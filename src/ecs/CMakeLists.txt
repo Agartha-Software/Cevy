@@ -18,7 +18,7 @@ add_library(entity
   Entity.hpp
   )
 
-target_link_libraries(entity SparseVector)
+target_link_libraries(entity PUBLIC SparseVector)
 
 # include_directories(PUBLIC . ./commands ../)
 # include_directories(PUBLIC .)

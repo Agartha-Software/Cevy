@@ -14,4 +14,6 @@ add_library(commands
   EntityCommands.cpp
   )
 
-include_directories(PUBLIC ..)
+target_include_directories(commands PUBLIC ..)
+
+target_link_libraries(commands PUBLIC ecs entity world)

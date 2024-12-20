@@ -14,4 +14,4 @@ add_library(collision
     EntitiesCollision.cpp
 )
 
-target_link_librairies(collision PRIVATE math engine ecs)
+target_link_librairies(collision PUBLIC math engine ecs)

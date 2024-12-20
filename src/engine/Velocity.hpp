@@ -20,10 +20,8 @@
 #ifdef ____cpp_lib_interpolate
 using std::lerp;
 #else
-namespace std {
-inline constexpr float lerp(float a, float b, float x) { return a + x * (b - a); }
-} // namespace std
-using std::lerp;
+inline constexpr float lerp(float a, float b, float x) noexcept { return a + x * (b - a); }
+// using std::lerp;
 #endif
 
 namespace cevy::engine {
