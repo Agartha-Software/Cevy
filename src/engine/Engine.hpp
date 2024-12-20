@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include "Plugin.hpp"
-#include "Stage.hpp"
-#include "ecs.hpp"
+#include "ecs/Plugin.hpp"
+#include "ecs/Stage.hpp"
+#include "ecs/Stage.hpp"
 
 namespace cevy::engine {
 

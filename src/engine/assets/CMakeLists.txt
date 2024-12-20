@@ -9,14 +9,9 @@ add_library(assets
   STATIC
   AssetManager.cpp
   Asset.hpp
+  Diffuse.hpp
   Handle.hpp
   AssetManager.hpp
   )
 
-target_include_directories(assets PRIVATE ${RAYLIB_FOLDER})
-
-target_include_directories(assets PUBLIC
-  ../../ecs
-  .
-  ..
-  )
+target_link_libraries(assets PUBLIC ecs engine)

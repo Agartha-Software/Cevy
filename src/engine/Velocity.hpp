@@ -11,9 +11,9 @@
 #include <raymath.h>
 
 #include "PhysicsProps.hpp"
-#include "Query.hpp"
-#include "Resource.hpp"
-#include "Time.hpp"
+#include "ecs/Query.hpp"
+#include "ecs/Resource.hpp"
+#include "ecs/Time.hpp"
 #include "Transform.hpp"
 #include "Vector.hpp"
 

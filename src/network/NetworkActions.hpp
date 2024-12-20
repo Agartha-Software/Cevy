@@ -19,12 +19,12 @@
 #include <utility>
 #include <vector>
 
-#include "App.hpp"
+#include "ecs/App.hpp"
 #include "Commands.hpp"
-#include "Plugin.hpp"
-#include "Query.hpp"
-#include "network/CevyNetwork.hpp"
-#include "network/network.hpp"
+#include "ecs/Plugin.hpp"
+#include "ecs/Query.hpp"
+#include "CevyNetwork.hpp"
+#include "network.hpp"
 
 /**
  * @brief A handler for network activity

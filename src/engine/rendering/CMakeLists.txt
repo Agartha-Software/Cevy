@@ -12,12 +12,4 @@ add_library(rendering
   ClearColor.cpp
   )
 
-target_include_directories(rendering PRIVATE ${RAYLIB_FOLDER})
-
-target_include_directories(rendering PUBLIC
-  ../../ecs
-  ../assets
-  ../math
-  .
-  ..
-  )
+target_link_libraries(rendering PUBLIC raylib ecs engine math)

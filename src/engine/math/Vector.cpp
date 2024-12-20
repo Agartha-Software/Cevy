@@ -10,6 +10,7 @@
 #include <cmath>
 #include <complex>
 #include <cstdlib>
+#include <raymath.h>
 
 using namespace cevy::engine;
 

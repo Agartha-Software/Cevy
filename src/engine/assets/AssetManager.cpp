@@ -9,6 +9,7 @@
 #include "Asset.hpp"
 #include "Diffuse.hpp"
 #include "Mesh.hpp"
+#include "engine/Engine.hpp"
 
 void init_asset_manager(cevy::ecs::World &w) {
   w.insert_resource(cevy::engine::AssetManager());

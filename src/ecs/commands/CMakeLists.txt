@@ -13,3 +13,5 @@ add_library(commands
   EntityCommands.hpp
   EntityCommands.cpp
   )
+
+include_directories(PUBLIC ..)

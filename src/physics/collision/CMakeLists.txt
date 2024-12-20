@@ -14,11 +14,4 @@ add_library(collision
     EntitiesCollision.cpp
 )
 
-target_include_directories(collision PUBLIC
-  ../../ecs
-  ../../engine
-  ../../engine/math
-  .
-  ..
-  ${RAYLIB_FOLDER}
-  )
+target_link_librairies(collision PRIVATE math engine ecs)

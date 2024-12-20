@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "raylib.hpp"
+#include "raylib.h"
 
 namespace cevy::engine {
 class Mesh {

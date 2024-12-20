@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "Query.hpp"
+#include "ecs/Query.hpp"
 #include "Target.hpp"
 #include "Transform.hpp"
 #include "cevy.hpp"

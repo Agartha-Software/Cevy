@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "ecs.hpp"
+#include "ecs/World.hpp"
 
 void render_models(cevy::ecs::World &world);
 

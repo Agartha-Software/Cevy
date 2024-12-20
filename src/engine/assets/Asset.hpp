@@ -8,6 +8,7 @@
 #pragma once
 
 #include "AssetManager.hpp"
+#include "Handle.hpp"
 
 namespace cevy::engine {
 template <typename Type>

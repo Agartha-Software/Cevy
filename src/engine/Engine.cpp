@@ -6,20 +6,19 @@
 */
 
 #include "Engine.hpp"
-#include "App.hpp"
+#include "ecs/App.hpp"
 #include "AssetManager.hpp"
 #include "Camera.hpp"
 #include "ClearColor.hpp"
 #include "Color.hpp"
-#include "DefaultPlugin.hpp"
-#include "EntityCommands.hpp"
-#include "Event.hpp"
+#include "ecs/DefaultPlugin.hpp"
+#include "ecs/Event.hpp"
 #include "Line.hpp"
 #include "PhysicsProps.hpp"
 #include "Target.hpp"
 #include "Transform.hpp"
 #include "Velocity.hpp"
-#include "ecs.hpp"
+#include "ecs/ecs.hpp"
 #ifdef DEBUG
 #include "imgui.h"
 #endif

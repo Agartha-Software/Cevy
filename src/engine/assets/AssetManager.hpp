@@ -7,13 +7,11 @@
 
 #pragma once
 
-#include "App.hpp"
+#include "ecs/App.hpp"
 #include "Diffuse.hpp"
-#include "Engine.hpp"
-#include "Handle.hpp"
 #include "Mesh.hpp"
-#include "Plugin.hpp"
-#include "ecs.hpp"
+#include "ecs/Plugin.hpp"
+#include "ecs/ecs.hpp"
 
 #include <vector>
 
