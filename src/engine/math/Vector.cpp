@@ -5,12 +5,12 @@
 ** Vector
 */
 
+/*
 #include "Vector.hpp"
 #include <algorithm>
 #include <cmath>
 #include <complex>
 #include <cstdlib>
-#include <raymath.h>
 
 using namespace cevy::engine;
 
@@ -258,3 +258,5 @@ Vector Vector::random(float degree, const Vector &source) {
 }
 
 #endif
+
+*/

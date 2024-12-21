@@ -7,25 +7,17 @@
 
 #pragma once
 
-#include <raylib.h>
-#include <raymath.h>
 
 #include "PhysicsProps.hpp"
 #include "ecs/Query.hpp"
 #include "ecs/Resource.hpp"
 #include "ecs/Time.hpp"
 #include "Transform.hpp"
-#include "Vector.hpp"
-
-#ifdef ____cpp_lib_interpolate
-using std::lerp;
-#else
-inline constexpr float lerp(float a, float b, float x) noexcept { return a + x * (b - a); }
-// using std::lerp;
-#endif
+#include <glm/ext/quaternion_geometric.hpp>
+#include <glm/ext/vector_float3.hpp>
 
 namespace cevy::engine {
-class Velocity : public Vector {
+class Velocity : public glm::vec3 {
   public:
   Velocity(){};
   ~Velocity(){};
@@ -44,7 +36,7 @@ class TransformVelocity : public engine::Transform {
   TransformVelocity &operator*=(float s) {
     invalidate();
 
-    rotation = QuaternionNlerp(QuaternionIdentity(), rotation, s);
+    rotation = glm::normalize(glm::slerp(glm::quat(), rotation, std::max(0.f, s)));
     position *= s;
 
     return *this;

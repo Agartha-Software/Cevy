@@ -8,7 +8,6 @@
 #pragma once
 
 #include "network/network.hpp"
-#include "raylib.h"
 #include <ostream>
 
 namespace cevy::engine {

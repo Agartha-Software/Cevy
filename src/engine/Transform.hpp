@@ -7,38 +7,49 @@
 
 #pragma once
 
-#include <raylib.h>
-#include <raymath.h>
+
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/vector_float3.hpp>
+#include <glm/ext/vector_relational.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "Pointer.hpp"
-#include "Vector.hpp"
 
 namespace cevy {
 namespace engine {
 class Transform {
   public:
-  Quaternion rotation;
-  Vector position;
-  Vector scale;
+  glm::quat rotation;
+  glm::vec3 position;
+  glm::vec3 scale;
 
-  Transform() : rotation(QuaternionIdentity()), position(0, 0, 0), scale(1, 1, 1) {}
+  Transform() : rotation(glm::identity<glm::quat>()), position(0, 0, 0), scale(1, 1, 1) {}
   Transform(float x, float y, float z)
-      : rotation(QuaternionIdentity()), position(x, y, z), scale(1, 1, 1) {}
-  Transform(const Vector &vec) : rotation(QuaternionIdentity()), position(vec), scale(1, 1, 1) {}
-  Transform(const Quaternion &quat) : rotation(quat), position(0, 0, 0), scale(1, 1, 1) {}
+      : rotation(glm::identity<glm::quat>()), position(x, y, z), scale(1, 1, 1) {}
+  Transform(const glm::vec3 &vec) : rotation(glm::identity<glm::quat>()), position(vec), scale(1, 1, 1) {}
+  Transform(const glm::quat &quat) : rotation(quat), position(0, 0, 0), scale(1, 1, 1) {}
 
-  std::tuple<Vector, Quaternion, Vector> get() const {
+  glm::mat4 mat4() const {
+    return glm::mat4(rotation) * glm::translate(glm::mat4(1), position) * glm::scale(glm::mat4(1), scale);
+  }
+
+  operator glm::mat4() const {
+    return mat4();
+  }
+
+  std::tuple<glm::vec3, glm::quat, glm::vec3> get() const {
     if (!cache_valid()) {
       if (_parent) {
         auto [p_vec, p_rot, p_scale] = _parent->get();
         _cache_vector = p_vec;
         _cache_scale = p_scale;
-        _cache_quaternion = QuaternionMultiply(p_rot, _cache_quaternion);
-        auto v = Vector3RotateByQuaternion(position, _cache_quaternion);
-        _cache_vector += Vector(v);
+        _cache_quaternion = p_rot * _cache_quaternion;
+        auto v = position * _cache_quaternion;
+        _cache_vector += glm::vec3(v);
       } else {
         _cache_quaternion = rotation;
-        _cache_vector = Vector3RotateByQuaternion(position, _cache_quaternion);
+        _cache_vector = position * _cache_quaternion;
         _cache_scale = scale;
       }
     }
@@ -48,16 +59,16 @@ class Transform {
   Transform &operator*=(const Transform &other) {
     invalidate();
     auto [vec, rot, sca] = other.get();
-    rotation = QuaternionMultiply(rotation, rot);
+    rotation = rotation * rot;
     position += vec;
     // scale += sca;
     return *this;
   }
 
-  Vector operator*(const Vector &v) const {
-    Vector w = v;
+  glm::vec3 operator*(const glm::vec3 &v) const {
+    glm::vec3 w = v;
     auto [vec, rot, scale] = get();
-    w = Vector3RotateByQuaternion(w, rot);
+    w = w * rot;
     w += vec;
     // w *= scale;
     return w;
@@ -65,61 +76,61 @@ class Transform {
 
   Transform &rotateX(float deg) {
     invalidate();
-    rotation = QuaternionMultiply(rotation, QuaternionFromEuler(deg, 0, 0));
+    rotation = rotation * glm::quat(glm::vec3(deg, 0, 0));
     return *this;
   }
 
   Transform &rotateY(float deg) {
     invalidate();
-    rotation = QuaternionMultiply(rotation, QuaternionFromEuler(0, deg, 0));
+    rotation = rotation * glm::quat(glm::vec3(0, deg, 0));
     return *this;
   }
 
   Transform &rotateZ(float deg) {
     invalidate();
-    rotation = QuaternionMultiply(rotation, QuaternionFromEuler(0, 0, deg));
+    rotation = rotation * glm::quat(glm::vec3(0, 0, deg));
     return *this;
   }
 
   Transform &rotateXYZ(float x, float y, float z) {
     invalidate();
-    rotation = QuaternionMultiply(rotation, QuaternionFromEuler(x, y, z));
+    rotation = rotation * glm::quat(glm::vec3(x, y, z));
     return *this;
   }
 
-  Transform &rotateXYZ(const Vector &vec) {
+  Transform &rotateXYZ(const glm::vec3 &vec) {
     invalidate();
-    rotation = QuaternionMultiply(rotation, QuaternionFromEuler(vec.x, vec.y, vec.z));
+    rotation = rotation * glm::quat(vec);
     return *this;
   }
 
   Transform &setRotationX(float deg) {
     invalidate();
-    rotation = QuaternionFromEuler(deg, 0, 0);
+    rotation = glm::quat(glm::vec3(deg, 0, 0));
     return *this;
   }
 
   Transform &setRotationY(float deg) {
     invalidate();
-    rotation = QuaternionFromEuler(0, deg, 0);
+    rotation = glm::quat(glm::vec3(0, deg, 0));
     return *this;
   }
 
   Transform &setRotationZ(float deg) {
     invalidate();
-    rotation = QuaternionFromEuler(0, 0, deg);
+    rotation = glm::quat(glm::vec3(0, 0, deg));
     return *this;
   }
 
   Transform &setRotationXYZ(float x, float y, float z) {
     invalidate();
-    rotation = QuaternionFromEuler(x, y, z);
+    rotation = glm::quat(glm::vec3(x, y, z));
     return *this;
   }
 
-  Transform &setRotationXYZ(const Vector &vec) {
+  Transform &setRotationXYZ(const glm::vec3 &vec) {
     invalidate();
-    rotation = QuaternionFromEuler(vec.x, vec.y, vec.z);
+    rotation = glm::quat(glm::vec3(vec.x, vec.y, vec.z));
     return *this;
   }
 
@@ -143,11 +154,11 @@ class Transform {
 
   Transform &translateXYZ(float x, float y, float z) {
     invalidate();
-    position += Vector(x, y, z);
+    position += glm::vec3(x, y, z);
     return *this;
   }
 
-  Transform &translateXYZ(const Vector &vec) {
+  Transform &translateXYZ(const glm::vec3 &vec) {
     invalidate();
     position += vec;
     return *this;
@@ -173,11 +184,11 @@ class Transform {
 
   Transform &setPositionXYZ(float x, float y, float z) {
     invalidate();
-    position = Vector(x, y, z);
+    position = glm::vec3(x, y, z);
     return *this;
   }
 
-  Transform &setPositionXYZ(const Vector &vec) {
+  Transform &setPositionXYZ(const glm::vec3 &vec) {
     invalidate();
     position = vec;
     return *this;
@@ -203,11 +214,11 @@ class Transform {
 
   Transform &scaleXYZ(float x, float y, float z) {
     invalidate();
-    scale *= Vector(x, y, z);
+    scale *= glm::vec3(x, y, z);
     return *this;
   }
 
-  Transform &scaleXYZ(const Vector &vec) {
+  Transform &scaleXYZ(const glm::vec3 &vec) {
     invalidate();
     scale *= vec;
     return *this;
@@ -241,11 +252,11 @@ class Transform {
 
   Transform &setScaleXYZ(float x, float y, float z) {
     invalidate();
-    scale = Vector{x, y, z};
+    scale = glm::vec3{x, y, z};
     return *this;
   }
 
-  Transform &setScaleXYZ(const Vector &vec) {
+  Transform &setScaleXYZ(const glm::vec3 &vec) {
     invalidate();
     scale = vec;
     return *this;
@@ -259,45 +270,45 @@ class Transform {
     return *this;
   }
 
-  Vector euler() const {
-    auto v = QuaternionToEuler(rotation);
-    return {v.x, v.y, v.z};
+  glm::vec3 euler() const {
+    auto v = glm::eulerAngles(rotation);
+    return glm::vec3(v.x, v.y, v.z);
   }
 
-  Vector xyz() const { return position; }
+  glm::vec3 xyz() const { return position; }
 
-  Vector fwd() const {
-    Vector3 v{0, 0, 1};
+  glm::vec3 fwd() const {
+    glm::vec3 v{0, 0, 1};
     auto [vec, rot, sc] = get();
-    v = Vector3RotateByQuaternion(v, rot);
+    v = v * rot;
     return v;
   }
 
-  Vector up() const {
-    Vector3 v{0, 1, 0};
+  glm::vec3 up() const {
+    glm::vec3 v{0, 1, 0};
     auto [vec, rot, sc] = get();
-    v = Vector3RotateByQuaternion(v, rot);
+    v = v * rot;
     return v;
   }
 
-  Vector right() const {
-    Vector3 v{0, 1, 0};
+  glm::vec3 right() const {
+    glm::vec3 v{0, 1, 0};
     auto [vec, rot, _] = get();
-    v = Vector3RotateByQuaternion(v, rot);
+    v = v * rot;
     return v;
   }
 
-  Vector tan() const {
-    Vector3 v{1, 0, 0};
+  glm::vec3 tan() const {
+    glm::vec3 v{1, 0, 0};
     auto [vec, rot, _] = get();
-    v = Vector3RotateByQuaternion(v, rot);
+    v = v * rot;
     return v;
   }
 
-  Vector cotan() const {
-    Vector3 v{0, 1, 0};
+  glm::vec3 cotan() const {
+    glm::vec3 v{0, 1, 0};
     auto [vec, rot, _] = get();
-    v = Vector3RotateByQuaternion(v, rot);
+    v = v * rot;
     return v;
   }
 
@@ -322,9 +333,9 @@ class Transform {
 
   pointer<Transform> _parent;
   std::shared_ptr<int> _lock = std::make_shared<int>();
-  mutable Vector _cache_vector;
-  mutable Vector _cache_scale;
-  mutable Quaternion _cache_quaternion;
+  mutable glm::vec3 _cache_vector;
+  mutable glm::vec3 _cache_scale;
+  mutable glm::quat _cache_quaternion;
   mutable bool _cache_validity;
 };
 } // namespace engine

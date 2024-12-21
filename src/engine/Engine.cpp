@@ -50,9 +50,9 @@ void update_window(cevy::ecs::Query<cevy::engine::Camera> cams, cevy::ecs::World
                    cevy::ecs::Resource<cevy::engine::ClearColor> clearcolor) {
   ClearBackground(clearcolor.get());
   for (auto [cam] : cams) {
-    BeginMode3D(cam);
+    BeginMode3D(cam.camera);
     render_models(w);
-    render_lines(w);
+    // render_lines(w);
     EndMode3D();
 #ifdef DEBUG
     rlImGuiBegin();

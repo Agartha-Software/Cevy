@@ -16,10 +16,18 @@
 namespace cevy::engine {
 class Camera {
   public:
-  Camera3D camera;
-  operator Camera3D &();
-  operator Camera3D *();
-  operator Camera3D() const;
+    float fov;
+    float aspect;
+    float near;
+    float far;
+    glm::vec3 up;
+    float tilt;
+    glm::mat4 projection;
+    glm::mat4 view;
+    Camera3D camera;
+  // operator Camera3D &();
+  // operator Camera3D *();
+  // operator Camera3D() const;
   Camera();
   ~Camera();
 };

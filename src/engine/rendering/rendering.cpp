@@ -18,29 +18,35 @@
 #include "ecs/ecs.hpp"
 #include "raylib.h"
 #include "raymath.h"
+#include <cstring>
+#include <glm/matrix.hpp>
 
 using namespace cevy::engine;
 using namespace cevy;
 
-void render_lines(cevy::ecs::World &w) {
-  auto lines =
-      ecs::Query<Line, option<cevy::engine::Transform>, option<cevy::engine::Color>>::query(w);
-  for (auto [line, opt_transform, opt_color] : lines) {
-    const cevy::engine::Transform &trans =
-        opt_transform.value_or(cevy::engine::Transform(0., 0., 0.));
-    const cevy::engine::Color &col = opt_color.value_or(cevy::engine::Color(0., 255., 60));
-    Vector3 end = Vector3RotateByQuaternion(line.end - line.start, trans.rotation);
-    end = Vector3Add(end, line.start + trans.position);
-    DrawCylinderEx(line.start + trans.position, end, 0.1, 0.1, 4, (::Color)col);
-  }
-}
+// void render_lines(cevy::ecs::World &w) {
+//   auto lines =
+//       ecs::Query<Line, option<cevy::engine::Transform>, option<cevy::engine::Color>>::query(w);
+//   for (auto [line, opt_transform, opt_color] : lines) {
+//     const cevy::engine::Transform &trans =
+//         opt_transform.value_or(cevy::engine::Transform(0., 0., 0.));
+//     const cevy::engine::Color &col = opt_color.value_or(cevy::engine::Color(0., 255., 60));
+//     Vector3 end = Vector3RotateByQuaternion(line.end - line.start, trans.rotation);
+//     end = Vector3Add(end, line.start + trans.position);
+//     DrawCylinderEx(line.start + trans.position, end, 0.1, 0.1, 4, (::Color)col);
+//   }
+// }
 
 static void render_model(Model &model, engine::Transform transform, ::Color tint) {
-  model.transform = QuaternionToMatrix(transform.rotation);
-  model.transform = MatrixMultiply(
-      model.transform, MatrixScale(transform.scale.x, transform.scale.y, transform.scale.z));
+  // model.transform = QuaternionToMatrix(transform.rotation);
+  // model.transform = MatrixMultiply(
+  //     model.transform, MatrixScale(transform.scale.x, transform.scale.y, transform.scale.z));
+  glm::mat4 mat4(1);
+  mat4 = mat4 * glm::scale(glm::mat4(1), transform.scale);
+  mat4 = glm::mat4(transform.rotation) * mat4;
+  std::memcpy(&model.transform, &mat4, sizeof(glm::mat4));
   for (int i = 0; i < model.meshCount; ++i) {
-    DrawModelEx(model, transform.position, Vector3{0, 0, 0}, 1, Vector3{1, 1, 1}, tint);
+    DrawModelEx(model, Vector3{transform.position.x, transform.position.y, transform.position.z}, Vector3{0, 0, 0}, 1, Vector3{1, 1, 1}, tint);
   }
 }
 
