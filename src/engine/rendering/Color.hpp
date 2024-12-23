@@ -7,15 +7,22 @@
 
 #pragma once
 
+#include <glm/fwd.hpp>
+#include <glm/glm.hpp>
+
 namespace cevy::engine {
 class Color {
   public:
-  unsigned char r; // Color red value
-  unsigned char g; // Color green value
-  unsigned char b; // Color blue value
-  unsigned char a; // Color alpha value
+  float r; // Color red value
+  float g; // Color green value
+  float b; // Color blue value
+  float a; // Color alpha value
 
-  Color(unsigned char r = 255, unsigned char g = 255, unsigned char b = 255, unsigned char a = 255);
+  Color(float r = 1., float g = 1., float b = 1., float a = 1.);
+
+  glm::vec4 &as_vec() {
+    return *reinterpret_cast<glm::vec4 *>(this);
+  }
   // operator ::Color();
   // operator const ::Color() const;
 };
