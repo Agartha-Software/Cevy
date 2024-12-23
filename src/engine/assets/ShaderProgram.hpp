@@ -1,4 +1,3 @@
-
 /*author: r3dux
 version : 0.3 - 15 / 01 / 2014
 	  description : Gets GLSL source code either provided as strings or can load from filenames,

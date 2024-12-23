@@ -9,7 +9,6 @@ add_library(assets
   STATIC
   AssetManager.cpp
   Asset.hpp
-  Diffuse.hpp
   Handle.hpp
   AssetManager.hpp
   Model.cpp

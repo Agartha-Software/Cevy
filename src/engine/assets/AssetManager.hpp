@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include "PbrMaterial.hpp"
 #include "ecs/App.hpp"
-#include "Diffuse.hpp"
 #include "Model.hpp"
 #include "ecs/Plugin.hpp"
 #include "ecs/ecs.hpp"
@@ -22,7 +22,7 @@ class AssetManager {
   public:
   // using map = std::unordered_map<std::type_index, std::any>;
   std::vector<cevy::engine::Model> _meshs;
-  std::vector<Diffuse> _diffuses;
+  std::vector<cevy::engine::PbrMaterial> _diffuses;
   // std::vector<ShaderProgram> _shaders;
 };
 

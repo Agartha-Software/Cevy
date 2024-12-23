@@ -7,6 +7,7 @@
 #include <optional>
 #include <string>
 
+namespace cevy::engine {
 class Texture {
   public:
   std::string file_name;
@@ -33,3 +34,4 @@ class PbrMaterial {
 
   std::optional<Texture> diffuse_texture = std::optional<Texture>();
 };
+}

@@ -6,6 +6,7 @@
 */
 
 #include "Scheduler.hpp"
+#include <memory>
 #include <stdexcept>
 #define GLM_FORCE_SWIZZLE
 
@@ -15,7 +16,6 @@
 #if (__linux__)
 #include <GL/glew.h>
 #endif
-#include "Resource.hpp"
 #include "glWindow.hpp"
 #include <glm/gtc/type_ptr.hpp>
 
@@ -33,6 +33,7 @@ static glm::vec3 filmicToneMapping(glm::vec3 color) {
 
 glWindow::glWindow(int width, int height) : width(width), height(height) {
   open();
+  this->defaultMaterial = PbrMaterial();
   this->setupEnv();
 }
 
@@ -121,14 +122,14 @@ void glWindow::setupEnv() {
 
 void glWindow::render_system(
     Resource<cevy::engine::Window> win, Query<Camera> cams,
-    Query<option<Transform>, Handle<Model>, option<Handle<Diffuse>>, option<Color>> models,
+    Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
     cevy::ecs::EventWriter<cevy::ecs::AppExit> close) {
   win.get()->render(cams, models, close);
 }
 
 void glWindow::render(
     Query<Camera> cams,
-    Query<option<Transform>, Handle<Model>, option<Handle<Diffuse>>, option<Color>> models,
+    Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
     cevy::ecs::EventWriter<cevy::ecs::AppExit> close) {
   glfwSwapBuffers(this->glfWindow);
   glfwPollEvents();
@@ -183,16 +184,17 @@ void glWindow::render(
   glUniformMatrix4fv(this->shaderProgram->uniform("invView"), 1, GL_FALSE, glm::value_ptr(invView));
 
   std::cout << "rendering " << models.size() << " models" << std::endl;
-  for (auto [o_tm, h_model, h_diffuse, color] : models) {
+  for (auto [o_tm, h_model, o_h_material, color] : models) {
     auto tm = o_tm ? o_tm->mat4() : glm::mat4(1);
     auto model = h_model.get();
+    PbrMaterial &material = o_h_material ? *o_h_material->get() : this->defaultMaterial;
     glUniform3fv(this->shaderProgram->uniform("ambientColor"), 1,
-                 glm::value_ptr(env.ambientColor + model->material.ambiant));
+                 glm::value_ptr(env.ambientColor + material.ambiant));
     glUniform3fv(this->shaderProgram->uniform("albedo"), 1,
-                 glm::value_ptr(model->material.diffuse));
+                 glm::value_ptr(material.diffuse));
     glUniform3fv(this->shaderProgram->uniform("specular_tint"), 1,
-                 glm::value_ptr(model->material.specular_tint));
-    glUniform1f(this->shaderProgram->uniform("phong_exponent"), model->material.phong_exponent);
+                 glm::value_ptr(material.specular_tint));
+    glUniform1f(this->shaderProgram->uniform("phong_exponent"), material.phong_exponent);
     glUniform1i(this->shaderProgram->uniform("halflambert"), true);
     glUniformMatrix4fv(this->shaderProgram->uniform("model"), 1, GL_FALSE,
                        glm::value_ptr(tm * model->modelMatrix()));
@@ -200,6 +202,10 @@ void glWindow::render(
                        glm::value_ptr(model->tNormalMatrix() * glm::inverse(glm::mat3(tm))));
     glUniform1i(this->shaderProgram->uniform("has_texture"), model->tex_coordinates.size() != 0);
 
+    if (material.diffuse_texture.has_value()) {
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, material.diffuse_texture->gl_handle);
+    }
     model->draw();
   };
 }

@@ -7,9 +7,9 @@
 
 #include "Camera.hpp"
 #include "Color.hpp"
-#include "Diffuse.hpp"
 #include "Handle.hpp"
 #include "Model.hpp"
+#include "PbrMaterial.hpp"
 #include "Scheduler.hpp"
 #include "ShaderProgram.hpp"
 #include "Query.hpp"
@@ -46,7 +46,7 @@ class glWindow {
 
   using Camera = cevy::engine::Camera;
   using Transform = cevy::engine::Transform;
-  using Diffuse = cevy::engine::Diffuse;
+  using PbrMaterial = cevy::engine::PbrMaterial;
   using Color = cevy::engine::Color;
   using Model = cevy::engine::Model;
 
@@ -60,6 +60,7 @@ class glWindow {
     this->glfWindow = rhs.glfWindow;
     rhs.shaderProgram = nullptr;
     rhs.glfWindow = nullptr;
+    this->defaultMaterial = rhs.defaultMaterial;
 
     glfwSetWindowUserPointer(this->glfWindow, this);
   }
@@ -68,10 +69,10 @@ class glWindow {
   bool open();
   bool close();
   static void render_system(Resource<cevy::engine::Window> win,Query<Camera> cams,
-         Query<option<Transform>, Handle<Model>, option<Handle<Diffuse>>, option<Color>> models,
+         Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
          cevy::ecs::EventWriter<cevy::ecs::AppExit> close);
   void render(Query<Camera> cams,
-         Query<option<Transform>, Handle<Model>, option<Handle<Diffuse>>, option<Color>> models,
+         Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
          cevy::ecs::EventWriter<cevy::ecs::AppExit> close);
 
   void setupEnv();
@@ -93,6 +94,8 @@ class glWindow {
   Environment env;
   ShaderProgram* shaderProgram;
   GLFWwindow *glfWindow;
+
+  PbrMaterial defaultMaterial;
 };
 
 namespace cevy::engine {

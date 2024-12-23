@@ -14,13 +14,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <iostream>
-#include <optional>
 #include <vector>
 
 using cevy::engine::Model;
 
 Model::Model() {
-  material = PbrMaterial();
   this->modelMatrix_ = glm::identity<glm::mat4>();
   this->t_normalMatrix = glm::identity<glm::mat3>();
   this->initialized = false;
@@ -85,10 +83,7 @@ void Model::draw() {
   glBindVertexArray(vaoHandle);
   int size;
   glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-  if (material.diffuse_texture.has_value()) {
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, material.diffuse_texture->gl_handle);
-  }
+
   std::cout << "drawing " << size / sizeof(uint32_t) << " vertices" << std::endl;
   // glDrawElements(GL_LINES_ADJACENCY, size / sizeof(uint32_t), GL_UNSIGNED_INT, 0);
   glDrawElements(GL_TRIANGLES, size / sizeof(uint32_t), GL_UNSIGNED_INT, 0);

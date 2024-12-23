@@ -1,7 +1,5 @@
 #pragma once
 
-#include "PbrMaterial.hpp"
-#include "cevy.hpp"
 #include <algorithm>
 #include <cstdint>
 #include <glm/ext/matrix_float4x4.hpp>
@@ -49,7 +47,6 @@ class Model {
   const glm::mat3 &tNormalMatrix() const { return t_normalMatrix; }
 
   void gl_init();
-  PbrMaterial material;
 
   std::vector<glm::vec4> vertices;
   std::vector<glm::vec3> normals;
