@@ -8,7 +8,6 @@
 #include "AssetManager.hpp"
 #include "Asset.hpp"
 #include "Diffuse.hpp"
-#include "Mesh.hpp"
 #include "engine/Engine.hpp"
 
 void init_asset_manager(cevy::ecs::World &w) {

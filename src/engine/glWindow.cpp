@@ -153,7 +153,8 @@ void glWindow::render(
 
   auto &camera = std::get<Camera &>(*cams.get_single());
 
-  auto view = glm::scale(camera.projection, glm::vec3(1, float(this->width) / this->height, 1)) * camera.view;
+  auto view = glm::scale(camera.projection, glm::vec3(1, float(this->width) / this->height, 1)) *
+              camera.view;
 
   for (size_t i = 0; i < env.lights.size(); ++i) {
     std::string name;
@@ -278,4 +279,7 @@ bool glWindow::init_context() {
   return 0;
 }
 
-bool glWindow::unload_context() { glfwTerminate(); }
+bool glWindow::unload_context() {
+  glfwTerminate();
+  return 0;
+}
