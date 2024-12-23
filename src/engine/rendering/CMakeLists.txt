@@ -7,7 +7,6 @@
 
 add_library(rendering
   STATIC
-  rendering.cpp
   Color.cpp
   ClearColor.cpp
   )
