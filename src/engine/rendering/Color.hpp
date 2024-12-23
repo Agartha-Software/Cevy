@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include "raylib.h"
-
 namespace cevy::engine {
 class Color {
   public:
@@ -17,8 +15,8 @@ class Color {
   unsigned char b; // Color blue value
   unsigned char a; // Color alpha value
 
-  Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255);
-  operator ::Color();
-  operator const ::Color() const;
+  Color(unsigned char r = 255, unsigned char g = 255, unsigned char b = 255, unsigned char a = 255);
+  // operator ::Color();
+  // operator const ::Color() const;
 };
 } // namespace cevy::engine

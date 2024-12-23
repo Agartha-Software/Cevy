@@ -6,6 +6,7 @@
 */
 
 #include "Engine.hpp"
+#include "Stage.hpp"
 #include "ecs/App.hpp"
 #include "AssetManager.hpp"
 #include "Camera.hpp"
@@ -19,56 +20,15 @@
 #include "Transform.hpp"
 #include "Velocity.hpp"
 #include "ecs/ecs.hpp"
+#include "glWindow.hpp"
+
 #ifdef DEBUG
 #include "imgui.h"
 #endif
 
-#include "rendering.hpp"
-#include "rlImGui.h"
+// #include "rlImGui.h"
+// #include <imgui_impl_glfw.h>
 
-void init_window() {
-#ifdef DEBUG
-  SetTraceLogLevel(LOG_ALL);
-#else
-  SetTraceLogLevel(LOG_ERROR);
-#endif
-  SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-  InitWindow(800, 450, "raylib [core] example - basic window");
-  SetTargetFPS(60);
-  rlImGuiSetup(true);
-}
-
-void close_game(cevy::ecs::EventWriter<cevy::ecs::AppExit> close) {
-  if (WindowShouldClose())
-    close.send(cevy::ecs::AppExit{});
-}
-
-void update_window(cevy::ecs::Query<cevy::engine::Camera> cams, cevy::ecs::World &w,
-#ifdef DEBUG
-                   cevy::ecs::Resource<cevy::engine::DebugWindow> debug,
-#endif
-                   cevy::ecs::Resource<cevy::engine::ClearColor> clearcolor) {
-  ClearBackground(clearcolor.get());
-  for (auto [cam] : cams) {
-    BeginMode3D(cam.camera);
-    render_models(w);
-    // render_lines(w);
-    EndMode3D();
-#ifdef DEBUG
-    rlImGuiBegin();
-    if (!ImGui::Begin("Debug Informations", &(debug.get().open))) {
-      ImGui::End();
-    } else {
-      ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-                  1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-      ImGui::Text("Number of entities: %zu", w.entities().valid_size());
-      ImGui::End();
-    }
-    rlImGuiEnd();
-#endif
-  }
-  EndDrawing();
-}
 
 void cevy::engine::Engine::build(cevy::ecs::App &app) {
   app.add_plugins(cevy::ecs::DefaultPlugin());
@@ -82,6 +42,7 @@ void cevy::engine::Engine::build(cevy::ecs::App &app) {
   app.init_resource<cevy::engine::DebugWindow>(cevy::engine::DebugWindow{.open = true});
 #endif
   app.init_resource<cevy::engine::ClearColor>(cevy::engine::Color(255, 255, 255));
+  app.init_resource<Window>(1280, 720);
   app.init_component<cevy::engine::Camera>();
   app.init_component<cevy::engine::Velocity>();
   app.init_component<cevy::engine::PhysicsProps>();
@@ -92,39 +53,7 @@ void cevy::engine::Engine::build(cevy::ecs::App &app) {
   app.init_component<cevy::engine::Color>();
   app.init_component<cevy::engine::ClearColor>();
   app.add_plugins(cevy::engine::AssetManagerPlugin());
-  app.add_systems<cevy::engine::PreStartupRenderStage>(init_window);
-  app.add_systems<cevy::engine::PreRenderStage>(close_game);
   app.add_systems<cevy::engine::PreRenderStage>(update_camera);
-  app.add_systems<cevy::engine::RenderStage>(update_window);
+  app.add_systems<cevy::engine::RenderStage>(glWindow::render_system);
   app.add_systems<ecs::core_stage::Update>(TransformVelocity::system);
 }
-
-/*
-
-void cevy::Engine::DebugWindow (void) {
-    if (IsKeyPressed(KEY_F10)) {
-        debugMode = (debugMode == false);
-        if (debugMode)
-            EnableCursor();
-    }
-    if(debugMode) {
-    } else {
-        DisableCursor();
-    }
-}
-
-void cevy::Engine::Fullscreen (void) {
-    if (IsWindowFullscreen()) {
-        int display = GetCurrentMonitor();
-        this->screenWidth = GetMonitorWidth(display);
-        this->screenHeight = GetMonitorHeight(display);
-    } else {
-        this->screenWidth = GetScreenWidth();
-        this->screenHeight = GetScreenHeight();
-    }
-    if (!IsKeyPressed(KEY_F11))
-        return;
-    SetWindowSize(this->screenWidth, this->screenWidth);
-        ToggleFullscreen();
-}
-*/

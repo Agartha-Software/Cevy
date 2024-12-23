@@ -15,7 +15,7 @@ class ClearColor {
   Color color;
 
   ClearColor(const Color &color);
-  operator ::Color();
-  operator const ::Color() const;
+  // operator ::Color();
+  // operator const ::Color() const;
 };
 } // namespace cevy::engine

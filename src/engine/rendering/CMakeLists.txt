@@ -12,4 +12,11 @@ add_library(rendering
   ClearColor.cpp
   )
 
-target_link_libraries(rendering PUBLIC raylib ecs engine math)
+target_link_libraries(rendering PUBLIC ecs engine math)
+
+if (WIN32)
+  target_link_libraries(rendering PRIVATE unofficial::gl3w::gl3w glfw glm::glm)
+endif()
+if (UNIX)
+target_link_libraries(rendering PRIVATE GLEW::glew glfw glm::glm OpenGL::GL)
+endif()

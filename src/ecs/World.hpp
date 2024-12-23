@@ -146,7 +146,8 @@ class cevy::ecs::World {
   **
   */
 
-  /// emplace a resource to the world by calling the
+  // / emplace a resource to the world by calling the
+  /// std::any can not be move constructed so irrelevant
   template <typename R, typename... Params>
   void init_resource(Params &&...p) {
     _resource_manager.insert_resource(R(p...));

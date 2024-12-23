@@ -16,6 +16,7 @@ set(RAYLIB_FOLDER ${CMAKE_BINARY_DIR}/_deps/raylib-build/raylib/include)
 add_library(engine
   STATIC
     Engine.cpp
+    glWindow.cpp
     Transform.hpp
     Camera.cpp
 )
@@ -25,7 +26,16 @@ add_subdirectory(assets)
 add_subdirectory(rendering)
 
 target_link_libraries(engine PUBLIC ecs math assets rendering)
-target_link_libraries(engine PRIVATE raylib imgui rlImGui) #PRIVATE
+target_link_libraries(engine PRIVATE imgui) #PRIVATE
+# target_link_libraries(engine PRIVATE raylib imgui rlImGui) #PRIVATE
+
+if (WIN32)
+  target_link_libraries(engine PRIVATE unofficial::gl3w::gl3w glfw glm::glm)
+endif()
+if (UNIX)
+target_link_libraries(engine PRIVATE GLEW::glew glfw glm::glm OpenGL::GL)
+endif()
+
 
 target_include_directories(engine PUBLIC
 #   ../ecs

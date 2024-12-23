@@ -21,26 +21,27 @@ class Asset<Diffuse> {
   AssetManager &_ref;
 
   public:
-  Asset<Diffuse>(AssetManager &ref) : _ref(ref){};
+  Asset(AssetManager &ref) : _ref(ref){};
 
   Handle<Diffuse> load(const std::string &path) {
-    _ref._diffuses.push_back(Diffuse(LoadTexture(path.c_str())));
+    // _ref._diffuses.push_back(Diffuse(LoadTexture(path.c_str())));
+    _ref._diffuses.push_back(Diffuse());
     return Handle<Diffuse>(_ref._diffuses[_ref._diffuses.size() - 1]);
   }
 };
 
 template <>
-class Asset<cevy::engine::Mesh> {
-  using Type = Mesh;
+class Asset<cevy::engine::Model> {
+  using Type = Model;
 
   AssetManager &_ref;
 
   public:
-  Asset<Mesh>(AssetManager &ref) : _ref(ref){};
+  Asset(AssetManager &ref) : _ref(ref){};
 
-  Handle<Mesh> load(const std::string &path) {
-    _ref._meshs.push_back(Mesh(LoadModel(path.c_str())));
-    return Handle<Mesh>(_ref._meshs[_ref._meshs.size() - 1]);
+  Handle<Model> load(Model&& model) {
+    _ref._meshs.push_back(model);
+    return Handle<Model>(_ref._meshs[_ref._meshs.size() - 1]);
   }
 };
 

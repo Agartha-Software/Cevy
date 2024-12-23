@@ -11,7 +11,6 @@
 #include "Target.hpp"
 #include "Transform.hpp"
 #include "cevy.hpp"
-#include "raylib.hpp"
 
 namespace cevy::engine {
 class Camera {
@@ -24,10 +23,6 @@ class Camera {
     float tilt;
     glm::mat4 projection;
     glm::mat4 view;
-    Camera3D camera;
-  // operator Camera3D &();
-  // operator Camera3D *();
-  // operator Camera3D() const;
   Camera();
   ~Camera();
 };

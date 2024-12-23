@@ -7,13 +7,12 @@
 
 #pragma once
 
-#include "raylib.h"
-
 namespace cevy::engine {
 class Diffuse {
   public:
-  Texture2D texture;
+  // Texture2D texture;
 
-  Diffuse(const Texture2D &texture) : texture(texture){};
+  // Diffuse(const Texture2D &texture) : texture(texture){};
+  Diffuse() {};
 };
 } // namespace cevy::engine
