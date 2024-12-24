@@ -53,6 +53,7 @@ bool glWindow::close() {
 }
 
 void glWindow::setupEnv() {
+
   env.ambientColor = {.1, .15, .2};
   env.ambientColor = env.ambientColor * env.ambientColor;
   env.fog = env.ambientColor;
@@ -62,10 +63,10 @@ void glWindow::setupEnv() {
   const float ringRadius = 20;
   for (int i = 0; i < ringCount; i++) {
     glm::vec3 rgb = 200.f * hsv2rgb({float(i) / ringCount, 0.9, 1.0f});
-    Light light = {{ringRadius * std::cos(glm::two_pi<float>() * float(i) / ringCount), 15.0f,
-                    ringRadius * std::sin(glm::two_pi<float>() * float(i) / ringCount), 1.0f},
-                   rgb,
-                   1.0f};
+    glLight light = {{ringRadius * std::cos(glm::two_pi<float>() * float(i) / ringCount), 15.0f,
+                      ringRadius * std::sin(glm::two_pi<float>() * float(i) / ringCount), 1.0f},
+                     rgb,
+                     1.0f};
     env.lights.push_back(light);
   }
 
@@ -104,33 +105,48 @@ void glWindow::setupEnv() {
   this->shaderProgram->addUniform("specular_tint");
   this->shaderProgram->addUniform("phong_exponent");
   this->shaderProgram->addUniform("halflambert");
-  this->shaderProgram->addUniform("lightCount");
 
-  for (int i = 0; i < 5; i++) {
-    std::string name;
-    name = "lights[";
-    name = name + std::to_string(i) + "].position";
-    shaderProgram->addUniform(name);
-    name = "lights[";
-    name = name + std::to_string(i) + "].radius";
-    shaderProgram->addUniform(name);
-    name = "lights[";
-    name = name + std::to_string(i) + "].color";
-    shaderProgram->addUniform(name);
-  }
+  this->shaderProgram->addUniform("activeLights");
+  GLuint uniformBlockIndexLights = glGetUniformBlockIndex(this->shaderProgram->id(), "LightBlock");
+  std::cout << "uniformBlockIndexLights: " << uniformBlockIndexLights << std::endl;
+  glUniformBlockBinding(this->shaderProgram->id(),uniformBlockIndexLights, 0);
+
+  glGenBuffers(1, &this->uboLights);
+  glBindBuffer(GL_UNIFORM_BUFFER, this->uboLights);
+  glBufferData(GL_UNIFORM_BUFFER, sizeof(glLight) * glLight::count, NULL, GL_DYNAMIC_DRAW);
+  glBindBufferBase(GL_UNIFORM_BUFFER, uniformBlockIndexLights, this->uboLights);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+  glBindBufferBase(GL_UNIFORM_BUFFER, 1, this->uboLights);
+
+  // for (int i = 0; i < 5; i++) {
+  //   std::string name;
+  //   name = "lights[";
+  //   name = name + std::to_string(i) + "].position";
+  //   shaderProgram->addUniform(name);
+  //   name = "lights[";
+  //   name = name + std::to_string(i) + "].radius";
+  //   shaderProgram->addUniform(name);
+  //   name = "lights[";
+  //   name = name + std::to_string(i) + "].color";
+  //   shaderProgram->addUniform(name);
+  // }
 }
 
 void glWindow::render_system(
     Resource<cevy::engine::Window> win, Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+    Query<option<Transform>, cevy::engine::PointLight> lights,
     cevy::ecs::EventWriter<cevy::ecs::AppExit> close) {
-  win.get()->render(cams, models, close);
+  win.get()->render(cams, models, lights, close);
 }
 
 void glWindow::render(
     Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+    Query<option<Transform>, cevy::engine::PointLight> lights,
     cevy::ecs::EventWriter<cevy::ecs::AppExit> close) {
+
   glfwSwapBuffers(this->glfWindow);
   glfwPollEvents();
 
@@ -157,20 +173,40 @@ void glWindow::render(
   auto view = glm::scale(camera.projection, glm::vec3(1, float(this->width) / this->height, 1)) *
               camera.view;
 
-  for (size_t i = 0; i < env.lights.size(); ++i) {
-    std::string name;
-    name = "lights[";
-    name = name + std::to_string(i) + "].position";
-    glUniform4fv(this->shaderProgram->uniform(name), 1, glm::value_ptr(env.lights[i].position));
+  std::vector<glLight> light_buffer;
+  light_buffer.clear();
+  light_buffer.reserve(glLight::count);
 
-    name = "lights[";
-    name = name + std::to_string(i) + "].color";
-    glUniform3fv(this->shaderProgram->uniform(name), 1, glm::value_ptr(env.lights[i].color));
-
-    name = "lights[";
-    name = name + std::to_string(i) + "].radius";
-    glUniform1fv(this->shaderProgram->uniform(name), 1, &env.lights[i].radius);
+  for (auto [o_tm, light] : lights) {
+    if (light_buffer.size() >= glLight::count) break;
+    light_buffer.push_back(glLight(light, o_tm.has_value() ? o_tm->position : glm::vec3()));
   }
+
+  for (auto light : env.lights) {
+    if (light_buffer.size() >= glLight::count) break;
+    light_buffer.push_back(light);
+  }
+
+  glBindBuffer(GL_UNIFORM_BUFFER, this->uboLights);
+  glBufferSubData(GL_UNIFORM_BUFFER, 0, light_buffer.size() * sizeof(glLight), light_buffer.data());
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+  glUniform1i(this->shaderProgram->uniform("activeLights"), light_buffer.size());
+
+  // for (size_t i = 0; i < env.lights.size(); ++i) {
+  //   std::string name;
+  //   name = "lights[";
+  //   name = name + std::to_string(i) + "].position";
+  //   glUniform4fv(this->shaderProgram->uniform(name), 1, glm::value_ptr(env.lights[i].position));
+
+  //   name = "lights[";
+  //   name = name + std::to_string(i) + "].color";
+  //   glUniform3fv(this->shaderProgram->uniform(name), 1, glm::value_ptr(env.lights[i].color));
+
+  //   name = "lights[";
+  //   name = name + std::to_string(i) + "].radius";
+  //   glUniform1fv(this->shaderProgram->uniform(name), 1, &env.lights[i].radius);
+  // }
 
   glUniform3fv(this->shaderProgram->uniform("fog"), 1, glm::value_ptr(env.fog));
 
@@ -183,7 +219,7 @@ void glWindow::render(
 
   glUniformMatrix4fv(this->shaderProgram->uniform("invView"), 1, GL_FALSE, glm::value_ptr(invView));
 
-  std::cout << "rendering " << models.size() << " models" << std::endl;
+  // std::cout << "rendering " << models.size() << " models" << std::endl;
   for (auto [o_tm, h_model, o_h_material, o_color] : models) {
     auto tm = o_tm ? o_tm->mat4() : glm::mat4(1);
     auto model = h_model.get();

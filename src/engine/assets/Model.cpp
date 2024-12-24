@@ -1,3 +1,10 @@
+/*
+** Agartha-Software, 2024
+** C++evy
+** File description:
+** mesh geometry
+*/
+
 #define STB_IMAGE_IMPLEMENTATION
 #define GLM_ENABLE_EXPERIMENTAL
 
@@ -84,7 +91,7 @@ void Model::draw() {
   int size;
   glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 
-  std::cout << "drawing " << size / sizeof(uint32_t) << " vertices" << std::endl;
+  // std::cout << "drawing " << size / sizeof(uint32_t) << " vertices" << std::endl;
   // glDrawElements(GL_LINES_ADJACENCY, size / sizeof(uint32_t), GL_UNSIGNED_INT, 0);
   glDrawElements(GL_TRIANGLES, size / sizeof(uint32_t), GL_UNSIGNED_INT, 0);
 }

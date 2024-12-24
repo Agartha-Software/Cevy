@@ -304,6 +304,10 @@ public:
 		glUseProgram(0);
 	}
 
+	GLuint id() const {
+		return this->programId;
+	}
+
 	// Method to return the bound location of a named attribute, or -1 if the attribute was not found
 	GLuint attribute(const std::string attributeName)
 	{

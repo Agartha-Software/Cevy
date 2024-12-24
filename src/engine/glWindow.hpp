@@ -13,22 +13,24 @@
 #include "Scheduler.hpp"
 #include "ShaderProgram.hpp"
 #include "Query.hpp"
+#include "PointLight.hpp"
 #include "GLFW/glfw3.h"
+#include "pipeline.hpp"
 #include <memory>
 
 namespace cevy::engine {
 class Window;
 }
 
-struct Light {
-	glm::vec4 position;
-	glm::vec3 color;
-	float radius;
-};
+// struct Light {
+// 	glm::vec4 position;
+// 	glm::vec3 color;
+// 	float radius;
+// };
 
 
 struct Environment {
-	std::vector<Light> lights;
+	std::vector<cevy::engine::pipeline::Light> lights;
 	glm::vec3 ambientColor;
 	glm::vec3 fog;
 };
@@ -48,6 +50,7 @@ class glWindow {
   using PbrMaterial = cevy::engine::PbrMaterial;
   using Color = cevy::engine::Color;
   using Model = cevy::engine::Model;
+  using glLight = cevy::engine::pipeline::Light;
 
   public:
   glWindow(int width, int height);
@@ -69,9 +72,11 @@ class glWindow {
   bool close();
   static void render_system(Resource<cevy::engine::Window> win,Query<Camera> cams,
          Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+         Query<option<Transform>, cevy::engine::PointLight> lights,
          cevy::ecs::EventWriter<cevy::ecs::AppExit> close);
   void render(Query<Camera> cams,
          Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+         Query<option<Transform>, cevy::engine::PointLight> lights,
          cevy::ecs::EventWriter<cevy::ecs::AppExit> close);
 
   void setupEnv();
@@ -90,6 +95,7 @@ class glWindow {
 
   int width;
   int height;
+  GLuint uboLights = 0;
   Environment env;
   ShaderProgram* shaderProgram;
   GLFWwindow *glfWindow;
