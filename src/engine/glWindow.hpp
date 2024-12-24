@@ -22,15 +22,7 @@ namespace cevy::engine {
 class Window;
 }
 
-// struct Light {
-// 	glm::vec4 position;
-// 	glm::vec3 color;
-// 	float radius;
-// };
-
-
 struct Environment {
-	std::vector<cevy::engine::pipeline::Light> lights;
 	glm::vec3 ambientColor;
 	glm::vec3 fog;
 };
