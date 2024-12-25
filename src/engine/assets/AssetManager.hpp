@@ -8,10 +8,10 @@
 #pragma once
 
 #include "PbrMaterial.hpp"
-#include "ecs/App.hpp"
+#include "App.hpp"
 #include "Model.hpp"
-#include "ecs/Plugin.hpp"
-#include "ecs/ecs.hpp"
+#include "Plugin.hpp"
+#include "ecs.hpp"
 
 #include <vector>
 

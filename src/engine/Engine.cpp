@@ -7,19 +7,18 @@
 
 #include "Engine.hpp"
 #include "Stage.hpp"
-#include "ecs/App.hpp"
+#include "App.hpp"
 #include "AssetManager.hpp"
 #include "Camera.hpp"
 #include "ClearColor.hpp"
 #include "Color.hpp"
 #include "ecs/DefaultPlugin.hpp"
-#include "ecs/Event.hpp"
 #include "Line.hpp"
 #include "PhysicsProps.hpp"
 #include "Target.hpp"
 #include "Transform.hpp"
 #include "Velocity.hpp"
-#include "ecs/ecs.hpp"
+#include "ecs.hpp"
 #include "glWindow.hpp"
 
 #ifdef DEBUG

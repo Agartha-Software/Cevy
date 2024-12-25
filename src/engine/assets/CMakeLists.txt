@@ -15,7 +15,9 @@ add_library(assets
   PbrMaterial.cpp
   )
 
-target_link_libraries(assets PUBLIC ecs engine)
+target_include_directories(assets PUBLIC .)
+
+target_link_libraries(assets PUBLIC ecs engine cevy_headers)
 
 if (WIN32)
   target_link_libraries(assets PRIVATE unofficial::gl3w::gl3w glfw glm::glm)

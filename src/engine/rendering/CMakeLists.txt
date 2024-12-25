@@ -13,6 +13,8 @@ add_library(rendering
 
 target_link_libraries(rendering PUBLIC ecs engine math)
 
+target_include_directories(rendering PUBLIC .)
+
 if (WIN32)
   target_link_libraries(rendering PRIVATE unofficial::gl3w::gl3w glfw glm::glm)
 endif()

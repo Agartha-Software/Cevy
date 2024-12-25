@@ -9,7 +9,7 @@
 
 #include <memory>
 
-#include "ecs/App.hpp"
+#include "App.hpp"
 #include "NetworkCommands.hpp"
 #include "Plugin.hpp"
 #include "Synchroniser.hpp"

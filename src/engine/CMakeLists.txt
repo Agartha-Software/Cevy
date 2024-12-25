@@ -36,15 +36,8 @@ if (UNIX)
 target_link_libraries(engine PRIVATE GLEW::glew glfw glm::glm OpenGL::GL)
 endif()
 
+target_include_directories(engine PUBLIC ./)
 
-target_include_directories(engine PUBLIC
-#   ../ecs
-#   ../ecs/commands
-#   .
-  ./math
-  assets
-  rendering
-)
 
 # target_include_directories(rlImGui PRIVATE
 #   ${RLIMGUI_FOLDER}

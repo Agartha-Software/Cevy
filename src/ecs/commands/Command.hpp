@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "ecs/ecs.hpp"
+#include "ecs.hpp"
 
 class cevy::ecs::Command {
   public:

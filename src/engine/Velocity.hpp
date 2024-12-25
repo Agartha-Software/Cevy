@@ -9,9 +9,9 @@
 
 
 #include "PhysicsProps.hpp"
-#include "ecs/Query.hpp"
-#include "ecs/Resource.hpp"
-#include "ecs/Time.hpp"
+#include "Query.hpp"
+#include "Resource.hpp"
+#include "Time.hpp"
 #include "Transform.hpp"
 #include <glm/ext/quaternion_geometric.hpp>
 #include <glm/ext/vector_float3.hpp>
