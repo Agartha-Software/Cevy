@@ -455,6 +455,45 @@ bool cevy::ecs::World::EntityWorldRef::contains() {
 }
 
 template <typename... T>
-cevy::ecs::Query<T...> cevy::ecs::Query<T...>::query(World &w) {
-  return Query<T...>(w.entities().size(), w.get_components<remove_optional<T>>()...);
+cevy::ecs::iterator<T...> cevy::ecs::iterator<T...>::begin(World &w, size_t size)  {
+    return iterator<T...>(std::make_tuple(w.get_components<remove_optional<T>>().begin()...), size);
 }
+
+template <typename... T>
+cevy::ecs::iterator<T...> cevy::ecs::iterator<T...>::end(World &w, size_t size)  {
+    return iterator<T...>(std::make_tuple(w.get_components<remove_optional<T>>().end()...), size, size);
+}
+
+template <typename... T>
+cevy::ecs::iterator<cevy::ecs::Entity, T...> cevy::ecs::iterator<cevy::ecs::Entity, T...>::begin(World &w, size_t size)  {
+    return iterator<cevy::ecs::Entity, T...>(std::make_tuple(w.get_components<remove_optional<T>>().begin()...), size);
+}
+
+template <typename... T>
+cevy::ecs::iterator<cevy::ecs::Entity, T...> cevy::ecs::iterator<cevy::ecs::Entity, T...>::end(World &w, size_t size)  {
+    return iterator<cevy::ecs::Entity, T...>(std::make_tuple(w.get_components<remove_optional<T>>().end()...), size, size);
+}
+
+
+template <typename... T>
+cevy::ecs::Query<T...>::Query(cevy::ecs::World &w) : _size(iterator_t::_compute_size(w, w.entities().size())), _begin(iterator_t::begin(w, _size)),
+        _end(iterator_t::end(w, _size)) {};
+
+template <typename... T>
+size_t cevy::ecs::iterator<T...>::_compute_size(World& w, size_t nb_e)
+ {
+    size_t current_size = 0;
+    if ((... && is_optional<T>::value)) {
+      current_size = nb_e;
+    } else {
+      std::bitset<sizeof...(T)> are_optional;
+      size_t idx = 0;
+      bool is_first = true;
+
+      (are_optional.set(idx++, is_optional<T>::value), ...);
+      idx = 0;
+      (_compute_a_size(w.get_components<remove_optional<T>>(), current_size, is_first, idx, are_optional), ...);
+    }
+    (resize_optional<T>(w.get_components<remove_optional<T>>(), current_size), ...);
+    return current_size;
+  }
