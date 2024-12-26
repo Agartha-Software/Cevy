@@ -26,6 +26,11 @@ class Velocity : public glm::vec3 {
   private:
 };
 
+inline static glm::vec3 lerp( const glm::vec3& A, const glm::vec3& B, float t ){
+  return A*t + B*(1.f-t) ;
+}
+
+
 class TransformVelocity : public engine::Transform {
   public:
   TransformVelocity() : engine::Transform(){};
@@ -34,10 +39,10 @@ class TransformVelocity : public engine::Transform {
 
   /// delta scale
   TransformVelocity &operator*=(float s) {
-    invalidate();
 
-    rotation = glm::normalize(glm::slerp(glm::quat(), rotation, std::max(0.f, s)));
     position *= s;
+    rotation = glm::slerp(glm::identity<glm::quat>(), rotation, s);
+    scale = glm::pow(scale, glm::vec3(s, s, s));
 
     return *this;
   }
@@ -54,11 +59,12 @@ class TransformVelocity : public engine::Transform {
          ecs::Resource<cevy::ecs::Time> time) {
     float delta_t = time.get().delta_seconds();
     for (auto [tm, vel, phys] : q) {
-      float decay = 0.995;
-      if (phys.has_value())
-        decay = 1 - phys.value().decay;
       tm *= vel * delta_t;
-      vel *= powf(decay, delta_t);
+      float decay = 1;
+      if (phys.has_value()) {
+        decay = 1 - phys.value().decay;
+        vel *= powf(decay, delta_t);
+      }
     }
   }
 

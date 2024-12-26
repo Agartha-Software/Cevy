@@ -73,8 +73,8 @@ void glWindow::setupEnv() {
   this->shaderProgram->addUniform("specular_tint");
   this->shaderProgram->addUniform("phong_exponent");
   this->shaderProgram->addUniform("halflambert");
-
   this->shaderProgram->addUniform("activeLights");
+
   GLuint uniformBlockIndexLights = glGetUniformBlockIndex(this->shaderProgram->id(), "LightBlock");
   std::cout << "uniformBlockIndexLights: " << uniformBlockIndexLights << std::endl;
   glUniformBlockBinding(this->shaderProgram->id(),uniformBlockIndexLights, 0);
@@ -134,7 +134,8 @@ void glWindow::render(
 
   for (auto [o_tm, light] : lights) {
     if (light_buffer.size() >= glLight::count) break;
-    light_buffer.push_back(glLight(light, o_tm.has_value() ? o_tm->position : glm::vec3()));
+    // light_buffer.push_back(glLight(light, o_tm.has_value() ? o_tm->position : glm::vec3()));
+    light_buffer.push_back(glLight(light, o_tm.has_value() ? o_tm->get_world().position : glm::vec3()));
   }
 
   glBindBuffer(GL_UNIFORM_BUFFER, this->uboLights);
@@ -157,7 +158,7 @@ void glWindow::render(
 
   // std::cout << "rendering " << models.size() << " models" << std::endl;
   for (auto [o_tm, h_model, o_h_material, o_color] : models) {
-    auto tm = o_tm ? o_tm->mat4() : glm::mat4(1);
+    auto tm = o_tm ? o_tm->get_world().mat4() : glm::mat4(1);
     auto model = h_model.get();
     glm::vec4 white = glm::vec4(1, 1, 1, 1);
     auto &color = o_color ? o_color.value().as_vec() : white;
