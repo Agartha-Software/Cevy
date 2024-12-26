@@ -102,6 +102,17 @@ class iterator {
     return old;
   };
 
+  iterator& operator+=(size_t n) {
+    incr_all(n);
+    return *this;
+  };
+
+  iterator operator+(size_t n) {
+    auto it = *this;
+    return it += n;
+  };
+
+
   value_type operator*() { return to_value(); };
   value_type operator->() { return to_value(); };
 
@@ -109,12 +120,12 @@ class iterator {
   friend bool operator!=(iterator const &lhs, iterator const &rhs) { return lhs._idx != rhs._idx; };
 
   protected:
-  void incr_all() {
+  void incr_all(size_t n = 1) {
     if (_idx == _max)
       return;
     do {
-      _idx++;
-      ((std::get<iterator_t<SparseVector<remove_optional<T>>>>(current)++), ...);
+      _idx += n;
+      ((std::get<iterator_t<SparseVector<remove_optional<T>>>>(current) += n), ...);
     } while (_idx < _max && !all_set()); // NOTE - check to choose <= or <
   }
 
@@ -175,8 +186,20 @@ class iterator<Entity, T...> : public iterator<T...> {
   static iterator begin(World &w, size_t size);
   static iterator end(World &w, size_t size);
 
+  iterator operator+(size_t n) {
+    auto it = *this;
+    return it += n;
+  };
+
+  iterator& operator+=(size_t n) {
+    iterator<T...>::incr_all(n);
+    return *this;
+  };
+
   value_type operator*() { return to_value(); };
   value_type operator->() { return to_value(); };
+  // protected:
+  // iterator(iterator<T...> const &z) : iterator<T...>(z) {};
 };
 
 template <class... T>
@@ -211,6 +234,15 @@ class Query {
       return std::nullopt;
     }
     return single();
+  }
+
+  std::optional<typename iterator_t::value_type> get(const Entity& id) {
+    auto at = begin() + id._id;
+    if (at.all_set()) {
+      return std::make_optional(at.to_value());
+    } else {
+      return std::nullopt;
+    }
   }
 
   private:
