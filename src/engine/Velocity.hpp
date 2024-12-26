@@ -54,6 +54,8 @@ class TransformVelocity : public engine::Transform {
     return ret;
   }
 
+  protected:
+  friend class Engine;
   static void
   system(ecs::Query<engine::Transform, TransformVelocity, option<cevy::engine::PhysicsProps>> q,
          ecs::Resource<cevy::ecs::Time> time) {
@@ -68,7 +70,6 @@ class TransformVelocity : public engine::Transform {
     }
   }
 
-  protected:
   private:
 };
 } // namespace cevy::engine
