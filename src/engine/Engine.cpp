@@ -47,6 +47,7 @@ void cevy::engine::Engine::build(cevy::ecs::App &app) {
   app.init_component<cevy::engine::PhysicsProps>();
   app.init_component<cevy::engine::Target>();
   app.init_component<cevy::engine::Line>();
+  app.init_component<cevy::engine::Parent>();
   app.init_component<cevy::engine::Transform>();
   app.init_component<cevy::engine::TransformVelocity>();
   app.init_component<cevy::engine::PointLight>();
@@ -56,4 +57,6 @@ void cevy::engine::Engine::build(cevy::ecs::App &app) {
   app.add_systems<cevy::engine::PreRenderStage>(update_camera);
   app.add_systems<cevy::engine::RenderStage>(glWindow::render_system);
   app.add_systems<ecs::core_stage::Update>(TransformVelocity::system);
+  app.add_systems<cevy::ecs::core_stage::Update>(Transform::children_system);
+
 }

@@ -7,8 +7,12 @@
 
 #pragma once
 
+#include "Engine.hpp"
+#include "Entity.hpp"
+#include "Query.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <map>
 
 namespace cevy {
 namespace engine {
@@ -276,6 +280,7 @@ class Transform {
   }
 
   protected:
+  friend class Engine;
 
   Transform &parent(const Transform &parent) {
     auto world = parent.get_world();
@@ -302,6 +307,36 @@ class Transform {
   glm::vec3 world_position;
   glm::quat world_rotation;
   glm::vec3 world_scale;
+
+  static void parent_callback(std::map<size_t, std::tuple<Transform*, size_t>> storage, Transform& self, size_t parent) {
+    if (storage.find(parent) != storage.end()) {
+      auto& [p_tm, p_p] = storage.at(parent);
+      parent_callback(storage, *p_tm, p_p);
+      std::get<1>(storage.at(parent)) = size_t(-1);
+      self.parent(*p_tm);
+    }
+  };
+
+  static int children_system(ecs::Query<cevy::ecs::Entity, Parent, Transform> children, ecs::Query<ecs::Entity, Transform> all) {
+    std::map<size_t, std::tuple<Transform*, size_t>> storage;
+    for (auto [c_en, parent, c_tm] : children) {
+      c_tm.reset_world();
+      storage[c_en] = std::make_tuple(&c_tm, size_t(parent.entity));
+      if (storage.find(parent.entity) == storage.end()) {
+        auto q_parent = all.get(parent.entity);
+        if (q_parent) {
+          auto [_, p_tm] = q_parent.value();
+          p_tm.reset_world();
+          storage[parent.entity] = std::make_tuple(&p_tm, size_t(-1));
+        }
+      }
+    }
+    for (auto [en, s]: storage) {
+      auto [tm, p] = s;
+      parent_callback(storage, *tm, p);
+    }
+    return 0;
+  }
 };
 } // namespace engine
 } // namespace cevy

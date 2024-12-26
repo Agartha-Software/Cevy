@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include "ecs/Plugin.hpp"
-#include "ecs/Stage.hpp"
-#include "ecs/Stage.hpp"
+#include "Plugin.hpp"
+#include "Stage.hpp"
+#include "Entity.hpp"
 
 namespace cevy::engine {
 
@@ -31,5 +31,9 @@ class PostRenderStage : public cevy::ecs::core_stage::after<RenderStage> {};
 class Engine : public cevy::ecs::Plugin {
   public:
   void build(cevy::ecs::App &app);
+};
+
+struct Parent {
+  ecs::Entity entity;
 };
 } // namespace cevy::engine
