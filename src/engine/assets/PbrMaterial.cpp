@@ -12,7 +12,7 @@
 #include <optional>
 
 std::optional<cevy::engine::Texture> cevy::engine::Texture::from_tinyobj(const std::string &file_name,
-                                             const tinyobj::texture_option_t &_option) {
+                                             const tinyobj::texture_option_t &/* _option */) {
   Texture new_texture;
   new_texture.file_name = file_name;
 

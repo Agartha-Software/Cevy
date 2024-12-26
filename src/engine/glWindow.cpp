@@ -19,12 +19,6 @@
 #include "glWindow.hpp"
 #include <glm/gtc/type_ptr.hpp>
 
-static glm::vec3 hsv2rgb(glm::vec3 c) {
-  glm::vec4 K = glm::vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-  glm::vec3 p = abs(fract(c.xxx() + K.xyz()) * 6.0f - K.www());
-  return c.z * mix(K.xxx(), clamp(p - K.xxx(), 0.0f, 1.0f), c.y);
-}
-
 static glm::vec3 filmicToneMapping(glm::vec3 color) {
   color = max(glm::vec3(0.), color - glm::vec3(0.004));
   color = (color * (6.2f * color + .5f)) / (color * (6.2f * color + 1.7f) + 0.06f);
@@ -196,14 +190,14 @@ void glWindow::updateSize(int width, int height) {
   this->height = height;
 }
 
-void glWindow::keyInput(int key, int scancode, int action, int mods) {
+void glWindow::keyInput(int key, int /* scancode */, int action, int /* mods */) {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     glfwSetWindowShouldClose(this->glfWindow, GLFW_TRUE);
 }
 
-void glWindow::cursor(double xpos, double ypos) {}
+void glWindow::cursor(double /* xpos */, double /* ypos */) {}
 
-void glWindow::mouseInput(int button, int action, int mods) {}
+void glWindow::mouseInput(int /* button */, int /* action */, int /* mods */) {}
 
 bool glWindow::init_context() {
   if (!glfwInit()) {

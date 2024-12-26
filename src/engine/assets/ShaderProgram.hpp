@@ -26,7 +26,6 @@ version : 0.3 - 15 / 01 / 2014
 #include <fstream>
 #include <sstream>
 #include <map>
-#undef DEBUG
 
 
 #include <GL/gl.h>
@@ -36,8 +35,9 @@ class ShaderProgram
 {
 private:
 	// static DEBUG flag - if set to false then, errors aside, we'll run completely silent
+	#ifndef DEBUG
 	static const bool DEBUG = true;
-
+	#endif // DEBUG
 	// We'll use an enum to differentiate between shaders and shader programs when querying the info log
 	enum class ObjectType
 	{
