@@ -9,6 +9,7 @@ add_library(rendering
   STATIC
   Color.cpp
   ClearColor.cpp
+  ForwardRenderer.cpp
   )
 
 target_link_libraries(rendering PUBLIC ecs engine math)

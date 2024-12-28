@@ -6,6 +6,7 @@
 */
 
 #include "Camera.hpp"
+#include "Window.hpp"
 #include "Target.hpp"
 #include "Transform.hpp"
 #include "cevy.hpp"
@@ -13,7 +14,7 @@
 
 cevy::engine::Camera::Camera() {
   this->fov = 70;
-  this->aspect = 1;
+  this->aspect = -1;
   this-> near = 0.01;
   this->far = 500;
   this->projection = glm::perspective(fov, aspect, near, far);
@@ -24,11 +25,15 @@ cevy::engine::Camera::~Camera() {}
 
 void update_camera(cevy::ecs::Query<cevy::engine::Camera, option<cevy::engine::Target>,
                                     option<cevy::engine::Transform>>
-                       cams) {
+                       cams, cevy::ecs::Resource<cevy::engine::Window> window) {
   for (auto [cam, opt_target, opt_transform] : cams) {
     if (opt_transform) {
       auto &tm = opt_transform.value();
       cam.view = tm;
+    }
+    if (cam.aspect < 0) {
+      auto size = window.get().size();
+      cam.aspect = float(size.x) / size.y;
     }
   }
 }

@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "Engine.hpp"
 #include "Entity.hpp"
 #include "Query.hpp"
 #include <glm/glm.hpp>
@@ -16,6 +15,10 @@
 
 namespace cevy {
 namespace engine {
+
+struct Parent {
+  ecs::Entity entity;
+};
 class Transform {
   public:
   glm::vec3 position;
@@ -280,6 +283,7 @@ class Transform {
   }
 
   protected:
+  template<template<typename T> typename Windower, typename Renderer>
   friend class Engine;
 
   Transform &parent(const Transform &parent) {

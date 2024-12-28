@@ -7,9 +7,24 @@
 
 #pragma once
 
+#include "App.hpp"
+#include "AssetManager.hpp"
+#include "Camera.hpp"
+#include "ClearColor.hpp"
+#include "Color.hpp"
+#include "DefaultPlugin.hpp"
+#include "ForwardRenderer.hpp"
+#include "Line.hpp"
+#include "PhysicsProps.hpp"
 #include "Plugin.hpp"
 #include "Stage.hpp"
-#include "Entity.hpp"
+#include "Target.hpp"
+#include "Transform.hpp"
+#include "Velocity.hpp"
+#include "Window.hpp"
+#include "ecs.hpp"
+#include "ecs/DefaultPlugin.hpp"
+#include "glWindow.hpp"
 
 namespace cevy::engine {
 
@@ -28,12 +43,41 @@ class RenderStage : public cevy::ecs::core_stage::after<cevy::ecs::core_stage::P
 class PreRenderStage : public cevy::ecs::core_stage::before<RenderStage> {};
 class PostRenderStage : public cevy::ecs::core_stage::after<RenderStage> {};
 
+template<template<typename T> typename Windower = glWindow, typename Renderer = ForwardRenderer>
 class Engine : public cevy::ecs::Plugin {
   public:
-  void build(cevy::ecs::App &app);
-};
+  // void build(cevy::ecs::App &app);
 
-struct Parent {
-  ecs::Entity entity;
+  void build(cevy::ecs::App &app) {
+    app.add_plugins(cevy::ecs::DefaultPlugin());
+    app.add_stage<StartupRenderStage>();
+    app.add_stage<PreStartupRenderStage>();
+    app.add_stage<PostStartupRenderStage>();
+    app.add_stage<RenderStage>();
+    app.add_stage<PreRenderStage>();
+    app.add_stage<PostRenderStage>();
+#ifdef DEBUG
+    app.init_resource<cevy::engine::DebugWindow>(cevy::engine::DebugWindow{.open = true});
+#endif
+    app.init_resource<cevy::engine::ClearColor>(cevy::engine::Color(255, 255, 255));
+    app.init_resource<cevy::engine::Window>(
+        cevy::engine::Window(Windower<Renderer>(1280, 720)));
+    app.init_component<cevy::engine::Camera>();
+    app.init_component<cevy::engine::Velocity>();
+    app.init_component<cevy::engine::PhysicsProps>();
+    app.init_component<cevy::engine::Target>();
+    app.init_component<cevy::engine::Line>();
+    app.init_component<cevy::engine::Parent>();
+    app.init_component<cevy::engine::Transform>();
+    app.init_component<cevy::engine::TransformVelocity>();
+    app.init_component<cevy::engine::PointLight>();
+    app.init_component<cevy::engine::Color>();
+    app.init_component<cevy::engine::ClearColor>();
+    app.add_plugins(cevy::engine::AssetManagerPlugin());
+    app.add_systems<cevy::engine::PreRenderStage>(update_camera);
+    app.add_systems<cevy::engine::RenderStage>(glWindow<ForwardRenderer>::render_system);
+    app.add_systems<ecs::core_stage::Update>(TransformVelocity::system);
+    app.add_systems<cevy::ecs::core_stage::Update>(Transform::children_system);
+  };
 };
 } // namespace cevy::engine

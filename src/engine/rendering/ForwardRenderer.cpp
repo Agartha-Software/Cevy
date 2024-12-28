@@ -2,12 +2,9 @@
 ** Agartha-Software, 2024
 ** C++evy
 ** File description:
-** openGL window handling
+** forward renderer
 */
 
-#include "Scheduler.hpp"
-#include <memory>
-#include <stdexcept>
 #define GLM_FORCE_SWIZZLE
 
 #if (_WIN32)
@@ -16,8 +13,10 @@
 #if (__linux__)
 #include <GL/glew.h>
 #endif
-#include "glWindow.hpp"
 #include <glm/gtc/type_ptr.hpp>
+
+#include "ForwardRenderer.hpp"
+#include "pipeline.hpp"
 
 static glm::vec3 filmicToneMapping(glm::vec3 color) {
   color = max(glm::vec3(0.), color - glm::vec3(0.004));
@@ -25,28 +24,9 @@ static glm::vec3 filmicToneMapping(glm::vec3 color) {
   return color;
 }
 
-glWindow::glWindow(int width, int height) : width(width), height(height) {
-  open();
+cevy::engine::ForwardRenderer::ForwardRenderer() {}
+void cevy::engine::ForwardRenderer::init() {
   this->defaultMaterial = PbrMaterial();
-  this->setupEnv();
-}
-
-bool glWindow::open() {
-  this->init_context();
-  return 0;
-}
-
-glWindow::~glWindow() { close(); }
-
-bool glWindow::close() {
-  if (this->glfWindow) {
-    glfwDestroyWindow(this->glfWindow);
-    glfwTerminate();
-  }
-  return 0;
-}
-
-void glWindow::setupEnv() {
 
   env.ambientColor = {.1, .15, .2};
   env.ambientColor = env.ambientColor * env.ambientColor;
@@ -77,47 +57,32 @@ void glWindow::setupEnv() {
 
   GLuint uniformBlockIndexLights = glGetUniformBlockIndex(this->shaderProgram->id(), "LightBlock");
   std::cout << "uniformBlockIndexLights: " << uniformBlockIndexLights << std::endl;
-  glUniformBlockBinding(this->shaderProgram->id(),uniformBlockIndexLights, 0);
+  glUniformBlockBinding(this->shaderProgram->id(), uniformBlockIndexLights, 0);
 
   glGenBuffers(1, &this->uboLights);
   glBindBuffer(GL_UNIFORM_BUFFER, this->uboLights);
-  glBufferData(GL_UNIFORM_BUFFER, sizeof(glLight) * glLight::count, NULL, GL_DYNAMIC_DRAW);
+  glBufferData(GL_UNIFORM_BUFFER, sizeof(pipeline::Light) * pipeline::Light::count, NULL,
+               GL_DYNAMIC_DRAW);
   glBindBufferBase(GL_UNIFORM_BUFFER, uniformBlockIndexLights, this->uboLights);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
   glBindBufferBase(GL_UNIFORM_BUFFER, 1, this->uboLights);
 }
 
-void glWindow::render_system(
-    Resource<cevy::engine::Window> win, Query<Camera> cams,
-    Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-    Query<option<Transform>, cevy::engine::PointLight> lights,
-    cevy::ecs::EventWriter<cevy::ecs::AppExit> close) {
-  win.get()->render(cams, models, lights, close);
-}
-
-void glWindow::render(
+void cevy::engine::ForwardRenderer::render(
     Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-    Query<option<Transform>, cevy::engine::PointLight> lights,
-    cevy::ecs::EventWriter<cevy::ecs::AppExit> close) {
-
-  glfwSwapBuffers(this->glfWindow);
-  glfwPollEvents();
+    Query<option<Transform>, cevy::engine::PointLight> lights) {
 
   auto fog = filmicToneMapping(this->env.fog);
   glClearColor(fog.r, fog.g, fog.b, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
-  glCullFace(GL_BACK);
+  glCullFace(GL_FRONT);
+  // glCullFace(GL_BACK);
 
   this->shaderProgram->use();
-
-  if (glfwWindowShouldClose(this->glfWindow)) {
-    close.send(cevy::ecs::AppExit());
-    return;
-  }
 
   if (cams.size() == 0) {
     return;
@@ -125,21 +90,24 @@ void glWindow::render(
 
   auto &camera = std::get<Camera &>(*cams.get_single());
 
-  auto view = glm::scale(camera.projection, glm::vec3(1, float(this->width) / this->height, 1)) *
-              camera.view;
+  auto view = glm::scale(camera.projection, glm::vec3(1, camera.aspect, 1)) * camera.view;
 
-  std::vector<glLight> light_buffer;
+  std::vector<pipeline::Light> light_buffer;
   light_buffer.clear();
-  light_buffer.reserve(glLight::count);
+  light_buffer.reserve(pipeline::Light::count);
 
   for (auto [o_tm, light] : lights) {
-    if (light_buffer.size() >= glLight::count) break;
-    // light_buffer.push_back(glLight(light, o_tm.has_value() ? o_tm->position : glm::vec3()));
-    light_buffer.push_back(glLight(light, o_tm.has_value() ? o_tm->get_world().position : glm::vec3()));
+    if (light_buffer.size() >= pipeline::Light::count)
+      break;
+    // light_buffer.push_back(pipeline::Light(light, o_tm.has_value() ? o_tm->position :
+    // glm::vec3()));
+    light_buffer.push_back(
+        pipeline::Light(light, o_tm.has_value() ? o_tm->get_world().position : glm::vec3()));
   }
 
   glBindBuffer(GL_UNIFORM_BUFFER, this->uboLights);
-  glBufferSubData(GL_UNIFORM_BUFFER, 0, light_buffer.size() * sizeof(glLight), light_buffer.data());
+  glBufferSubData(GL_UNIFORM_BUFFER, 0, light_buffer.size() * sizeof(pipeline::Light),
+                  light_buffer.data());
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
   glUniform1i(this->shaderProgram->uniform("activeLights"), light_buffer.size());
@@ -155,6 +123,7 @@ void glWindow::render(
   invView = invView / invView[3][3];
 
   glUniformMatrix4fv(this->shaderProgram->uniform("invView"), 1, GL_FALSE, glm::value_ptr(invView));
+
 
   // std::cout << "rendering " << models.size() << " models" << std::endl;
   for (auto [o_tm, h_model, o_h_material, o_color] : models) {
@@ -184,84 +153,4 @@ void glWindow::render(
     }
     model->draw();
   };
-}
-
-void glWindow::updateSize(int width, int height) {
-  this->width = width;
-  this->height = height;
-}
-
-void glWindow::keyInput(int key, int /* scancode */, int action, int /* mods */) {
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-    glfwSetWindowShouldClose(this->glfWindow, GLFW_TRUE);
-}
-
-void glWindow::cursor(double /* xpos */, double /* ypos */) {}
-
-void glWindow::mouseInput(int /* button */, int /* action */, int /* mods */) {}
-
-bool glWindow::init_context() {
-  if (!glfwInit()) {
-    throw std::runtime_error("failed to init glfw");
-    // Initialization failed
-  }
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-  this->glfWindow = glfwCreateWindow(width, height, "C++evy glWindow", NULL, NULL);
-  if (!this->glfWindow) {
-    glfwTerminate();
-    throw std::runtime_error("failed to create window");
-  }
-  glfwSetWindowUserPointer(this->glfWindow, this);
-  glfwMakeContextCurrent(this->glfWindow);
-
-  glfwSetWindowSizeCallback(this->glfWindow, [](GLFWwindow *win, int width, int height) {
-    getFromWin(win)->updateSize(width, height);
-  });
-  glfwSetMouseButtonCallback(this->glfWindow,
-                             [](GLFWwindow *win, int button, int action, int mods) {
-                               getFromWin(win)->mouseInput(button, action, mods);
-                             });
-  glfwSetCursorPosCallback(this->glfWindow, [](GLFWwindow *win, double xpos, double ypos) {
-    getFromWin(win)->cursor(xpos, ypos);
-  });
-  glfwSetKeyCallback(this->glfWindow,
-                     [](GLFWwindow *win, int key, int scancode, int action, int mods) {
-                       getFromWin(win)->keyInput(key, scancode, action, mods);
-                     });
-
-#if _WIN32
-  if (gl3wInit()) {
-    fprintf(stderr, "failed to initialize OpenGL\n");
-    return -1;
-  }
-  if (!gl3wIsSupported(4, 2)) {
-    fprintf(stderr, "OpenGL 4.2 not supported\n");
-    return -1;
-  }
-#elif __linux__
-  if (glewInit()) {
-    // std::string err(glewGetErrorString());
-    throw std::runtime_error("failed to init glew");
-
-    // fprintf(stderr, "failed to initialize OpenGL\n");
-    return -1;
-  }
-  if (!glewIsSupported("GL_VERSION_4_2")) {
-    throw std::runtime_error("glew unsupported");
-    // fprintf(stderr, "OpenGL 4.2 not supported\n");
-    return -1;
-  }
-#endif // _WIN32
-
-  printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION), glGetString(GL_SHADING_LANGUAGE_VERSION));
-  glfwSwapInterval(1); // enable vsync
-  return 0;
-}
-
-bool glWindow::unload_context() {
-  glfwTerminate();
-  return 0;
 }

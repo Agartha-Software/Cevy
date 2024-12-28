@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "Resource.hpp"
+#include "Window.hpp"
 #include "ecs/Query.hpp"
 #include "Target.hpp"
 #include "Transform.hpp"
@@ -30,4 +32,4 @@ class Camera {
 
 void update_camera(cevy::ecs::Query<cevy::engine::Camera, option<cevy::engine::Target>,
                                     option<cevy::engine::Transform>>
-                       cams);
+                       cams, cevy::ecs::Resource<cevy::engine::Window> window);
