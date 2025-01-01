@@ -1,3 +1,10 @@
+/*
+** Agartha-Software, 2024
+** C++evy
+** File description:
+** mesh geometry
+*/
+
 #pragma once
 
 #include <algorithm>

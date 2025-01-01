@@ -14,23 +14,14 @@
 #include "Scheduler.hpp"
 #include "ShaderProgram.hpp"
 #include "Query.hpp"
+#include "PointLight.hpp"
 #include "GLFW/glfw3.h"
+#include "pipeline.hpp"
 #include <memory>
 
 namespace cevy::engine {
 class Window;
 }
-
-struct Light {
-	glm::vec4 position;
-	glm::vec3 color;
-	float radius;
-};
-
-
-struct Environment {
-	std::vector<Light> lights;
-};
 
 class glWindow {
   template <typename T>
@@ -47,13 +38,13 @@ class glWindow {
   using PbrMaterial = cevy::engine::PbrMaterial;
   using Color = cevy::engine::Color;
   using Model = cevy::engine::Model;
+  using glLight = cevy::engine::pipeline::Light;
 
   public:
   glWindow(int width, int height);
   glWindow(glWindow&& rhs) noexcept {
     this->width = rhs.width;
     this->height = rhs.height;
-    this->env = rhs.env;
     this->shaderProgram = rhs.shaderProgram;
     this->glfWindow = rhs.glfWindow;
     rhs.shaderProgram = nullptr;
@@ -66,18 +57,16 @@ class glWindow {
   ~glWindow();
   bool open();
   bool close();
-
-  static void render_system(
-    Resource<cevy::engine::Window> win, Query<Camera> cams,
-    Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-    cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
-    cevy::ecs::World &world);
-
-void render(
-    Query<Camera> cams,
-    std::optional<ref<cevy::engine::Atmosphere>> atmosphere,
-    Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-    cevy::ecs::EventWriter<cevy::ecs::AppExit> close);
+  static void render_system(Resource<cevy::engine::Window> win,Query<Camera> cams,
+         Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+         Query<option<Transform>, cevy::engine::PointLight> lights,
+         cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
+         cevy::ecs::World &world);
+  void render(Query<Camera> cams,
+         std::optional<ref<cevy::engine::Atmosphere>> atmosphere,
+         Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+         Query<option<Transform>, cevy::engine::PointLight> lights,
+         cevy::ecs::EventWriter<cevy::ecs::AppExit> close);
 
   void setupEnv();
 
@@ -95,7 +84,7 @@ void render(
 
   int width;
   int height;
-  Environment env;
+  GLuint uboLights = 0;
   ShaderProgram* shaderProgram;
   GLFWwindow *glfWindow;
 

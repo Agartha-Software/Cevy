@@ -48,6 +48,7 @@ void cevy::engine::Engine::build(cevy::ecs::App &app) {
   app.init_component<cevy::engine::Line>();
   app.init_component<cevy::engine::Transform>();
   app.init_component<cevy::engine::TransformVelocity>();
+  app.init_component<cevy::engine::PointLight>();
   app.init_component<cevy::engine::Color>();
   app.init_component<cevy::engine::Atmosphere>();
   app.add_plugins(cevy::engine::AssetManagerPlugin());
