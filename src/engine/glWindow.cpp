@@ -5,10 +5,12 @@
 ** openGL window handling
 */
 
-#include "Scheduler.hpp"
-#include <memory>
-#include <stdexcept>
 #define GLM_FORCE_SWIZZLE
+
+#include "World.hpp"
+#include "Atmosphere.hpp"
+#include "Scheduler.hpp"
+#include <stdexcept>
 
 #if (_WIN32)
 #include <GL/gl3w.h>
@@ -53,9 +55,6 @@ bool glWindow::close() {
 }
 
 void glWindow::setupEnv() {
-  env.ambientColor = {.1, .15, .2};
-  env.ambientColor = env.ambientColor * env.ambientColor;
-  env.fog = env.ambientColor;
   env.lights.clear();
 
   const int ringCount = 5;
@@ -123,18 +122,24 @@ void glWindow::setupEnv() {
 void glWindow::render_system(
     Resource<cevy::engine::Window> win, Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-    cevy::ecs::EventWriter<cevy::ecs::AppExit> close) {
-  win.get()->render(cams, models, close);
+    cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
+    cevy::ecs::World &world) {
+  auto atmo = world.get_resource<cevy::engine::Atmosphere>();
+
+  win.get()->render(cams, atmo, models, close);
 }
 
 void glWindow::render(
     Query<Camera> cams,
+    std::optional<ref<cevy::engine::Atmosphere>> atmosphere,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
     cevy::ecs::EventWriter<cevy::ecs::AppExit> close) {
   glfwSwapBuffers(this->glfWindow);
   glfwPollEvents();
 
-  auto fog = filmicToneMapping(this->env.fog);
+  auto atmo = atmosphere.has_value() ? atmosphere->get() : cevy::engine::Atmosphere();
+
+  auto fog = filmicToneMapping(atmo.fog.as_vec());
   glClearColor(fog.r, fog.g, fog.b, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
@@ -172,9 +177,9 @@ void glWindow::render(
     glUniform1fv(this->shaderProgram->uniform(name), 1, &env.lights[i].radius);
   }
 
-  glUniform3fv(this->shaderProgram->uniform("fog"), 1, glm::value_ptr(env.fog));
+  glUniform3fv(this->shaderProgram->uniform("fog"), 1, glm::value_ptr(atmo.fog.as_vec()));
 
-  glUniform1f(this->shaderProgram->uniform("fog_far"), camera.far);
+  glUniform1f(this->shaderProgram->uniform("fog_far"), atmo.fog_distance); // or is it camera.far?
 
   glUniformMatrix4fv(this->shaderProgram->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
 
@@ -192,7 +197,7 @@ void glWindow::render(
     PbrMaterial &material = o_h_material ? *o_h_material->get() : this->defaultMaterial;
 
     glUniform3fv(this->shaderProgram->uniform("ambientColor"), 1,
-                 glm::value_ptr(env.ambientColor + material.ambiant));
+                 glm::value_ptr(atmo.ambiant.as_vec().xyz() + material.ambiant));
     glUniform3fv(this->shaderProgram->uniform("albedo"), 1,
                  glm::value_ptr(material.diffuse * color.xyz()));
     glUniform3fv(this->shaderProgram->uniform("specular_tint"), 1,

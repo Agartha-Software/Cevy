@@ -5,6 +5,7 @@
 ** openGL window handling
 */
 
+#include "Atmosphere.hpp"
 #include "Camera.hpp"
 #include "Color.hpp"
 #include "Handle.hpp"
@@ -29,8 +30,6 @@ struct Light {
 
 struct Environment {
 	std::vector<Light> lights;
-	glm::vec3 ambientColor;
-	glm::vec3 fog;
 };
 
 class glWindow {
@@ -67,12 +66,18 @@ class glWindow {
   ~glWindow();
   bool open();
   bool close();
-  static void render_system(Resource<cevy::engine::Window> win,Query<Camera> cams,
-         Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-         cevy::ecs::EventWriter<cevy::ecs::AppExit> close);
-  void render(Query<Camera> cams,
-         Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-         cevy::ecs::EventWriter<cevy::ecs::AppExit> close);
+
+  static void render_system(
+    Resource<cevy::engine::Window> win, Query<Camera> cams,
+    Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+    cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
+    cevy::ecs::World &world);
+
+void render(
+    Query<Camera> cams,
+    std::optional<ref<cevy::engine::Atmosphere>> atmosphere,
+    Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+    cevy::ecs::EventWriter<cevy::ecs::AppExit> close);
 
   void setupEnv();
 

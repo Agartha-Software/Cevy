@@ -10,10 +10,8 @@
 #include "ecs/App.hpp"
 #include "AssetManager.hpp"
 #include "Camera.hpp"
-#include "ClearColor.hpp"
 #include "Color.hpp"
 #include "ecs/DefaultPlugin.hpp"
-#include "ecs/Event.hpp"
 #include "Line.hpp"
 #include "PhysicsProps.hpp"
 #include "Target.hpp"
@@ -41,7 +39,7 @@ void cevy::engine::Engine::build(cevy::ecs::App &app) {
 #ifdef DEBUG
   app.init_resource<cevy::engine::DebugWindow>(cevy::engine::DebugWindow{.open = true});
 #endif
-  app.init_resource<cevy::engine::ClearColor>(cevy::engine::Color(255, 255, 255));
+  app.init_resource<cevy::engine::Atmosphere>();
   app.init_resource<Window>(1280, 720);
   app.init_component<cevy::engine::Camera>();
   app.init_component<cevy::engine::Velocity>();
@@ -51,7 +49,7 @@ void cevy::engine::Engine::build(cevy::ecs::App &app) {
   app.init_component<cevy::engine::Transform>();
   app.init_component<cevy::engine::TransformVelocity>();
   app.init_component<cevy::engine::Color>();
-  app.init_component<cevy::engine::ClearColor>();
+  app.init_component<cevy::engine::Atmosphere>();
   app.add_plugins(cevy::engine::AssetManagerPlugin());
   app.add_systems<cevy::engine::PreRenderStage>(update_camera);
   app.add_systems<cevy::engine::RenderStage>(glWindow::render_system);
