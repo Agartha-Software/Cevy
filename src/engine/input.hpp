@@ -1,6 +1,5 @@
 #pragma once
 
-
 namespace cevy {
 class Keyboard {
   private:

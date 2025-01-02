@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include "PbrMaterial.hpp"
 #include "App.hpp"
 #include "Model.hpp"
+#include "PbrMaterial.hpp"
 #include "ecs/Plugin.hpp"
 #include "ecs/ecs.hpp"
 

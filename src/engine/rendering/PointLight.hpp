@@ -11,8 +11,8 @@
 
 namespace cevy::engine {
 class PointLight {
-public:
-    glm::vec3 color;
-    float radius;
+  public:
+  glm::vec3 color;
+  float radius;
 };
-}
+} // namespace cevy::engine

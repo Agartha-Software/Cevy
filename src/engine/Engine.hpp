@@ -9,7 +9,6 @@
 
 #include "ecs/Plugin.hpp"
 #include "ecs/Stage.hpp"
-#include "ecs/Stage.hpp"
 
 namespace cevy::engine {
 

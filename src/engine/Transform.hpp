@@ -7,12 +7,11 @@
 
 #pragma once
 
-
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/vector_float3.hpp>
 #include <glm/ext/vector_relational.hpp>
-#include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include "Pointer.hpp"
 
@@ -27,16 +26,16 @@ class Transform {
   Transform() : rotation(glm::identity<glm::quat>()), position(0, 0, 0), scale(1, 1, 1) {}
   Transform(float x, float y, float z)
       : rotation(glm::identity<glm::quat>()), position(x, y, z), scale(1, 1, 1) {}
-  Transform(const glm::vec3 &vec) : rotation(glm::identity<glm::quat>()), position(vec), scale(1, 1, 1) {}
+  Transform(const glm::vec3 &vec)
+      : rotation(glm::identity<glm::quat>()), position(vec), scale(1, 1, 1) {}
   Transform(const glm::quat &quat) : rotation(quat), position(0, 0, 0), scale(1, 1, 1) {}
 
   glm::mat4 mat4() const {
-    return glm::mat4(rotation) * glm::translate(glm::mat4(1), position) * glm::scale(glm::mat4(1), scale);
+    return glm::mat4(rotation) * glm::translate(glm::mat4(1), position) *
+           glm::scale(glm::mat4(1), scale);
   }
 
-  operator glm::mat4() const {
-    return mat4();
-  }
+  operator glm::mat4() const { return mat4(); }
 
   std::tuple<glm::vec3, glm::quat, glm::vec3> get() const {
     if (!cache_valid()) {

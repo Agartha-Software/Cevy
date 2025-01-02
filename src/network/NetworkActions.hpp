@@ -19,11 +19,11 @@
 #include <utility>
 #include <vector>
 
-#include "ecs/App.hpp"
+#include "CevyNetwork.hpp"
 #include "Commands.hpp"
+#include "ecs/App.hpp"
 #include "ecs/Plugin.hpp"
 #include "ecs/Query.hpp"
-#include "CevyNetwork.hpp"
 #include "network.hpp"
 
 /**

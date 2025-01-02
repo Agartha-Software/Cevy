@@ -61,6 +61,8 @@ THE SOFTWARE.
 //   #include "tiny_obj_loader.h"
 //
 
+// clang-format off
+
 #ifndef TINY_OBJ_LOADER_H_
 #define TINY_OBJ_LOADER_H_
 
@@ -3549,3 +3551,5 @@ namespace tinyobj {
 }  // namespace tinyobj
 
 #endif
+
+// clang-format on

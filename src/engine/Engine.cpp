@@ -6,17 +6,17 @@
 */
 
 #include "Engine.hpp"
-#include "Stage.hpp"
-#include "ecs/App.hpp"
 #include "AssetManager.hpp"
 #include "Camera.hpp"
 #include "Color.hpp"
-#include "ecs/DefaultPlugin.hpp"
 #include "Line.hpp"
 #include "PhysicsProps.hpp"
+#include "Stage.hpp"
 #include "Target.hpp"
 #include "Transform.hpp"
 #include "Velocity.hpp"
+#include "ecs/App.hpp"
+#include "ecs/DefaultPlugin.hpp"
 #include "ecs/ecs.hpp"
 #include "glWindow.hpp"
 
@@ -26,7 +26,6 @@
 
 // #include "rlImGui.h"
 // #include <imgui_impl_glfw.h>
-
 
 void cevy::engine::Engine::build(cevy::ecs::App &app) {
   app.add_plugins(cevy::ecs::DefaultPlugin());

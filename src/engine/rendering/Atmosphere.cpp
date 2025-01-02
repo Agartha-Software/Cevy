@@ -11,6 +11,5 @@
 using Atmosphere = cevy::engine::Atmosphere;
 using Color = cevy::engine::Color;
 
-
 Atmosphere::Atmosphere(const Color &fog, float fog_distance, const Color &ambiant)
-  : ambiant(ambiant), fog(fog), fog_distance(fog_distance) {};
+    : ambiant(ambiant), fog(fog), fog_distance(fog_distance){};

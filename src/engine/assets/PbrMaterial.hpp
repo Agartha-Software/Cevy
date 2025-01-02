@@ -19,10 +19,10 @@ class Texture {
 
 class PbrMaterial {
   public:
-  PbrMaterial() {};
+  PbrMaterial(){};
   PbrMaterial(glm::vec3 &&diffuse, glm::vec3 &&specular, float exponent)
       : diffuse(diffuse), specular_tint(specular), phong_exponent(exponent) {}
-  ~PbrMaterial() {};
+  ~PbrMaterial(){};
 
   static PbrMaterial gold();
   static PbrMaterial from_tinyobj(const tinyobj::material_t &material);
@@ -34,4 +34,4 @@ class PbrMaterial {
 
   std::optional<Texture> diffuse_texture = std::optional<Texture>();
 };
-}
+} // namespace cevy::engine

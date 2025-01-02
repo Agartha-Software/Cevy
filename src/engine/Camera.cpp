@@ -14,7 +14,7 @@
 cevy::engine::Camera::Camera() {
   this->fov = 70;
   this->aspect = 1;
-  this-> near = 0.01;
+  this->near = 0.01;
   this->far = 500;
   this->projection = glm::perspective(fov, aspect, near, far);
   this->view = glm::mat4(1);

@@ -9,10 +9,10 @@
 
 #include <memory>
 
-#include "ecs/App.hpp"
 #include "NetworkCommands.hpp"
 #include "Plugin.hpp"
 #include "Synchroniser.hpp"
+#include "ecs/App.hpp"
 #include "network.hpp"
 #include "network/network.hpp"
 

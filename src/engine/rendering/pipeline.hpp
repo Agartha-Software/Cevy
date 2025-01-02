@@ -88,7 +88,7 @@ struct diffuseTexture {
   using Type = sampler2D;
   inline static constexpr auto name = "diffuseTexture";
 };
-} // namespace shading
+} // namespace PbrMaterial
 } // namespace uniforms
 namespace layout {
 /// vertex position
@@ -126,7 +126,7 @@ struct Light {
     this->color = l.color;
   }
   Light(glm::vec4 position, glm::vec3 color, float radius)
-      : position(position), color(color), radius(radius) {};
+      : position(position), color(color), radius(radius){};
   glm::vec4 position;
   glm::vec3 color;
   float radius; /// 0 for directionnal, non-0 for point;

@@ -7,9 +7,9 @@
 
 #define GLM_FORCE_SWIZZLE
 
-#include "World.hpp"
 #include "Atmosphere.hpp"
 #include "Scheduler.hpp"
+#include "World.hpp"
 #include <stdexcept>
 
 #if (_WIN32)
@@ -81,7 +81,7 @@ void glWindow::setupEnv() {
   this->shaderProgram->addUniform("activeLights");
   GLuint uniformBlockIndexLights = glGetUniformBlockIndex(this->shaderProgram->id(), "LightBlock");
   std::cout << "uniformBlockIndexLights: " << uniformBlockIndexLights << std::endl;
-  glUniformBlockBinding(this->shaderProgram->id(),uniformBlockIndexLights, 0);
+  glUniformBlockBinding(this->shaderProgram->id(), uniformBlockIndexLights, 0);
 
   glGenBuffers(1, &this->uboLights);
   glBindBuffer(GL_UNIFORM_BUFFER, this->uboLights);
@@ -96,16 +96,14 @@ void glWindow::render_system(
     Resource<cevy::engine::Window> win, Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
     Query<option<Transform>, cevy::engine::PointLight> lights,
-    cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
-    cevy::ecs::World &world) {
+    cevy::ecs::EventWriter<cevy::ecs::AppExit> close, cevy::ecs::World &world) {
   auto atmo = world.get_resource<cevy::engine::Atmosphere>();
 
   win.get()->render(cams, atmo, models, lights, close);
 }
 
 void glWindow::render(
-    Query<Camera> cams,
-    std::optional<ref<cevy::engine::Atmosphere>> atmosphere,
+    Query<Camera> cams, std::optional<ref<cevy::engine::Atmosphere>> atmosphere,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
     Query<option<Transform>, cevy::engine::PointLight> lights,
     cevy::ecs::EventWriter<cevy::ecs::AppExit> close) {
@@ -143,7 +141,8 @@ void glWindow::render(
   light_buffer.reserve(glLight::count);
 
   for (auto [o_tm, light] : lights) {
-    if (light_buffer.size() >= glLight::count) break;
+    if (light_buffer.size() >= glLight::count)
+      break;
     light_buffer.push_back(glLight(light, o_tm.has_value() ? o_tm->position : glm::vec3()));
   }
 

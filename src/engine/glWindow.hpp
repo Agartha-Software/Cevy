@@ -5,17 +5,20 @@
 ** openGL window handling
 */
 
+// clang-format off
+#include "ShaderProgram.hpp"
+// clang-format on
+
 #include "Atmosphere.hpp"
 #include "Camera.hpp"
 #include "Color.hpp"
+#include "GLFW/glfw3.h"
 #include "Handle.hpp"
 #include "Model.hpp"
 #include "PbrMaterial.hpp"
-#include "Scheduler.hpp"
-#include "ShaderProgram.hpp"
-#include "Query.hpp"
 #include "PointLight.hpp"
-#include "GLFW/glfw3.h"
+#include "Query.hpp"
+#include "Scheduler.hpp"
 #include "pipeline.hpp"
 #include <memory>
 
@@ -32,7 +35,6 @@ class glWindow {
   template <typename... T>
   using Query = cevy::ecs::Query<T...>;
 
-
   using Camera = cevy::engine::Camera;
   using Transform = cevy::engine::Transform;
   using PbrMaterial = cevy::engine::PbrMaterial;
@@ -42,7 +44,7 @@ class glWindow {
 
   public:
   glWindow(int width, int height);
-  glWindow(glWindow&& rhs) noexcept {
+  glWindow(glWindow &&rhs) noexcept {
     this->width = rhs.width;
     this->height = rhs.height;
     this->shaderProgram = rhs.shaderProgram;
@@ -53,17 +55,17 @@ class glWindow {
 
     glfwSetWindowUserPointer(this->glfWindow, this);
   }
-  glWindow(const glWindow&) = delete;
+  glWindow(const glWindow &) = delete;
   ~glWindow();
   bool open();
   bool close();
-  static void render_system(Resource<cevy::engine::Window> win,Query<Camera> cams,
-         Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-         Query<option<Transform>, cevy::engine::PointLight> lights,
-         cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
-         cevy::ecs::World &world);
-  void render(Query<Camera> cams,
-         std::optional<ref<cevy::engine::Atmosphere>> atmosphere,
+  static void render_system(
+      Resource<cevy::engine::Window> win, Query<Camera> cams,
+      Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+      Query<option<Transform>, cevy::engine::PointLight> lights,
+      cevy::ecs::EventWriter<cevy::ecs::AppExit> close, cevy::ecs::World &world);
+  void
+  render(Query<Camera> cams, std::optional<ref<cevy::engine::Atmosphere>> atmosphere,
          Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
          Query<option<Transform>, cevy::engine::PointLight> lights,
          cevy::ecs::EventWriter<cevy::ecs::AppExit> close);
@@ -85,7 +87,7 @@ class glWindow {
   int width;
   int height;
   GLuint uboLights = 0;
-  ShaderProgram* shaderProgram;
+  ShaderProgram *shaderProgram;
   GLFWwindow *glfWindow;
 
   PbrMaterial defaultMaterial;
@@ -93,26 +95,15 @@ class glWindow {
 
 namespace cevy::engine {
 class Window {
-public:
-  Window(glWindow&& win) {
-    this->window = std::make_shared<glWindow>(std::forward<glWindow>(win));
-  }
-  Window(int width, int height) {
-    this->window = std::make_shared<glWindow>(width, height);
-  }
-  glWindow* operator->() {
-    return this->window.get();
-  }
-  glWindow* get() {
-    return this->window.get();
-  }
-  glWindow& operator*() {
-    return *this->window;
-  }
-  const glWindow& operator*() const {
-    return *this->window;
-  }
-protected:
+  public:
+  Window(glWindow &&win) { this->window = std::make_shared<glWindow>(std::forward<glWindow>(win)); }
+  Window(int width, int height) { this->window = std::make_shared<glWindow>(width, height); }
+  glWindow *operator->() { return this->window.get(); }
+  glWindow *get() { return this->window.get(); }
+  glWindow &operator*() { return *this->window; }
+  const glWindow &operator*() const { return *this->window; }
+
+  protected:
   std::shared_ptr<glWindow> window;
 };
-}
+} // namespace cevy::engine
