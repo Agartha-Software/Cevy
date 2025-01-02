@@ -16,4 +16,4 @@ add_library(commands
 
 target_include_directories(commands PUBLIC ..)
 
-target_link_libraries(commands PUBLIC ecs entity world)
+target_link_libraries(commands PUBLIC ecs)

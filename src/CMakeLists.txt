@@ -5,7 +5,9 @@
 ## cevy-cmake
 ##
 
-include_directories(".")
+add_library(cevy_headers STATIC cevy.cpp)
+target_include_directories(cevy_headers PUBLIC ./)
+
 
 add_subdirectory(ecs)
 add_subdirectory(network)

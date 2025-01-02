@@ -16,6 +16,6 @@ class Atmosphere {
 	Color fog;
   float fog_distance;
 
-  Atmosphere(const Color &fog = {.01, 0.0225, 0.04}, float fog_distance = 2, const Color &ambiant = {.01, 0.0225, 0.04});
+  Atmosphere(const Color &fog = {.01, 0.0225, 0.04}, float fog_distance = 500, const Color &ambiant = {.01, 0.0225, 0.04});
 };
 } // namespace cevy::engine

@@ -76,6 +76,7 @@ void glWindow::setupEnv() {
   this->shaderProgram->addUniform("specular_tint");
   this->shaderProgram->addUniform("phong_exponent");
   this->shaderProgram->addUniform("halflambert");
+  this->shaderProgram->addUniform("has_texture");
 
   this->shaderProgram->addUniform("activeLights");
   GLuint uniformBlockIndexLights = glGetUniformBlockIndex(this->shaderProgram->id(), "LightBlock");
