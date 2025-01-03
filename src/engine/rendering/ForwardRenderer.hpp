@@ -13,6 +13,7 @@
 #include "Model.hpp"
 #include "PbrMaterial.hpp"
 #include "ShaderProgram.hpp"
+#include "Window.hpp"
 #include "rendering.hpp"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -29,7 +30,8 @@ class cevy::engine::ForwardRenderer {
   using Resource = ecs::Resource<T>;
 
   public:
-  ForwardRenderer();
+  template<typename Windower = cevy::engine::Window::generic_window>
+  ForwardRenderer(const Windower& /* win */) {}
   void init();
   void
   render(Query<Camera> cams,

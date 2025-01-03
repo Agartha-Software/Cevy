@@ -17,7 +17,7 @@ class Window {
   struct generic_window {
     generic_window() {};
     virtual bool open() = 0;
-    virtual glm::vec<2, int> size() = 0;
+    virtual glm::vec<2, int> size() const = 0;
     virtual void setSize(int width, int height) = 0;
     virtual void setFullscreen(bool fullscreen) = 0;
   };
@@ -41,7 +41,7 @@ class Window {
   }
 
   bool open() { return this->window->open(); }
-  glm::vec<2, int> size() { return this->window->size(); }
+  glm::vec<2, int> size() const { return this->window->size(); }
   void setSize(int width, int height) { this->window->setSize(width, height); }
   void setFullscreen(bool fullscreen) { this->window->setFullscreen(fullscreen); }
   protected:

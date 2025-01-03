@@ -44,11 +44,11 @@ class glWindow : public cevy::engine::Window::generic_window {
   using glLight = cevy::engine::pipeline::Light;
 
   public:
-  glWindow(int width, int height) : width(width), height(height), renderer() {
+  glWindow(int width, int height) : width(width), height(height), renderer(*this) {
     open();
     renderer.init();
   }
-  glWindow(glWindow &&rhs) noexcept {
+  glWindow(glWindow &&rhs) noexcept :  width(width), height(height), renderer(rhs.renderer) {
     this->width = rhs.width;
     this->height = rhs.height;
     this->glfWindow = rhs.glfWindow;
@@ -60,7 +60,7 @@ class glWindow : public cevy::engine::Window::generic_window {
   glWindow(const glWindow &) = delete;
   ~glWindow() { close(); };
 
-  glm::vec<2, int> size() override {
+  glm::vec<2, int> size() const override {
     return {width, height};
   }
   void setSize(int /* width */, int /* height */) override {
@@ -95,7 +95,6 @@ class glWindow : public cevy::engine::Window::generic_window {
          Query<option<Transform>, cevy::engine::PointLight> lights,
          cevy::ecs::EventWriter<cevy::ecs::AppExit> close) {
 
-    glfwSwapBuffers(this->glfWindow);
     glfwPollEvents();
 
     if (glfwWindowShouldClose(this->glfWindow)) {
@@ -104,6 +103,7 @@ class glWindow : public cevy::engine::Window::generic_window {
     }
 
     this->renderer.render(cams, models, lights);
+    glfwSwapBuffers(this->glfWindow);
   }
 
   protected:

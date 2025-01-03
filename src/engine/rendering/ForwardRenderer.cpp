@@ -24,7 +24,6 @@ static glm::vec3 filmicToneMapping(glm::vec3 color) {
   return color;
 }
 
-cevy::engine::ForwardRenderer::ForwardRenderer() {}
 void cevy::engine::ForwardRenderer::init() {
   this->defaultMaterial = PbrMaterial();
 
