@@ -70,7 +70,6 @@ void cevy::engine::DeferredRenderer::init() {
   this->principled_shader->addUniform("ambientColor");
   this->principled_shader->addUniform("fog");
   this->principled_shader->addUniform("fog_far");
-  this->principled_shader->addUniform("halflambert");
   this->principled_shader->addUniform("activeLights");
 
   GLuint uniformBlockIndexLights =
@@ -101,6 +100,7 @@ void cevy::engine::DeferredRenderer::init() {
   this->gBuffer_shader->addUniform("view");
   this->gBuffer_shader->addUniform("invView");
   this->gBuffer_shader->addUniform("emit");
+  this->gBuffer_shader->addUniform("emit_ambient");
   // this->gBuffer_shader->addUniform("fog");
   // this->gBuffer_shader->addUniform("fog_far");
   this->gBuffer_shader->addUniform("albedo");
@@ -176,10 +176,10 @@ void cevy::engine::DeferredRenderer::render(
 
   glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer);
   glEnable(GL_DEPTH_TEST);
-  glClearColor(0.0, 0.0, 0.0, 0.0); // keep it black so it doesn't leak into g-buffer
+  glClearColor(0.0, 0.0, 0.0, 0.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glm::vec4 far_pos = {0, 0, 0, camera.far};
-  glClearBufferfv(this->gPosition, this->gBuffer, glm::value_ptr(far_pos));
+  glClearBufferfv(GL_COLOR, 0, glm::value_ptr(far_pos));
 
   this->gBuffer_shader->use();
 
@@ -202,10 +202,12 @@ void cevy::engine::DeferredRenderer::render(
 
     glUniform3fv(this->gBuffer_shader->uniform("emit"), 1,
                  glm::value_ptr(material.ambiant));
+    glUniform1i(this->gBuffer_shader->uniform("emit_ambient"), true);
     glUniform3fv(this->gBuffer_shader->uniform("albedo"), 1,
                  glm::value_ptr(material.diffuse * color.xyz()));
     glUniform3fv(this->gBuffer_shader->uniform("specular_tint"), 1,
                  glm::value_ptr(material.specular_tint));
+    glUniform1i(this->gBuffer_shader->uniform("halflambert"), true);
     glUniform1f(this->gBuffer_shader->uniform("phong_exponent"), material.phong_exponent);
     glUniformMatrix4fv(this->gBuffer_shader->uniform("model"), 1, GL_FALSE,
                        glm::value_ptr(tm * model->modelMatrix()));
@@ -261,7 +263,6 @@ void cevy::engine::DeferredRenderer::render(
 
   glUniform1f(this->principled_shader->uniform("fog_far"), camera.far);
 
-  glUniform1i(this->principled_shader->uniform("halflambert"), true);
 
   glUniformMatrix4fv(this->principled_shader->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
   glUniformMatrix4fv(this->principled_shader->uniform("invView"), 1, GL_FALSE,

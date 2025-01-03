@@ -8,6 +8,7 @@ in vec3 color;
 in vec4 position;
 in vec4 v_position;
 in vec3 normal;
+in vec2 texCoord;
 
 uniform vec3 albedo;
 uniform vec3 specular_tint;
@@ -30,5 +31,6 @@ void main() {
     gAlbedo = vec4(albedo /* * texture(diffuseTexture, texCoord).rgb */, 1 / phong_exponent);
     // store specular intensity in gAlbedo's alpha component
     int emit_mode = int(halflambert) | (int(emit_ambient) << 1);
-    gEmit = vec4(emit, emit_mode);
+    // gEmit = vec4(emit, emit_mode);
+    gEmit = vec4(emit, emit_mode / 255.f);
 }

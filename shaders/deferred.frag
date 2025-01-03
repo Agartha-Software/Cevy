@@ -23,7 +23,6 @@ layout (std140, binding = 1) uniform LightBlock {
 
 uniform int activeLights;
 
-uniform bool halflambert;
 uniform bool has_texture;
 
 layout (binding = 0) uniform sampler2D gPosition;
@@ -49,7 +48,9 @@ void shade_light(
     vec3 lightVec,
     float lightRadius,
     vec3 viewVec,
-    float exponent) {
+    float exponent,
+    float halflambert
+    ) {
     float lightDist = length(lightVec);
     lightVec /= lightDist;
 
@@ -66,7 +67,7 @@ void shade_light(
     phong = max(0, lambert) * pow(max(0, dot(normal, halfway)), exponent * 2) * exponent / 2;
     // phong = max(0, lambert) * pow(max(0, dot(reflect(-lightVec, normal), -viewVec)), exponent) * exponent / 4;
 
-    float hl = float(halflambert) * 0.5;
+    float hl = halflambert * 0.5;
     lambert = lambert * (1 - hl) + hl;
     diffuse_light += light * max(0, lambert);
     specular_light += light * phong;
@@ -82,9 +83,10 @@ void main() {
     vec3 specular_tint = packed_normal.aaa;
     vec4 packed_emit = texture(gEmit, texCoord);
     vec3 emit = packed_emit.rgb;
-    uint emit_flags = floatBitsToUint(packed_emit.a);
-    float emit_ambient = float((emit_flags & 1) >> 1);
+    uint emit_flags = uint(packed_emit.a * 255);
+    float emit_ambient = float((emit_flags & 2) >> 1);
     float emit_illum = 1 - emit_ambient;
+    float halflambert = float(emit_flags & 1);
 
     vec3 cameraPos = invView[3].xyz;// / invView[3].w;
     vec3 viewVec = position.xyz - cameraPos;
@@ -100,8 +102,18 @@ void main() {
 
     for (int i = 0; i < lightCount; ++i) {
         vec3 lightVec = lights[i].position.xyz - position.xyz;
-
-        shade_light(diffuse_light, specular_light, normal, dnv, float(i < activeLights) * lights[i].color, lightVec, 0, viewVec, exponent);
+        if (i < activeLights && position.w < fog_far) {
+            shade_light(diffuse_light,
+                specular_light,
+                normal,
+                dnv,
+                float(i < activeLights) * lights[i].color,
+                lightVec,
+                0,
+                viewVec,
+                exponent,
+                halflambert);
+        }
     }
 
     vec3 surface = diffuse_light * albedo * fresnel + (1 - fresnel) * specular_light * specular_tint;
