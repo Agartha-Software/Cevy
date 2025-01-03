@@ -75,7 +75,7 @@ class Engine : public cevy::ecs::Plugin {
     app.init_component<cevy::engine::ClearColor>();
     app.add_plugins(cevy::engine::AssetManagerPlugin());
     app.add_systems<cevy::engine::PreRenderStage>(update_camera);
-    app.add_systems<cevy::engine::RenderStage>(glWindow<ForwardRenderer>::render_system);
+    app.add_systems<cevy::engine::RenderStage>(Windower<Renderer>::render_system);
     app.add_systems<ecs::core_stage::Update>(TransformVelocity::system);
     app.add_systems<cevy::ecs::core_stage::Update>(Transform::children_system);
   };
