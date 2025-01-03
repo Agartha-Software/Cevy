@@ -15,8 +15,6 @@ set(RAYLIB_FOLDER ${CMAKE_BINARY_DIR}/_deps/raylib-build/raylib/include)
 
 add_library(engine
   STATIC
-    Engine.cpp
-    glWindow.cpp
     Transform.hpp
     Camera.cpp
 )
