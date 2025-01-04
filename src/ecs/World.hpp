@@ -168,7 +168,7 @@ class cevy::ecs::World {
 
   /// true if the world holds this Resource
   template <typename R>
-  bool contains_resource() {
+  bool contains_resource() const {
     return _resource_manager.contains_resource<R>();
   }
 
@@ -186,7 +186,12 @@ class cevy::ecs::World {
 
   /// access a given Resource, or None if it not in this world
   template <typename R>
-  std::optional<ref<R>> get_resource() {
+  std::optional<Resource<R>> get_resource() const {
+    return _resource_manager.get_resource<R>();
+  }
+
+  template <typename R>
+  std::optional<Resource<R>> get_resource() {
     return _resource_manager.get_resource<R>();
   }
 
@@ -336,12 +341,15 @@ class cevy::ecs::World {
     return EventWriter(res, system_id);
   }
 
-  template <typename R, typename std::enable_if_t<is_resource<R>::value, bool> = true>
+  template <typename R, typename std::enable_if_t<is_resource<R>::value, bool> = true,
+            typename std::enable_if_t<std::negation<is_optional<R>>::value, bool> = true>
   R get_super(size_t) {
     return _resource_manager.get<typename R::value>();
   }
 
-  template <typename OR, typename R = typename OR::value_type, typename std::enable_if_t<is_resource<R>::value, bool> = true, typename std::enable_if_t<is_optional<OR>::value, bool> = true>
+  template <typename OR, typename R = typename OR::value_type,
+            typename std::enable_if_t<is_resource<R>::value, bool> = true,
+            typename std::enable_if_t<is_optional<OR>::value, bool> = true>
   OR get_super(size_t) {
     if (_resource_manager.contains_resource<typename R::value>()) {
       return OR(_resource_manager.get<typename R::value>());
@@ -465,45 +473,51 @@ bool cevy::ecs::World::EntityWorldRef::contains() {
 }
 
 template <typename... T>
-cevy::ecs::iterator<T...> cevy::ecs::iterator<T...>::begin(World &w, size_t size)  {
-    return iterator<T...>(std::make_tuple(w.get_components<remove_optional<T>>().begin()...), size);
+cevy::ecs::iterator<T...> cevy::ecs::iterator<T...>::begin(World &w, size_t size) {
+  return iterator<T...>(std::make_tuple(w.get_components<remove_optional<T>>().begin()...), size);
 }
 
 template <typename... T>
-cevy::ecs::iterator<T...> cevy::ecs::iterator<T...>::end(World &w, size_t size)  {
-    return iterator<T...>(std::make_tuple(w.get_components<remove_optional<T>>().end()...), size, size);
+cevy::ecs::iterator<T...> cevy::ecs::iterator<T...>::end(World &w, size_t size) {
+  return iterator<T...>(std::make_tuple(w.get_components<remove_optional<T>>().end()...), size,
+                        size);
 }
 
 template <typename... T>
-cevy::ecs::iterator<cevy::ecs::Entity, T...> cevy::ecs::iterator<cevy::ecs::Entity, T...>::begin(World &w, size_t size)  {
-    return iterator<cevy::ecs::Entity, T...>(std::make_tuple(w.get_components<remove_optional<T>>().begin()...), size);
+cevy::ecs::iterator<cevy::ecs::Entity, T...>
+cevy::ecs::iterator<cevy::ecs::Entity, T...>::begin(World &w, size_t size) {
+  return iterator<cevy::ecs::Entity, T...>(
+      std::make_tuple(w.get_components<remove_optional<T>>().begin()...), size);
 }
 
 template <typename... T>
-cevy::ecs::iterator<cevy::ecs::Entity, T...> cevy::ecs::iterator<cevy::ecs::Entity, T...>::end(World &w, size_t size)  {
-    return iterator<cevy::ecs::Entity, T...>(std::make_tuple(w.get_components<remove_optional<T>>().end()...), size, size);
+cevy::ecs::iterator<cevy::ecs::Entity, T...>
+cevy::ecs::iterator<cevy::ecs::Entity, T...>::end(World &w, size_t size) {
+  return iterator<cevy::ecs::Entity, T...>(
+      std::make_tuple(w.get_components<remove_optional<T>>().end()...), size, size);
 }
 
+template <typename... T>
+cevy::ecs::Query<T...>::Query(cevy::ecs::World &w)
+    : _size(iterator_t::_compute_size(w, w.entities().size())), _begin(iterator_t::begin(w, _size)),
+      _end(iterator_t::end(w, _size)){};
 
 template <typename... T>
-cevy::ecs::Query<T...>::Query(cevy::ecs::World &w) : _size(iterator_t::_compute_size(w, w.entities().size())), _begin(iterator_t::begin(w, _size)),
-        _end(iterator_t::end(w, _size)) {};
+size_t cevy::ecs::iterator<T...>::_compute_size(World &w, size_t nb_e) {
+  size_t current_size = 0;
+  if ((... && is_optional<T>::value)) {
+    current_size = nb_e;
+  } else {
+    std::bitset<sizeof...(T)> are_optional;
+    size_t idx = 0;
+    bool is_first = true;
 
-template <typename... T>
-size_t cevy::ecs::iterator<T...>::_compute_size(World& w, size_t nb_e)
- {
-    size_t current_size = 0;
-    if ((... && is_optional<T>::value)) {
-      current_size = nb_e;
-    } else {
-      std::bitset<sizeof...(T)> are_optional;
-      size_t idx = 0;
-      bool is_first = true;
-
-      (are_optional.set(idx++, is_optional<T>::value), ...);
-      idx = 0;
-      (_compute_a_size(w.get_components<remove_optional<T>>(), current_size, is_first, idx, are_optional), ...);
-    }
-    (resize_optional<T>(w.get_components<remove_optional<T>>(), current_size), ...);
-    return current_size;
+    (are_optional.set(idx++, is_optional<T>::value), ...);
+    idx = 0;
+    (_compute_a_size(w.get_components<remove_optional<T>>(), current_size, is_first, idx,
+                     are_optional),
+     ...);
   }
+  (resize_optional<T>(w.get_components<remove_optional<T>>(), current_size), ...);
+  return current_size;
+}

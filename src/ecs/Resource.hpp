@@ -27,6 +27,8 @@ class cevy::ecs::Resource {
   public:
   using value = Content;
   operator Content() const { return _content; };
+  const Content* operator ->() const { return &_content; };
+  Content* operator ->() { return &_content; };
   operator Content &() { return _content; };
   Content &get() { return _content; };
 };
@@ -36,6 +38,10 @@ struct is_resource : public std::false_type {};
 
 template <typename T>
 struct is_resource<cevy::ecs::Resource<T>> : public std::true_type {};
+
+template <typename T>
+struct is_resource<std::optional<cevy::ecs::Resource<T>>> : public std::true_type {};
+
 
 namespace cevy::ecs {
 class ResourceManager {
@@ -78,11 +84,20 @@ class ResourceManager {
   }
 
   template <typename Content>
-  std::optional<std::reference_wrapper<Content>> get_resource() {
+  std::optional<cevy::ecs::Resource<Content>> get_resource() const {
     auto it = _resources_map.find(std::type_index(typeid(Content)));
 
     if (it != _resources_map.end())
-      return std::any_cast<Content &>(_resources_map[std::type_index(typeid(Content))]);
+      return cevy::ecs::Resource(std::any_cast<Content &>(_resources_map.at(std::type_index(typeid(Content)))));
+    return std::nullopt;
+  }
+
+  template <typename Content>
+  std::optional<cevy::ecs::Resource<Content>> get_resource() {
+    auto it = _resources_map.find(std::type_index(typeid(Content)));
+
+    if (it != _resources_map.end())
+      return cevy::ecs::Resource(std::any_cast<Content &>(_resources_map.at(std::type_index(typeid(Content)))));
     return std::nullopt;
   }
 
@@ -93,7 +108,7 @@ class ResourceManager {
   }
 
   template <typename Content>
-  bool contains_resource() {
+  bool contains_resource() const {
     return _resources_map.find(std::type_index(typeid(Content))) != _resources_map.end();
   }
 };
