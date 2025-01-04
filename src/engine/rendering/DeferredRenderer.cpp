@@ -17,6 +17,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "DeferredRenderer.hpp"
+#include "World.hpp"
 
 static void renderQuad() {
   static uint quadVAO = 0;
@@ -52,10 +53,6 @@ static glm::vec3 filmicToneMapping(glm::vec3 color) {
 
 void cevy::engine::DeferredRenderer::init() {
   this->defaultMaterial = PbrMaterial();
-
-  env.ambientColor = {.1, .15, .2};
-  env.ambientColor = env.ambientColor * env.ambientColor;
-  env.fog = env.ambientColor;
 
   std::cout << "loading principled_shader" << std::endl;
 
@@ -150,7 +147,6 @@ void cevy::engine::DeferredRenderer::init() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, this->gEmit, 0);
 
-
   glDrawBuffers(4, this->gAttachments);
 
   glGenRenderbuffers(1, &this->rbo);
@@ -164,8 +160,14 @@ void cevy::engine::DeferredRenderer::init() {
 void cevy::engine::DeferredRenderer::render(
     Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-    Query<option<Transform>, cevy::engine::PointLight> lights,
-    std::optional<ref<Atmosphere>> /* atmosphere */)  {
+    Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world) {
+
+  auto r_atmo = world.get_resource<const Atmosphere>();
+  const auto &atmosphere = r_atmo.has_value() ? r_atmo->get() : cevy::engine::Atmosphere();
+
+  auto fog = atmosphere.fog.as_vec().rgb();
+  auto ambient = atmosphere.ambiant.as_vec().rgb();
+  auto fog_dist = atmosphere.fog_distance;
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
@@ -202,8 +204,7 @@ void cevy::engine::DeferredRenderer::render(
     auto &color = o_color ? o_color.value().as_vec() : white;
     PbrMaterial &material = o_h_material ? *o_h_material->get() : this->defaultMaterial;
 
-    glUniform3fv(this->gBuffer_shader->uniform("emit"), 1,
-                 glm::value_ptr(material.ambiant));
+    glUniform3fv(this->gBuffer_shader->uniform("emit"), 1, glm::value_ptr(material.ambiant));
     glUniform1i(this->gBuffer_shader->uniform("emit_ambient"), true);
     glUniform3fv(this->gBuffer_shader->uniform("albedo"), 1,
                  glm::value_ptr(material.diffuse * color.xyz()));
@@ -227,7 +228,6 @@ void cevy::engine::DeferredRenderer::render(
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-  auto fog = filmicToneMapping(this->env.fog);
   glClearColor(fog.r, fog.g, fog.b, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   this->principled_shader->use();
@@ -259,12 +259,10 @@ void cevy::engine::DeferredRenderer::render(
   glUniform1i(this->principled_shader->uniform("activeLights"), light_buffer.size());
   // std::cout << "activeLights: " << light_buffer.size() << std::endl;
 
-  glUniform3fv(this->principled_shader->uniform("ambientColor"), 1,
-               glm::value_ptr(env.ambientColor));
-  glUniform3fv(this->principled_shader->uniform("fog"), 1, glm::value_ptr(env.fog));
+  glUniform3fv(this->principled_shader->uniform("ambientColor"), 1, glm::value_ptr(ambient));
+  glUniform3fv(this->principled_shader->uniform("fog"), 1, glm::value_ptr(fog));
 
-  glUniform1f(this->principled_shader->uniform("fog_far"), camera.far);
-
+  glUniform1f(this->principled_shader->uniform("fog_far"), std::min(camera.far, fog_dist));
 
   glUniformMatrix4fv(this->principled_shader->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
   glUniformMatrix4fv(this->principled_shader->uniform("invView"), 1, GL_FALSE,

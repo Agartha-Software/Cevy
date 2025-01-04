@@ -20,14 +20,14 @@ class Color {
 
   Color(float r = 1., float g = 1., float b = 1., float a = 1.);
 
-  glm::vec4 &as_vec();
+  const glm::vec4 &as_vec() const;
 
-  operator const glm::vec4 &();
-  operator const glm::vec3 &();
-  operator glm::vec4 &&();
-  operator glm::vec3 &&();
+  operator const glm::vec4 &() const;
+  operator const glm::vec3 &() const;
+  // operator glm::vec4 &&();
+  // operator glm::vec3 &&();
 
   private:
-  glm::vec3 &as_vec3();
+  const glm::vec3 &as_vec3() const;
 };
 } // namespace cevy::engine

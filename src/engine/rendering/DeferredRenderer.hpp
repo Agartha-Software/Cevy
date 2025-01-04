@@ -75,13 +75,9 @@ class cevy::engine::DeferredRenderer {
   render(Query<Camera> cams,
          Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
          Query<option<Transform>, cevy::engine::PointLight> lights,
-         std::optional<ref<Atmosphere>> atmosphere);
+         const ecs::World &world);
   protected:
   GLFWwindow *glfWindow;
-  struct Environment {
-    glm::vec3 ambientColor;
-    glm::vec3 fog;
-  } env;
   ShaderProgram *gBuffer_shader;
   ShaderProgram *principled_shader;
   PbrMaterial defaultMaterial;

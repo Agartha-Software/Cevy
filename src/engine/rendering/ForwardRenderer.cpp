@@ -5,13 +5,11 @@
 ** forward renderer
 */
 
-#include <optional>
 #define GLM_FORCE_SWIZZLE
 
 #include "Atmosphere.hpp"
-#include "Scheduler.hpp"
 #include "World.hpp"
-#include <stdexcept>
+#include <optional>
 
 #if (_WIN32)
 #include <GL/gl3w.h>
@@ -24,18 +22,15 @@
 #include "ForwardRenderer.hpp"
 #include "pipeline.hpp"
 
-static glm::vec3 filmicToneMapping(glm::vec3 color) {
-  color = max(glm::vec3(0.), color - glm::vec3(0.004));
+static glm::vec3 filmicToneMapping(const glm::vec3 &in) {
+
+  glm::vec3 color = max(glm::vec3(0.), in - glm::vec3(0.004));
   color = (color * (6.2f * color + .5f)) / (color * (6.2f * color + 1.7f) + 0.06f);
   return color;
 }
 
 void cevy::engine::ForwardRenderer::init() {
   this->defaultMaterial = PbrMaterial();
-
-  env.ambientColor = {.1, .15, .2};
-  env.ambientColor = env.ambientColor * env.ambientColor;
-  env.fog = env.ambientColor;
 
   std::cout << "loading shaderProgram" << std::endl;
 
@@ -79,18 +74,19 @@ void cevy::engine::ForwardRenderer::init() {
 void cevy::engine::ForwardRenderer::render(
     Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-    Query<option<Transform>, cevy::engine::PointLight> lights,
-    std::optional<ref<cevy::engine::Atmosphere>> atmosphere) {
+    Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world) {
 
-  auto atmo = atmosphere.has_value() ? atmosphere->get() : cevy::engine::Atmosphere();
+  auto r_atmo = world.get_resource<const Atmosphere>();
+  const auto &atmosphere = r_atmo.has_value() ? r_atmo->get() : cevy::engine::Atmosphere();
 
-  auto fog = filmicToneMapping(atmo.fog.as_vec());
-  auto ambient = atmo.ambiant.as_vec().rgb();
-  glClearColor(fog.r, fog.g, fog.b, 1);
+  auto fog = atmosphere.fog.as_vec().rgb();
+  auto fog_tonemapped = filmicToneMapping(fog);
+  auto ambient = atmosphere.ambiant.as_vec().rgb();
+  auto fog_dist = atmosphere.fog_distance;
+  glClearColor(fog_tonemapped.r, fog_tonemapped.g, fog_tonemapped.b, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
-  // glCullFace(GL_FRONT);
   glCullFace(GL_BACK);
 
   this->shaderProgram->use();
@@ -126,7 +122,8 @@ void cevy::engine::ForwardRenderer::render(
 
   glUniform3fv(this->shaderProgram->uniform("fog"), 1, glm::value_ptr(fog));
 
-  glUniform1f(this->shaderProgram->uniform("fog_far"), atmo.fog_distance); // or is it camera.far?
+  glUniform1f(this->shaderProgram->uniform("fog_far"),
+              std::min(camera.far, fog_dist)); // or is it camera.far?
 
   glUniformMatrix4fv(this->shaderProgram->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
 
@@ -134,7 +131,6 @@ void cevy::engine::ForwardRenderer::render(
   invView = invView / invView[3][3];
 
   glUniformMatrix4fv(this->shaderProgram->uniform("invView"), 1, GL_FALSE, glm::value_ptr(invView));
-
 
   // std::cout << "rendering " << models.size() << " models" << std::endl;
   for (auto [o_tm, h_model, o_h_material, o_color] : models) {

@@ -59,7 +59,7 @@ class Engine : public cevy::ecs::Plugin {
 #ifdef DEBUG
     app.init_resource<cevy::engine::DebugWindow>(cevy::engine::DebugWindow{.open = true});
 #endif
-    app.init_resource<cevy::engine::Atmosphere>(cevy::engine::Color(255, 255, 255));
+    app.init_resource<cevy::engine::Atmosphere>();
     app.init_resource<cevy::engine::Window>(
         cevy::engine::Window(Windower<Renderer>(1280, 720)));
     app.init_component<cevy::engine::Camera>();
@@ -72,7 +72,7 @@ class Engine : public cevy::ecs::Plugin {
     app.init_component<cevy::engine::TransformVelocity>();
     app.init_component<cevy::engine::PointLight>();
     app.init_component<cevy::engine::Color>();
-    app.init_component<cevy::engine::Atmosphere>();
+    // app.init_component<cevy::engine::Atmosphere>();
     app.add_plugins(cevy::engine::AssetManagerPlugin());
     app.add_systems<cevy::engine::PreRenderStage>(update_camera);
     app.add_systems<cevy::engine::RenderStage>(Windower<Renderer>::render_system);

@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Window.hpp"
+#include <optional>
 #if (_WIN32)
 #include <GL/gl3w.h>
 #endif
@@ -87,7 +88,7 @@ class glWindow : public cevy::engine::Window::generic_window {
       Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
       Query<option<Transform>, cevy::engine::PointLight> lights,
       cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
-      cevy::ecs::World &world) {
+      const cevy::ecs::World &world) {
     win.get().get_handler<glWindow, Renderer>()->render(cams, models, lights, close, world);
   }
 
@@ -96,7 +97,7 @@ class glWindow : public cevy::engine::Window::generic_window {
          Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
          Query<option<Transform>, cevy::engine::PointLight> lights,
          cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
-         cevy::ecs::World &world) {
+         const cevy::ecs::World &world) {
 
     glfwPollEvents();
 
@@ -105,10 +106,8 @@ class glWindow : public cevy::engine::Window::generic_window {
       return;
     }
 
-    // auto atmo = world.get_super<std::optional<cevy::ecs::Resource<cevy::engine::Atmosphere>>>(0);
-    auto atmo = world.get_resource<cevy::engine::Atmosphere>();
 
-    this->renderer.render(cams, models, lights, atmo);
+    this->renderer.render(cams, models, lights, world);
     glfwSwapBuffers(this->glfWindow);
   }
 
