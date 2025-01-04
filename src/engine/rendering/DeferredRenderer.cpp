@@ -5,6 +5,7 @@
 ** Deferred renderer
 */
 
+#include <optional>
 #define GLM_FORCE_SWIZZLE
 
 #if (_WIN32)
@@ -163,7 +164,8 @@ void cevy::engine::DeferredRenderer::init() {
 void cevy::engine::DeferredRenderer::render(
     Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-    Query<option<Transform>, cevy::engine::PointLight> lights) {
+    Query<option<Transform>, cevy::engine::PointLight> lights,
+    std::optional<ref<Atmosphere>> /* atmosphere */)  {
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);

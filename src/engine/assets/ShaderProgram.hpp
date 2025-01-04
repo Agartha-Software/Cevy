@@ -1,3 +1,5 @@
+// clang-format off
+
 /*author: r3dux
 version : 0.3 - 15 / 01 / 2014
 	  description : Gets GLSL source code either provided as strings or can load from filenames,
@@ -22,13 +24,13 @@ version : 0.3 - 15 / 01 / 2014
 	#include <GL/glew.h>
 #endif
 
+#include <GL/gl.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <map>
 
 
-#include <GL/gl.h>
 
 
 class ShaderProgram
@@ -413,3 +415,5 @@ public:
 }; // End of class
 
 #endif // SHADER_PROGRAM_HPP
+
+// clang-format on

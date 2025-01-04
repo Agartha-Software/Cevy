@@ -5,7 +5,13 @@
 ** forward renderer
 */
 
+#include <optional>
 #define GLM_FORCE_SWIZZLE
+
+#include "Atmosphere.hpp"
+#include "Scheduler.hpp"
+#include "World.hpp"
+#include <stdexcept>
 
 #if (_WIN32)
 #include <GL/gl3w.h>
@@ -52,6 +58,8 @@ void cevy::engine::ForwardRenderer::init() {
   this->shaderProgram->addUniform("specular_tint");
   this->shaderProgram->addUniform("phong_exponent");
   this->shaderProgram->addUniform("halflambert");
+  this->shaderProgram->addUniform("has_texture");
+
   this->shaderProgram->addUniform("activeLights");
 
   GLuint uniformBlockIndexLights = glGetUniformBlockIndex(this->shaderProgram->id(), "LightBlock");
@@ -71,15 +79,19 @@ void cevy::engine::ForwardRenderer::init() {
 void cevy::engine::ForwardRenderer::render(
     Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-    Query<option<Transform>, cevy::engine::PointLight> lights) {
+    Query<option<Transform>, cevy::engine::PointLight> lights,
+    std::optional<ref<cevy::engine::Atmosphere>> atmosphere) {
 
-  auto fog = filmicToneMapping(this->env.fog);
+  auto atmo = atmosphere.has_value() ? atmosphere->get() : cevy::engine::Atmosphere();
+
+  auto fog = filmicToneMapping(atmo.fog.as_vec());
+  auto ambient = atmo.ambiant.as_vec().rgb();
   glClearColor(fog.r, fog.g, fog.b, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
-  glCullFace(GL_FRONT);
-  // glCullFace(GL_BACK);
+  // glCullFace(GL_FRONT);
+  glCullFace(GL_BACK);
 
   this->shaderProgram->use();
 
@@ -112,9 +124,9 @@ void cevy::engine::ForwardRenderer::render(
   glUniform1i(this->shaderProgram->uniform("activeLights"), light_buffer.size());
   // std::cout << "activeLights: " << light_buffer.size() << std::endl;
 
-  glUniform3fv(this->shaderProgram->uniform("fog"), 1, glm::value_ptr(env.fog));
+  glUniform3fv(this->shaderProgram->uniform("fog"), 1, glm::value_ptr(fog));
 
-  glUniform1f(this->shaderProgram->uniform("fog_far"), camera.far);
+  glUniform1f(this->shaderProgram->uniform("fog_far"), atmo.fog_distance); // or is it camera.far?
 
   glUniformMatrix4fv(this->shaderProgram->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
 
@@ -133,7 +145,7 @@ void cevy::engine::ForwardRenderer::render(
     PbrMaterial &material = o_h_material ? *o_h_material->get() : this->defaultMaterial;
 
     glUniform3fv(this->shaderProgram->uniform("ambientColor"), 1,
-                 glm::value_ptr(env.ambientColor + material.ambiant));
+                 glm::value_ptr(ambient + material.ambiant));
     glUniform3fv(this->shaderProgram->uniform("albedo"), 1,
                  glm::value_ptr(material.diffuse * color.xyz()));
     glUniform3fv(this->shaderProgram->uniform("specular_tint"), 1,

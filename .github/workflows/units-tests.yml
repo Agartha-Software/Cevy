@@ -15,7 +15,7 @@ jobs:
       - name: Install dependencies from raylib
         run: sudo apt install libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev
       - name: Install dependencies from OpenGL
-        run: sudo apt install libglfw3-dev
+        run: sudo apt-get install libglew-dev libglfw3-dev libglm-dev
       - name: Install dependencies for Units Tests
         run: sudo apt install libcriterion-dev
       - name: Build

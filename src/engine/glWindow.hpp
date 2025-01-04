@@ -15,6 +15,7 @@
 #include <GL/glew.h>
 #endif
 
+#include "Atmosphere.hpp"
 #include "Camera.hpp"
 #include "Color.hpp"
 #include "GLFW/glfw3.h"
@@ -85,15 +86,17 @@ class glWindow : public cevy::engine::Window::generic_window {
       Resource<cevy::engine::Window> win, Query<Camera> cams,
       Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
       Query<option<Transform>, cevy::engine::PointLight> lights,
-      cevy::ecs::EventWriter<cevy::ecs::AppExit> close) {
-    win.get().get_handler<glWindow, Renderer>()->render(cams, models, lights, close);
+      cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
+      cevy::ecs::World &world) {
+    win.get().get_handler<glWindow, Renderer>()->render(cams, models, lights, close, world);
   }
 
   void
   render(Query<Camera> cams,
          Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
          Query<option<Transform>, cevy::engine::PointLight> lights,
-         cevy::ecs::EventWriter<cevy::ecs::AppExit> close) {
+         cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
+         cevy::ecs::World &world) {
 
     glfwPollEvents();
 
@@ -102,7 +105,10 @@ class glWindow : public cevy::engine::Window::generic_window {
       return;
     }
 
-    this->renderer.render(cams, models, lights);
+    // auto atmo = world.get_super<std::optional<cevy::ecs::Resource<cevy::engine::Atmosphere>>>(0);
+    auto atmo = world.get_resource<cevy::engine::Atmosphere>();
+
+    this->renderer.render(cams, models, lights, atmo);
     glfwSwapBuffers(this->glfWindow);
   }
 

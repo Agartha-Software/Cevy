@@ -24,6 +24,7 @@
 #include <any>
 #include <cstddef>
 #include <functional>
+#include <optional>
 #include <queue>
 #include <tuple>
 #include <type_traits>
@@ -338,6 +339,15 @@ class cevy::ecs::World {
   template <typename R, typename std::enable_if_t<is_resource<R>::value, bool> = true>
   R get_super(size_t) {
     return _resource_manager.get<typename R::value>();
+  }
+
+  template <typename OR, typename R = typename OR::value_type, typename std::enable_if_t<is_resource<R>::value, bool> = true, typename std::enable_if_t<is_optional<OR>::value, bool> = true>
+  OR get_super(size_t) {
+    if (_resource_manager.contains_resource<typename R::value>()) {
+      return OR(_resource_manager.get<typename R::value>());
+    } else {
+      return OR(std::nullopt);
+    }
   }
 
   template <typename C, typename std::enable_if_t<is_commands<C>::value, bool> = true>

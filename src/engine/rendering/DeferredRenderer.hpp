@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "Atmosphere.hpp"
 #include "Camera.hpp"
 #include "Color.hpp"
 #include "Handle.hpp"
@@ -17,6 +18,7 @@
 #include <GLFW/glfw3.h>
 #include "pipeline.hpp"
 #include <glm/glm.hpp>
+#include <optional>
 
 class cevy::engine::DeferredRenderer {
   struct pipeline : engine::pipeline {
@@ -72,7 +74,8 @@ class cevy::engine::DeferredRenderer {
   void
   render(Query<Camera> cams,
          Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-         Query<option<Transform>, cevy::engine::PointLight> lights);
+         Query<option<Transform>, cevy::engine::PointLight> lights,
+         std::optional<ref<Atmosphere>> atmosphere);
   protected:
   GLFWwindow *glfWindow;
   struct Environment {

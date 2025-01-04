@@ -12,7 +12,7 @@
 
 namespace cevy::engine {
 struct pipeline {
-  template<typename T>
+  template <typename T>
   struct texture;
   struct Light;
   /// represents glsl sampler2D

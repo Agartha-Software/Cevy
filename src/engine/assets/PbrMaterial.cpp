@@ -5,14 +5,15 @@
 #include <GL/glew.h>
 #endif
 
-#include "PbrMaterial.hpp"
 #include "GL/gl.h"
+#include "PbrMaterial.hpp"
 #include "stb_image.h"
 #include <iostream>
 #include <optional>
 
-std::optional<cevy::engine::Texture> cevy::engine::Texture::from_tinyobj(const std::string &file_name,
-                                             const tinyobj::texture_option_t &/* _option */) {
+std::optional<cevy::engine::Texture>
+cevy::engine::Texture::from_tinyobj(const std::string &file_name,
+                                    const tinyobj::texture_option_t & /* _option */) {
   Texture new_texture;
   new_texture.file_name = file_name;
 
@@ -51,7 +52,8 @@ cevy::engine::PbrMaterial cevy::engine::PbrMaterial::gold() {
   return PbrMaterial({0.003, 0.00225, 0.001}, {0.6, 0.4, 0.1}, 10);
 }
 
-cevy::engine::PbrMaterial cevy::engine::PbrMaterial::from_tinyobj(const tinyobj::material_t &material) {
+cevy::engine::PbrMaterial
+cevy::engine::PbrMaterial::from_tinyobj(const tinyobj::material_t &material) {
   PbrMaterial new_material;
 
   printf("name %s\n", material.name.c_str());

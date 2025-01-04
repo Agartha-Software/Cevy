@@ -7,7 +7,6 @@
 
 #pragma once
 
-
 #include "PhysicsProps.hpp"
 #include "Query.hpp"
 #include "Resource.hpp"

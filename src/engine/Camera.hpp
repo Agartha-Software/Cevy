@@ -9,7 +9,7 @@
 
 #include "Resource.hpp"
 #include "Window.hpp"
-#include "ecs/Query.hpp"
+#include "Query.hpp"
 #include "Target.hpp"
 #include "Transform.hpp"
 #include "cevy.hpp"
@@ -17,14 +17,14 @@
 namespace cevy::engine {
 class Camera {
   public:
-    float fov;
-    float aspect;
-    float near;
-    float far;
-    glm::vec3 up;
-    float tilt;
-    glm::mat4 projection;
-    glm::mat4 view;
+  float fov;
+  float aspect;
+  float near;
+  float far;
+  glm::vec3 up;
+  float tilt;
+  glm::mat4 projection;
+  glm::mat4 view;
   Camera();
   ~Camera();
 };
