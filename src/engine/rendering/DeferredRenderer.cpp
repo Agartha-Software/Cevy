@@ -52,11 +52,14 @@ static glm::vec3 filmicToneMapping(glm::vec3 color) {
 }
 
 void cevy::engine::DeferredRenderer::init() {
+  this->alive = "DeferredRenderer is initialized";
+  // std::cerr << " <<<< DeferredRenderer::init() <<<<" << std::endl;
+
   this->defaultMaterial = PbrMaterial();
 
   std::cout << "loading principled_shader" << std::endl;
 
-  this->principled_shader = new ShaderProgram();
+  this->principled_shader = std::make_unique<ShaderProgram>();
 
   std::cout << "allocated principled_shader" << std::endl;
 
@@ -86,7 +89,7 @@ void cevy::engine::DeferredRenderer::init() {
 
   std::cout << "loading gBuffer_shader" << std::endl;
 
-  this->gBuffer_shader = new ShaderProgram();
+  this->gBuffer_shader = std::make_unique<ShaderProgram>();
 
   std::cout << "allocated gBuffer_shader" << std::endl;
 
@@ -107,54 +110,7 @@ void cevy::engine::DeferredRenderer::init() {
   this->gBuffer_shader->addUniform("halflambert");
   // this->gBuffer_shader->addUniform("activeLights");
 
-  glGenFramebuffers(1, &this->gBuffer);
-  glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer);
-
-  this->gAttachments[0] = GL_COLOR_ATTACHMENT0;
-  this->gAttachments[1] = GL_COLOR_ATTACHMENT1;
-  this->gAttachments[2] = GL_COLOR_ATTACHMENT2;
-  this->gAttachments[3] = GL_COLOR_ATTACHMENT3;
-
-  glGenTextures(1, &this->gPosition);
-  glBindTexture(GL_TEXTURE_2D, this->gPosition);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->gPosition, 0);
-
-  // - normal color buffer
-  glGenTextures(1, &this->gNormal);
-  glBindTexture(GL_TEXTURE_2D, this->gNormal);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, this->width, this->height, 0, GL_RGBA, GL_FLOAT, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this->gNormal, 0);
-
-  // - color + specular color buffer
-  glGenTextures(1, &this->gAlbedo);
-  glBindTexture(GL_TEXTURE_2D, this->gAlbedo);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-               NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, this->gAlbedo, 0);
-
-  glGenTextures(1, &this->gEmit);
-  glBindTexture(GL_TEXTURE_2D, this->gEmit);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-               NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, this->gEmit, 0);
-
-  glDrawBuffers(4, this->gAttachments);
-
-  glGenRenderbuffers(1, &this->rbo);
-  glBindRenderbuffer(GL_RENDERBUFFER, this->rbo);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, this->width, this->height);
-  glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, this->rbo);
+  this->gbuffer.init_default();
 }
 
 void cevy::engine::DeferredRenderer::render(
@@ -178,7 +134,7 @@ void cevy::engine::DeferredRenderer::render(
   }
   auto &camera = std::get<Camera &>(*cams.get_single());
 
-  glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer);
+  this->gbuffer.write();
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.0, 0.0, 0.0, 0.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -231,14 +187,7 @@ void cevy::engine::DeferredRenderer::render(
   glClearColor(fog.r, fog.g, fog.b, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   this->principled_shader->use();
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, this->gPosition);
-  glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, this->gNormal);
-  glActiveTexture(GL_TEXTURE2);
-  glBindTexture(GL_TEXTURE_2D, this->gAlbedo);
-  glActiveTexture(GL_TEXTURE3);
-  glBindTexture(GL_TEXTURE_2D, this->gEmit);
+  this->gbuffer.read();
 
   std::vector<pipeline::Light> light_buffer;
   light_buffer.clear();

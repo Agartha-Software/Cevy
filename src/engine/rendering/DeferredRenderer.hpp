@@ -14,15 +14,16 @@
 #include "Model.hpp"
 #include "PbrMaterial.hpp"
 #include "ShaderProgram.hpp"
+#include "deferred/GBuffers.hpp"
+#include "pipeline.hpp"
 #include "rendering.hpp"
 #include <GLFW/glfw3.h>
-#include "pipeline.hpp"
 #include <glm/glm.hpp>
-#include <optional>
 
 class cevy::engine::DeferredRenderer {
   struct pipeline : engine::pipeline {
-    using unorm8 = uint8_t; /// unsigned normalized: 1.0 is mapped to 255 etc https://www.khronos.org/opengl/wiki/Normalized_Integer
+    using unorm8 = uint8_t; /// unsigned normalized: 1.0 is mapped to 255 etc
+                            /// https://www.khronos.org/opengl/wiki/Normalized_Integer
     struct gBuffers {
       struct gPostition {
         static constexpr uint attachment = GL_COLOR_ATTACHMENT0;
@@ -51,7 +52,7 @@ class cevy::engine::DeferredRenderer {
           enum MODE {
             _,
             halfLambert, /// enable halfLambert
-            ambient, /// treat emit as additionnal ambient instead
+            ambient,     /// treat emit as additionnal ambient instead
           } flags;
         } mode; /// subject to change
       };
@@ -64,30 +65,47 @@ class cevy::engine::DeferredRenderer {
   using Resource = ecs::Resource<T>;
 
   public:
-  template<typename Windower = cevy::engine::Window::generic_window>
-  DeferredRenderer(const Windower& win) {
-    auto size = win.size();
-    this->width = size.x;
-    this->height = size.y;
+  template <typename Windower>
+  DeferredRenderer(const Windower &win)
+      : width(win.size().x), height(win.size().y), gbuffer(width, height) {
+    std::cout << " <<<< DeferredRenderer(win) @" << this << " <<<<" << std::endl;
   }
+
+  DeferredRenderer(DeferredRenderer &&rhs) : gbuffer(std::forward<GBuffers &&>(rhs.gbuffer)) {
+    std::cout << " <<<< DeferredRenderer MOVE CONSTRUCT @" << this << " <<<<" << std::endl;
+    this->width = rhs.width;
+    this->height = rhs.height;
+    this->defaultMaterial = rhs.defaultMaterial;
+    this->gBuffer_shader.swap(rhs.gBuffer_shader);
+    this->principled_shader.swap(rhs.principled_shader);
+    this->uboLights = rhs.uboLights;
+    rhs.alive = "DeferredRenderer is moved-from";
+    rhs.uboLights = 0;
+  }
+
+  ~DeferredRenderer() {
+    std::cout << this->alive << std::endl;
+    std::cout << " <<<< ~DeferredRenderer @" << this << "<<<<" << std::endl;
+  }
+
   void init();
   void
   render(Query<Camera> cams,
          Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-         Query<option<Transform>, cevy::engine::PointLight> lights,
-         const ecs::World &world);
+         Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world);
+
   protected:
   GLFWwindow *glfWindow;
-  ShaderProgram *gBuffer_shader;
-  ShaderProgram *principled_shader;
+  std::unique_ptr<ShaderProgram> gBuffer_shader = nullptr;
+  std::unique_ptr<ShaderProgram> principled_shader = nullptr;
   PbrMaterial defaultMaterial;
+
+  std::string alive = "DeferredRenderer is uninitialized";
 
   int width;
   int height;
 
   uint uboLights = 0;
-  uint gBuffer;
-  uint rbo;
-  uint gPosition, gNormal, gAlbedo, gEmit;
-  uint gAttachments[4];
+
+  GBuffers gbuffer;
 };
