@@ -60,6 +60,13 @@ class ResourceManager {
     _resources_map[std::type_index(typeid(Content))] = a;
   }
 
+  template <typename R, typename... Params>
+  void emplace_resource(Params &&... params) {
+    auto a = std::make_any<R>(std::forward<Params&&>(params)...);
+
+    _resources_map[std::type_index(typeid(R))] = a;
+  }
+
   template <typename Content>
   std::optional<Content> remove_resource() {
     auto it = _resources_map.find(std::type_index(typeid(Content)));
