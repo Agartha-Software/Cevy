@@ -8,7 +8,6 @@
 #pragma once
 
 #include "Window.hpp"
-#include <optional>
 #if (_WIN32)
 #include <GL/gl3w.h>
 #endif
@@ -16,7 +15,6 @@
 #include <GL/glew.h>
 #endif
 
-#include "Atmosphere.hpp"
 #include "Camera.hpp"
 #include "Color.hpp"
 #include "GLFW/glfw3.h"
@@ -46,21 +44,37 @@ class glWindow : public cevy::engine::Window::generic_window {
   using glLight = cevy::engine::pipeline::Light;
 
   public:
-  glWindow(int width, int height) : width(width), height(height), renderer(*this) {
+  glWindow(int width, int height) : width(width), height(height) {
+    // std::cout << " <<<< glWindow(width, height) @" << this << "  <<<<" << std::endl;
+    this->renderer = std::make_unique<Renderer>(*this);
     open();
-    renderer.init();
+    this->renderer->init();
   }
-  glWindow(glWindow &&rhs) noexcept :  width(width), height(height), renderer(rhs.renderer) {
+  glWindow(glWindow &&rhs) noexcept :  width(width), height(height), renderer(nullptr) {
+    this->renderer.swap(rhs.renderer);
+    // std::cout << " <<<< glWindow MOVE CONSTRUCT @" << this << "  <<<<" << std::endl;
     this->width = rhs.width;
     this->height = rhs.height;
     this->glfWindow = rhs.glfWindow;
-    this->renderer = rhs.renderer;
     rhs.glfWindow = nullptr;
 
     glfwSetWindowUserPointer(this->glfWindow, this);
   }
   glWindow(const glWindow &) = delete;
-  ~glWindow() { close(); };
+
+  ~glWindow() {
+    // std::cout << " <<<< ~glWindow @" << this << "  <<<<" << std::endl;
+
+    this->renderer.reset();
+
+    if (this->glfWindow) {
+      /*importantly, since children depend on the gl context for destruction,
+       we only destroy the gl context after destroying its dependants */
+      std::cerr << " <<<< TERMINATING GL WINDOW <<<<" << std::endl;
+      glfwDestroyWindow(this->glfWindow);
+      glfwTerminate();
+    }
+  };
 
   glm::vec<2, int> size() const override {
     return {width, height};
@@ -74,13 +88,6 @@ class glWindow : public cevy::engine::Window::generic_window {
 
   bool open() override {
     this->init_context();
-    return 0;
-  }
-  bool close() {
-    if (this->glfWindow) {
-      glfwDestroyWindow(this->glfWindow);
-      glfwTerminate();
-    }
     return 0;
   }
   static void render_system(
@@ -107,7 +114,7 @@ class glWindow : public cevy::engine::Window::generic_window {
     }
 
 
-    this->renderer.render(cams, models, lights, world);
+    this->renderer->render(cams, models, lights, world);
     glfwSwapBuffers(this->glfWindow);
   }
 
@@ -195,5 +202,5 @@ class glWindow : public cevy::engine::Window::generic_window {
   int width;
   int height;
   GLFWwindow *glfWindow;
-  Renderer renderer;
+  std::unique_ptr<Renderer> renderer;
 };
