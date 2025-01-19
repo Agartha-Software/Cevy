@@ -9,6 +9,7 @@
 
 #include "App.hpp"
 #include "AssetManager.hpp"
+#include "Atmosphere.hpp"
 #include "Camera.hpp"
 #include "Color.hpp"
 #include "DefaultPlugin.hpp"
@@ -22,9 +23,7 @@
 #include "Velocity.hpp"
 #include "Window.hpp"
 #include "ecs.hpp"
-#include "DefaultPlugin.hpp"
 #include "glWindow.hpp"
-#include "Atmosphere.hpp"
 
 namespace cevy::engine {
 
@@ -43,7 +42,7 @@ class RenderStage : public cevy::ecs::core_stage::after<cevy::ecs::core_stage::P
 class PreRenderStage : public cevy::ecs::core_stage::before<RenderStage> {};
 class PostRenderStage : public cevy::ecs::core_stage::after<RenderStage> {};
 
-template<template<typename T> typename Windower = glWindow, typename Renderer = ForwardRenderer>
+template <template <typename T> typename Windower = glWindow, typename Renderer = ForwardRenderer>
 class Engine : public cevy::ecs::Plugin {
   public:
   // void build(cevy::ecs::App &app);
@@ -60,8 +59,7 @@ class Engine : public cevy::ecs::Plugin {
     app.init_resource<cevy::engine::DebugWindow>(cevy::engine::DebugWindow{.open = true});
 #endif
     app.init_resource<cevy::engine::Atmosphere>();
-    app.init_resource<cevy::engine::Window>(
-        cevy::engine::Window(Windower<Renderer>(1280, 720)));
+    app.init_resource<cevy::engine::Window>(Windower<Renderer>(1280, 720));
     app.init_component<cevy::engine::Camera>();
     app.init_component<cevy::engine::Velocity>();
     app.init_component<cevy::engine::PhysicsProps>();
