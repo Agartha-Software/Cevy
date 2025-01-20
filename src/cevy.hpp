@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "any_nc.hpp"
 #include <functional>
 #include <optional>
 
@@ -63,6 +64,12 @@ namespace engine {};
 
 /// @brief hold physics mechanism, depends on ecs
 namespace physics {};
+
+using any = std::any_nc;
+template <typename... Args>
+auto make_any(Args &&...args) -> decltype(std::make_any_nc(std::forward<Args>(args)...)) {
+  return std::make_any_nc(std::forward<Args>(args)...);
+}
 
 } // namespace cevy
 

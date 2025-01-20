@@ -22,7 +22,7 @@ class Asset<PbrMaterial> {
   AssetManager &_ref;
 
   public:
-  Asset(AssetManager &ref) : _ref(ref){};
+  Asset(AssetManager &ref) : _ref(ref) {};
 
   Handle<PbrMaterial> load(PbrMaterial &&material) {
     _ref._diffuses.push_back(material);
@@ -37,7 +37,7 @@ class Asset<cevy::engine::Model> {
   AssetManager &_ref;
 
   public:
-  Asset(AssetManager &ref) : _ref(ref){};
+  Asset(AssetManager &ref) : _ref(ref) {};
 
   Handle<Model> load(Model &&model) {
     _ref._meshs.push_back(model);

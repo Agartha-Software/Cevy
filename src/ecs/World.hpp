@@ -151,7 +151,7 @@ class cevy::ecs::World {
   /// std::any can not be move constructed so irrelevant
   template <typename R, typename... Params>
   void init_resource(Params &&...p) {
-    _resource_manager.emplace_resource<R>(std::forward<Params&&>(p)...);
+    _resource_manager.emplace_resource<R>(std::forward<Params &&>(p)...);
   }
 
   /// insert a resource to the world
@@ -351,11 +351,7 @@ class cevy::ecs::World {
             typename std::enable_if_t<is_resource<R>::value, bool> = true,
             typename std::enable_if_t<is_optional<OR>::value, bool> = true>
   OR get_super(size_t) {
-    if (_resource_manager.contains_resource<typename R::value>()) {
-      return OR(_resource_manager.get<typename R::value>());
-    } else {
-      return OR(std::nullopt);
-    }
+    return _resource_manager.get_resource<R>();
   }
 
   template <typename C, typename std::enable_if_t<is_commands<C>::value, bool> = true>
