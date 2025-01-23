@@ -61,7 +61,10 @@ class TransformVelocity : public engine::Transform {
          ecs::Resource<cevy::ecs::Time> time) {
     float delta_t = time.get().delta_seconds();
     for (auto [tm, vel, phys] : q) {
-      tm *= vel * delta_t;
+      auto scaled = vel * delta_t;
+      tm.position += scaled.position;
+      tm.rotation *= scaled.rotation;
+      tm.scale *= scaled.scale;
       float decay = 1;
       if (phys.has_value()) {
         decay = 1 - phys.value().decay;
