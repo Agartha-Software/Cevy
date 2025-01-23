@@ -57,9 +57,9 @@ cevy::engine::PbrMaterial::from_tinyobj(const tinyobj::material_t &material) {
   PbrMaterial new_material;
 
   printf("name %s\n", material.name.c_str());
-  new_material.ambiant = {material.ambient[0], material.ambient[1], material.ambient[2]};
-  printf("ambiant %f %f %f \n", new_material.ambiant.x, new_material.ambiant.y,
-         new_material.ambiant.z);
+  new_material.ambient = {material.ambient[0], material.ambient[1], material.ambient[2]};
+  printf("ambient %f %f %f \n", new_material.ambient.x, new_material.ambient.y,
+         new_material.ambient.z);
   new_material.diffuse = {material.diffuse[0], material.diffuse[1], material.diffuse[2]};
   printf("diffuse %f %f %f \n", new_material.diffuse.x, new_material.diffuse.y,
          new_material.diffuse.z);

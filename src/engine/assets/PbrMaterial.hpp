@@ -19,18 +19,24 @@ class Texture {
 
 class PbrMaterial {
   public:
-  PbrMaterial(){};
+  PbrMaterial(){
+    halflambert = true;
+  };
   PbrMaterial(glm::vec3 &&diffuse, glm::vec3 &&specular, float exponent)
-      : diffuse(diffuse), specular_tint(specular), phong_exponent(exponent) {}
+      : diffuse(diffuse), specular_tint(specular), phong_exponent(exponent) {
+        halflambert = true;
+      }
   ~PbrMaterial(){};
 
   static PbrMaterial gold();
   static PbrMaterial from_tinyobj(const tinyobj::material_t &material);
 
-  glm::vec3 ambiant = {0, 0, 0};
+  glm::vec3 emit = {0, 0, 0};
+  glm::vec3 ambient = {0, 0, 0};
   glm::vec3 diffuse = {0.8, 0.8, 0.8};
   glm::vec3 specular_tint = {1, 1, 1};
   float phong_exponent = 8;
+  bool halflambert: 1;
 
   std::optional<Texture> diffuse_texture = std::optional<Texture>();
 };
