@@ -72,6 +72,7 @@ void cevy::engine::ForwardRenderer::init() {
 }
 
 void cevy::engine::ForwardRenderer::render(
+    ForwardRenderer &self,
     Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
     Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world) {
@@ -89,7 +90,7 @@ void cevy::engine::ForwardRenderer::render(
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
 
-  this->shaderProgram->use();
+  self.shaderProgram->use();
 
   if (cams.size() == 0) {
     return;
@@ -112,25 +113,25 @@ void cevy::engine::ForwardRenderer::render(
         pipeline::Light(light, o_tm.has_value() ? o_tm->get_world().position : glm::vec3()));
   }
 
-  glBindBuffer(GL_UNIFORM_BUFFER, this->uboLights);
+  glBindBuffer(GL_UNIFORM_BUFFER, self.uboLights);
   glBufferSubData(GL_UNIFORM_BUFFER, 0, light_buffer.size() * sizeof(pipeline::Light),
                   light_buffer.data());
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-  glUniform1i(this->shaderProgram->uniform("activeLights"), light_buffer.size());
+  glUniform1i(self.shaderProgram->uniform("activeLights"), light_buffer.size());
   // std::cout << "activeLights: " << light_buffer.size() << std::endl;
 
-  glUniform3fv(this->shaderProgram->uniform("fog"), 1, glm::value_ptr(fog));
+  glUniform3fv(self.shaderProgram->uniform("fog"), 1, glm::value_ptr(fog));
 
-  glUniform1f(this->shaderProgram->uniform("fog_far"),
+  glUniform1f(self.shaderProgram->uniform("fog_far"),
               std::min(camera.far, fog_dist)); // or is it camera.far?
 
-  glUniformMatrix4fv(this->shaderProgram->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
+  glUniformMatrix4fv(self.shaderProgram->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
 
   auto invView = glm::inverse(camera.view);
   invView = invView / invView[3][3];
 
-  glUniformMatrix4fv(this->shaderProgram->uniform("invView"), 1, GL_FALSE, glm::value_ptr(invView));
+  glUniformMatrix4fv(self.shaderProgram->uniform("invView"), 1, GL_FALSE, glm::value_ptr(invView));
 
   // std::cout << "rendering " << models.size() << " models" << std::endl;
   for (auto [o_tm, h_model, o_h_material, o_color] : models) {
@@ -138,21 +139,21 @@ void cevy::engine::ForwardRenderer::render(
     auto model = h_model.get();
     glm::vec4 white = glm::vec4(1, 1, 1, 1);
     auto &color = o_color ? o_color.value().as_vec() : white;
-    PbrMaterial &material = o_h_material ? *o_h_material->get() : this->defaultMaterial;
+    PbrMaterial &material = o_h_material ? *o_h_material->get() : self.defaultMaterial;
 
-    glUniform3fv(this->shaderProgram->uniform("ambientColor"), 1,
-                 glm::value_ptr(ambient + material.ambiant));
-    glUniform3fv(this->shaderProgram->uniform("albedo"), 1,
+    glUniform3fv(self.shaderProgram->uniform("ambientColor"), 1,
+                 glm::value_ptr(ambient + material.ambient));
+    glUniform3fv(self.shaderProgram->uniform("albedo"), 1,
                  glm::value_ptr(material.diffuse * color.xyz()));
-    glUniform3fv(this->shaderProgram->uniform("specular_tint"), 1,
+    glUniform3fv(self.shaderProgram->uniform("specular_tint"), 1,
                  glm::value_ptr(material.specular_tint));
-    glUniform1f(this->shaderProgram->uniform("phong_exponent"), material.phong_exponent);
-    glUniform1i(this->shaderProgram->uniform("halflambert"), true);
-    glUniformMatrix4fv(this->shaderProgram->uniform("model"), 1, GL_FALSE,
+    glUniform1f(self.shaderProgram->uniform("phong_exponent"), material.phong_exponent);
+    glUniform1i(self.shaderProgram->uniform("halflambert"), true);
+    glUniformMatrix4fv(self.shaderProgram->uniform("model"), 1, GL_FALSE,
                        glm::value_ptr(tm * model->modelMatrix()));
-    glUniformMatrix3fv(this->shaderProgram->uniform("model_normal"), 1, GL_TRUE,
+    glUniformMatrix3fv(self.shaderProgram->uniform("model_normal"), 1, GL_TRUE,
                        glm::value_ptr(model->tNormalMatrix() * glm::inverse(glm::mat3(tm))));
-    glUniform1i(this->shaderProgram->uniform("has_texture"), model->tex_coordinates.size() != 0);
+    glUniform1i(self.shaderProgram->uniform("has_texture"), model->tex_coordinates.size() != 0);
 
     if (material.diffuse_texture.has_value()) {
       glActiveTexture(GL_TEXTURE0);

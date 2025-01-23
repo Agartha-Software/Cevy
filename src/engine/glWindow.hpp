@@ -113,8 +113,8 @@ class glWindow : public cevy::engine::Window::generic_window {
       return;
     }
 
+    Renderer::render(*this->renderer, cams, models, lights, world);
 
-    this->renderer->render(cams, models, lights, world);
     glfwSwapBuffers(this->glfWindow);
   }
 

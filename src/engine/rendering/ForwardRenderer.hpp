@@ -29,7 +29,8 @@ class cevy::engine::ForwardRenderer {
   ForwardRenderer(const Windower & /* win */) {}
   void init();
   void
-  render(Query<Camera> cams,
+  static render(ForwardRenderer& self,
+         Query<Camera> cams,
          Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
          Query<option<Transform>, cevy::engine::PointLight> lights, const cevy::ecs::World &world);
 
