@@ -315,8 +315,9 @@ class Transform {
   static void parent_callback(std::map<size_t, std::tuple<Transform*, size_t>> storage, Transform& self, size_t parent) {
     if (storage.find(parent) != storage.end()) {
       auto& [p_tm, p_p] = storage.at(parent);
+      // std::get<1>(storage.at(parent)) = size_t(-1);
+      p_p = size_t(-1);
       parent_callback(storage, *p_tm, p_p);
-      std::get<1>(storage.at(parent)) = size_t(-1);
       self.parent(*p_tm);
     }
   };

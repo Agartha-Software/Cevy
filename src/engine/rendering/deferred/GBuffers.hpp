@@ -93,8 +93,9 @@ class GBuffers {
 
     add_spec(0, GL_RGBA16F, GL_NEAREST);
     add_spec(1, GL_RGBA16F, GL_NEAREST);
-    add_spec(2, GL_RGBA, GL_NEAREST);
-    add_spec(3, GL_RGBA16F, GL_NEAREST);
+    add_spec(2, GL_RGBA16F, GL_NEAREST);
+    add_spec(3, GL_RGBA, GL_NEAREST);
+    add_spec(4, GL_RGBA, GL_NEAREST);
     rebuild();
   }
 
@@ -166,6 +167,10 @@ class GBuffers {
   }
 
   void write() const { glBindFramebuffer(GL_FRAMEBUFFER, this->framebuffer); }
+
+  uint getFramebuffer() const { return this->framebuffer; }
+
+  uint getDepthbuffer() const { return this->depthbuffer; }
 
   protected:
   void build(size_t index) {

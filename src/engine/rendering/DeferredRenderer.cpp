@@ -57,35 +57,69 @@ void cevy::engine::DeferredRenderer::init() {
 
   this->defaultMaterial = PbrMaterial();
 
-  std::cout << "loading principled_shader" << std::endl;
 
-  this->principled_shader = std::make_unique<ShaderProgram>();
+  std::cout << "loading compose_shader" << std::endl;
 
-  std::cout << "allocated principled_shader" << std::endl;
+  this->compose_shader = std::make_unique<ShaderProgram>();
 
-  this->principled_shader->initFromFiles("shaders/deferred.vert", "shaders/deferred.frag");
-  std::cout << "inited principled_shader" << std::endl;
+  std::cout << "allocated compose_shader" << std::endl;
 
-  this->principled_shader->addUniform("view");
-  this->principled_shader->addUniform("invView");
-  this->principled_shader->addUniform("ambientColor");
-  this->principled_shader->addUniform("fog");
-  this->principled_shader->addUniform("fog_far");
-  this->principled_shader->addUniform("activeLights");
+  this->compose_shader->initFromFiles("assets/engine/shaders/deferred.vert", "assets/engine/shaders/deferred_compose.frag");
+  std::cout << "inited compose_shader" << std::endl;
 
-  GLuint uniformBlockIndexLights =
-      glGetUniformBlockIndex(this->principled_shader->id(), "LightBlock");
-  std::cout << "uniformBlockIndexLights: " << uniformBlockIndexLights << std::endl;
-  glUniformBlockBinding(this->principled_shader->id(), uniformBlockIndexLights, 0);
+  this->compose_shader->addUniform("view");
+  this->compose_shader->addUniform("invView");
+  this->compose_shader->addUniform("ambientColor");
+  this->compose_shader->addUniform("fog");
+  this->compose_shader->addUniform("fog_far");
 
-  glGenBuffers(1, &this->uboLights);
-  glBindBuffer(GL_UNIFORM_BUFFER, this->uboLights);
-  glBufferData(GL_UNIFORM_BUFFER, sizeof(pipeline::Light) * pipeline::Light::count, NULL,
-               GL_DYNAMIC_DRAW);
-  glBindBufferBase(GL_UNIFORM_BUFFER, uniformBlockIndexLights, this->uboLights);
-  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  this->compose_shader->addUniform("exposure");
 
-  glBindBufferBase(GL_UNIFORM_BUFFER, 1, this->uboLights);
+    std::cout << "loading accumulate_shader" << std::endl;
+
+  this->accumulate_shader = std::make_unique<ShaderProgram>();
+
+  std::cout << "allocated accumulate_shader" << std::endl;
+
+  this->accumulate_shader->initFromFiles("assets/engine/shaders/deferred.vert", "assets/engine/shaders/deferred_accumulate.frag");
+  std::cout << "inited accumulate_shader" << std::endl;
+
+  this->accumulate_shader->addUniform("view");
+  this->accumulate_shader->addUniform("invView");
+  this->accumulate_shader->addUniform("lightPosition");
+  this->accumulate_shader->addUniform("lightEnergy");
+  this->accumulate_shader->addUniform("lightRadius");
+  this->accumulate_shader->addUniform("lightRange");
+
+  // std::cout << "loading principled_shader" << std::endl;
+
+  // this->principled_shader = std::make_unique<ShaderProgram>();
+
+  // std::cout << "allocated principled_shader" << std::endl;
+
+  // this->principled_shader->initFromFiles("assets/engine/shaders/deferred.vert", "assets/engine/shaders/deferred.frag");
+  // std::cout << "inited principled_shader" << std::endl;
+
+  // this->principled_shader->addUniform("view");
+  // this->principled_shader->addUniform("invView");
+  // this->principled_shader->addUniform("ambientColor");
+  // this->principled_shader->addUniform("fog");
+  // this->principled_shader->addUniform("fog_far");
+  // this->principled_shader->addUniform("activeLights");
+
+  // GLuint uniformBlockIndexLights =
+  //     glGetUniformBlockIndex(this->principled_shader->id(), "LightBlock");
+  // std::cout << "uniformBlockIndexLights: " << uniformBlockIndexLights << std::endl;
+  // glUniformBlockBinding(this->principled_shader->id(), uniformBlockIndexLights, 0);
+
+  // glGenBuffers(1, &this->uboLights);
+  // glBindBuffer(GL_UNIFORM_BUFFER, this->uboLights);
+  // glBufferData(GL_UNIFORM_BUFFER, sizeof(pipeline::Light) * pipeline::Light::count, NULL,
+  //              GL_DYNAMIC_DRAW);
+  // glBindBufferBase(GL_UNIFORM_BUFFER, uniformBlockIndexLights, this->uboLights);
+  // glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+  // glBindBufferBase(GL_UNIFORM_BUFFER, 1, this->uboLights);
 
   std::cout << "loading gBuffer_shader" << std::endl;
 
@@ -93,7 +127,7 @@ void cevy::engine::DeferredRenderer::init() {
 
   std::cout << "allocated gBuffer_shader" << std::endl;
 
-  this->gBuffer_shader->initFromFiles("shaders/simple.vert", "shaders/gbuffer.frag");
+  this->gBuffer_shader->initFromFiles("assets/engine/shaders/simple.vert", "assets/engine/shaders/gbuffer.frag");
   std::cout << "inited gBuffer_shader" << std::endl;
 
   this->gBuffer_shader->addUniform("model");
@@ -101,20 +135,18 @@ void cevy::engine::DeferredRenderer::init() {
   this->gBuffer_shader->addUniform("view");
   this->gBuffer_shader->addUniform("invView");
   this->gBuffer_shader->addUniform("emit");
-  this->gBuffer_shader->addUniform("emit_ambient");
-  // this->gBuffer_shader->addUniform("fog");
-  // this->gBuffer_shader->addUniform("fog_far");
+  this->gBuffer_shader->addUniform("custom_ambient");
   this->gBuffer_shader->addUniform("albedo");
-  this->gBuffer_shader->addUniform("specular_tint");
-  this->gBuffer_shader->addUniform("phong_exponent");
+  this->gBuffer_shader->addUniform("specular");
+  this->gBuffer_shader->addUniform("roughness");
   this->gBuffer_shader->addUniform("halflambert");
-  // this->gBuffer_shader->addUniform("activeLights");
 
   this->gbuffer.init_default();
+  this->billboard.init();
 }
 
 void cevy::engine::DeferredRenderer::render(
-    Query<Camera> cams,
+    DeferredRenderer &self, Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
     Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world) {
 
@@ -134,43 +166,41 @@ void cevy::engine::DeferredRenderer::render(
   }
   auto &camera = std::get<Camera &>(*cams.get_single());
 
-  this->gbuffer.write();
-  glEnable(GL_DEPTH_TEST);
+  self.gbuffer.write();
   glClearColor(0.0, 0.0, 0.0, 0.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glm::vec4 far_pos = {0, 0, 0, camera.far};
-  glClearBufferfv(GL_COLOR, 0, glm::value_ptr(far_pos));
+  glClearBufferfv(GL_COLOR, 1, glm::value_ptr(far_pos));
 
-  this->gBuffer_shader->use();
+  self.gBuffer_shader->use();
 
   auto view = glm::scale(camera.projection, glm::vec3(1, camera.aspect, 1)) * camera.view;
+  view = view / view[3][3];
 
   auto invView = glm::inverse(camera.view);
-  invView = invView / invView[3][3];
+  // invView = invView / invView[3][3];
 
-  glUniformMatrix4fv(this->gBuffer_shader->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
-  glUniformMatrix4fv(this->gBuffer_shader->uniform("invView"), 1, GL_FALSE,
-                     glm::value_ptr(invView));
+  glUniformMatrix4fv(self.gBuffer_shader->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
+  glUniformMatrix4fv(self.gBuffer_shader->uniform("invView"), 1, GL_FALSE, glm::value_ptr(invView));
 
-  // std::cout << "rendering " << models.size() << " models" << std::endl;
   for (auto [o_tm, h_model, o_h_material, o_color] : models) {
     auto tm = o_tm ? o_tm->get_world().mat4() : glm::mat4(1);
-    auto model = h_model.get();
+    const auto &model = h_model.get();
     glm::vec4 white = glm::vec4(1, 1, 1, 1);
     auto &color = o_color ? o_color.value().as_vec() : white;
-    PbrMaterial &material = o_h_material ? *o_h_material->get() : this->defaultMaterial;
+    PbrMaterial &material = o_h_material ? *o_h_material->get() : self.defaultMaterial;
 
-    glUniform3fv(this->gBuffer_shader->uniform("emit"), 1, glm::value_ptr(material.ambiant));
-    glUniform1i(this->gBuffer_shader->uniform("emit_ambient"), true);
-    glUniform3fv(this->gBuffer_shader->uniform("albedo"), 1,
+    glUniform3fv(self.gBuffer_shader->uniform("custom_ambient"), 1, glm::value_ptr(material.ambient));
+    glUniform3fv(self.gBuffer_shader->uniform("emit"), 1, glm::value_ptr(material.emit));
+    glUniform3fv(self.gBuffer_shader->uniform("albedo"), 1,
                  glm::value_ptr(material.diffuse * color.xyz()));
-    glUniform3fv(this->gBuffer_shader->uniform("specular_tint"), 1,
+    glUniform3fv(self.gBuffer_shader->uniform("specular"), 1,
                  glm::value_ptr(material.specular_tint));
-    glUniform1i(this->gBuffer_shader->uniform("halflambert"), true);
-    glUniform1f(this->gBuffer_shader->uniform("phong_exponent"), material.phong_exponent);
-    glUniformMatrix4fv(this->gBuffer_shader->uniform("model"), 1, GL_FALSE,
+    glUniform1i(self.gBuffer_shader->uniform("halflambert"), material.halflambert);
+    glUniform1f(self.gBuffer_shader->uniform("roughness"), 1 / material.phong_exponent);
+    glUniformMatrix4fv(self.gBuffer_shader->uniform("model"), 1, GL_FALSE,
                        glm::value_ptr(tm * model->modelMatrix()));
-    glUniformMatrix3fv(this->gBuffer_shader->uniform("model_normal"), 1, GL_TRUE,
+    glUniformMatrix3fv(self.gBuffer_shader->uniform("model_normal"), 1, GL_TRUE,
                        glm::value_ptr(model->tNormalMatrix() * glm::inverse(glm::mat3(tm))));
     // glUniform1i(this->gBuffer_shader->uniform("has_texture"), model->tex_coordinates.size() !=
     // 0);
@@ -182,40 +212,40 @@ void cevy::engine::DeferredRenderer::render(
     model->draw();
   };
 
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  self.accumulate_shader->use();
+  self.gbuffer.read();
+  glDisable(GL_DEPTH_TEST);
+  glEnable(GL_BLEND);
+  glBlendEquation(GL_FUNC_ADD);
+  glBlendFunc(GL_ONE, GL_ONE);
 
-  glClearColor(fog.r, fog.g, fog.b, 1);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  this->principled_shader->use();
-  this->gbuffer.read();
+  self.billboard.screenspace({-1, -1}, {1, 1});
 
-  std::vector<pipeline::Light> light_buffer;
-  light_buffer.clear();
-  light_buffer.reserve(pipeline::Light::count);
-
-  for (auto [o_tm, light] : lights) {
-    if (light_buffer.size() >= pipeline::Light::count)
-      break;
-    light_buffer.push_back(
-        pipeline::Light(light, o_tm.has_value() ? o_tm->get_world().position : glm::vec3()));
-  }
-
-  glBindBuffer(GL_UNIFORM_BUFFER, this->uboLights);
-  glBufferSubData(GL_UNIFORM_BUFFER, 0, light_buffer.size() * sizeof(pipeline::Light),
-                  light_buffer.data());
-  glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-  glUniform1i(this->principled_shader->uniform("activeLights"), light_buffer.size());
-  // std::cout << "activeLights: " << light_buffer.size() << std::endl;
-
-  glUniform3fv(this->principled_shader->uniform("ambientColor"), 1, glm::value_ptr(ambient));
-  glUniform3fv(this->principled_shader->uniform("fog"), 1, glm::value_ptr(fog));
-
-  glUniform1f(this->principled_shader->uniform("fog_far"), std::min(camera.far, fog_dist));
-
-  glUniformMatrix4fv(this->principled_shader->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
-  glUniformMatrix4fv(this->principled_shader->uniform("invView"), 1, GL_FALSE,
+  glUniformMatrix4fv(self.accumulate_shader->uniform("invView"), 1, GL_FALSE,
                      glm::value_ptr(invView));
 
-  renderQuad();
+  for (auto [o_tm, light] : lights) {
+    pipeline::Light gl_light(light, o_tm.has_value() ? o_tm->get_world().position : glm::vec3());
+
+    glUniform3fv(self.accumulate_shader->uniform("lightPosition"), 1, glm::value_ptr(gl_light.position));
+    glUniform3fv(self.accumulate_shader->uniform("lightEnergy"), 1, glm::value_ptr(gl_light.color));
+    glUniform1f(self.accumulate_shader->uniform("lightRadius"), gl_light.radius);
+    glUniform1f(self.accumulate_shader->uniform("lightRange"), 1);
+    self.billboard.draw();
+  }
+
+  glDisable(GL_BLEND);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  self.compose_shader->use();
+
+  glUniformMatrix4fv(self.compose_shader->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
+  glUniformMatrix4fv(self.compose_shader->uniform("invView"), 1, GL_FALSE,
+                     glm::value_ptr(invView));
+  glUniform3fv(self.compose_shader->uniform("ambientColor"), 1, glm::value_ptr(ambient));
+  glUniform3fv(self.compose_shader->uniform("fog"), 1, glm::value_ptr(fog));
+  glUniform1f(self.compose_shader->uniform("fog_far"), std::min(camera.far, fog_dist));
+
+  self.billboard.screenspace({-1, -1}, {1, 1});
+  self.billboard.draw();
 }

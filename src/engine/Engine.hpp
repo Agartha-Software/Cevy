@@ -74,8 +74,8 @@ class Engine : public cevy::ecs::Plugin {
     app.add_plugins(cevy::engine::AssetManagerPlugin());
     app.add_systems<cevy::engine::PreRenderStage>(update_camera);
     app.add_systems<cevy::engine::RenderStage>(Windower<Renderer>::render_system);
-    app.add_systems<ecs::core_stage::Update>(TransformVelocity::system);
-    app.add_systems<cevy::ecs::core_stage::Update>(Transform::children_system);
+    app.add_systems<ecs::core_stage::PostUpdate>(TransformVelocity::system);
+    app.add_systems<cevy::ecs::core_stage::PreUpdate>(Transform::children_system);
   };
 };
 } // namespace cevy::engine
