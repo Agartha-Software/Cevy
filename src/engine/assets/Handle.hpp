@@ -19,7 +19,10 @@ class Handle {
 
   public:
   Handle(Type &ref) : _ref(std::make_shared<Type>(ref)){};
+  Handle(Type &&ref) : _ref(std::make_shared<Type>(std::forward<Type>(ref))){};
 
+  const Type* operator->() const { return _ref.get(); }
+  Type* operator->() { return _ref.get(); }
   std::shared_ptr<Type> get() { return _ref; }
 };
 
