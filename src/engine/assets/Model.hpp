@@ -35,7 +35,7 @@ class Model {
   static void trim_geometry(std::vector<glm::vec3> &vertices, std::vector<index_t> &indices,
                             std::vector<T> &...cleanups);
 
-  void draw();
+  void draw() const;
 
   // void calculate_normals();
 
@@ -149,4 +149,11 @@ void Model::merge_by_distance(std::vector<glm::vec3> &vertices, std::vector<uint
 
   Model::trim_geometry(vertices, indices, cleanups...);
 }
+class Model;
+namespace primitives {
+Model cube(float size);
+// inline Model cube(float size) { return cube({size, size, size}); };
+Model plane(float size, uint subu, uint subv);
+Model sphere(float size, uint slices, uint stacks);
+} // namespace primitives
 } // namespace cevy::engine

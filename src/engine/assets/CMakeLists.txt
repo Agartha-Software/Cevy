@@ -12,6 +12,7 @@ add_library(assets
   Handle.hpp
   AssetManager.hpp
   Model.cpp
+  primitives.cpp
   PbrMaterial.cpp
   )
 

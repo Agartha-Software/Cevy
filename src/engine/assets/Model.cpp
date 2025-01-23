@@ -83,7 +83,7 @@ void Model::load(const std::vector<float> &vertices, const std::vector<float> &n
   this->gl_init();
 }
 
-void Model::draw() {
+void Model::draw() const {
   if (!initialized)
     return;
 
