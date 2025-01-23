@@ -14,5 +14,8 @@ class PointLight {
   public:
   glm::vec3 color;
   float radius;
+  float range;
+  uint16_t viewlayer_bits;
+  uint16_t shadow_viewlayer_bits;
 };
 } // namespace cevy::engine
