@@ -147,11 +147,20 @@ class cevy::ecs::World {
   **
   */
 
-  // / emplace a resource to the world by calling the
-  /// std::any can not be move constructed so irrelevant
+  // emplace a resource to the world by calling the contructor
   template <typename R, typename... Params>
   void init_resource(Params &&...p) {
+    static_assert(std::is_constructible<R, Params&&...>::value,
+                  "Resource must be constructible from Params");
     _resource_manager.emplace_resource<R>(std::forward<Params &&>(p)...);
+  }
+
+  // emplace a resource to the world by calling the move contructor
+  template <typename R>
+  void init_resource(R &&r) {
+    static_assert(std::is_constructible<R, R>::value,
+                  "Resource must be move or copy constructible");
+    _resource_manager.emplace_resource<R>(std::forward<R>(r));
   }
 
   /// insert a resource to the world

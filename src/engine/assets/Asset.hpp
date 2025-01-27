@@ -40,7 +40,7 @@ class Asset<cevy::engine::Model> {
   Asset(AssetManager &ref) : _ref(ref) {};
 
   Handle<Model> load(Model &&model) {
-    _ref._meshs.push_back(model);
+    _ref._meshs.emplace_back(std::forward<Model>(model));
     return Handle<Model>(_ref._meshs[_ref._meshs.size() - 1]);
   }
 };

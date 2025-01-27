@@ -11,7 +11,7 @@
 #include "engine/Engine.hpp"
 
 void init_asset_manager(cevy::ecs::World &w) {
-  w.insert_resource(cevy::engine::AssetManager());
+  w.init_resource(cevy::engine::AssetManager());
   auto asset_manager = w.get_resource<cevy::engine::AssetManager>();
   if (asset_manager) {
     w.insert_resource(cevy::engine::Asset<cevy::engine::Model>(asset_manager->get()));
