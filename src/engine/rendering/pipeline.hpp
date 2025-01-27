@@ -121,18 +121,38 @@ struct pipeline {
   }; // struct layout
 
   struct Light {
+    enum class Type {
+      Point,
+    };
     inline static const int count = 15;
     template <glm::length_t N, typename T>
     Light(const PointLight &l, glm::vec<N, T> position) {
-      this->position = {float(position.x), float(position.y), float(position.z), 1.0f};
+      // this->position = {float(position.x), float(position.y), float(position.z), 1.0f};
+      this->model = {
+          glm::vec4(l.range, 0, 0, 0), //
+          glm::vec4(0, l.range, 0, 0), //
+          glm::vec4(0, 0, l.range, 0), //
+          glm::vec4(position, 1)       //
+      }; // collumn major, visually transposed
+      // this->model = {
+      //     glm::vec4(l.range, 0, 0, position.x), //
+      //     glm::vec4(0, l.range, 0, position.y), //
+      //     glm::vec4(0, 0, l.range, position.z), //
+      //     glm::vec4(0, 0, 0, 1)       //
+      // }; // collumn major, visually transposed
       this->radius = l.radius;
+      this->range = l.range;
       this->color = l.color;
+      this->type = Type::Point;
     }
-    Light(glm::vec4 position, glm::vec3 color, float radius)
-        : position(position), color(color), radius(radius) {};
-    glm::vec4 position;
+    Light(glm::mat4 model, glm::vec3 color, float radius, Type type)
+        : model(model), color(color), radius(radius), type(type) {};
+    // glm::vec4 position;
+    glm::mat4 model;
     glm::vec3 color;
     float radius; /// 0 for directionnal, non-0 for point;
+    float range;
+    Type type;
   };
 };
 }; // namespace cevy::engine
