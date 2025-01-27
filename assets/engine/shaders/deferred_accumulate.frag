@@ -1,10 +1,16 @@
 #version 450
 
+uniform mat4 view;
 uniform mat4 invView;
 uniform vec3 lightPosition;
 uniform vec3 lightEnergy;
 uniform float lightRadius;
 uniform float lightRange;
+
+uniform float width;
+uniform float height;
+
+uniform bool debug_draw;
 
 in vec2 texCoord;
 
@@ -50,10 +56,13 @@ void shade_light(
 }
 
 void main() {
-    vec4 position = texture(gPosition, texCoord);
-    vec4 packed_normal = texture(gNormal, texCoord);
-    vec4 packed_albedo = texture(gAlbedo, texCoord);
-    vec4 packed_specular = texture(gSpecular, texCoord);
+    vec2 screenCoord;
+    // screenCoord = texCoord.xy;
+    screenCoord = gl_FragCoord.xy / vec2(width, height);
+    vec4 position = texture(gPosition, screenCoord);
+    vec4 packed_normal = texture(gNormal, screenCoord);
+    vec4 packed_albedo = texture(gAlbedo, screenCoord);
+    vec4 packed_specular = texture(gSpecular, screenCoord);
     vec3 albedo = packed_albedo.rgb;
     vec3 normal = packed_normal.rgb;
     vec3 specular = packed_specular.rgb;
@@ -89,6 +98,9 @@ void main() {
     vec3 surface = diffuse_light * albedo * fresnel;
     surface += (1 - fresnel) * specular_light * specular;
 
+    bool debug_draw_override = debug_draw;
+
+    surface = mix(surface, lightEnergy * 0.01, float(debug_draw_override));
+
     fragColor = vec4(surface, 1);
-    // fragColor = vec4(ray, 1);
 }

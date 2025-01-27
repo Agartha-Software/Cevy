@@ -8,7 +8,6 @@ layout (location = 4) out vec4 gSpecular;
 
 in vec3 color;
 in vec4 position;
-in vec4 v_position;
 in vec3 normal;
 in vec2 texCoord;
 
@@ -26,7 +25,7 @@ layout (binding = 0) uniform sampler2D diffuseTexture;
 // uniform sampler2D texture_specular1;
 
 void main() {
-    gPosition = vec4(position.xyz, v_position.z);
+    gPosition = position;
     gNormal = vec4(normalize(normal), 0);
     // and the diffuse per-fragment color
     // vec3 albedo = has_texture ? texture(diffuseTexture, texCoord).xyz * albedo : albedo;

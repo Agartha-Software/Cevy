@@ -6,6 +6,9 @@ uniform vec3 ambientColor;
 uniform vec3 fog;
 uniform float fog_far;
 
+uniform float width;
+uniform float height;
+
 in vec2 texCoord;
 
 layout (binding = 0) uniform sampler2D renderBuffer;
@@ -25,10 +28,13 @@ vec3 filmicToneMapping(vec3 color) {
 }
 
 void main() {
-    vec4 position = texture(gPosition, texCoord);
-    vec4 packed_normal = texture(gNormal, texCoord);
-    vec4 packed_albedo = texture(gAlbedo, texCoord);
-    vec4 packed_specular = texture(gSpecular, texCoord);
+    vec2 screenCoord;
+    // screenCoord = texCoord.xy;
+    screenCoord = gl_FragCoord.xy / vec2(width, height);
+    vec4 position = texture(gPosition, screenCoord);
+    vec4 packed_normal = texture(gNormal, screenCoord);
+    vec4 packed_albedo = texture(gAlbedo, screenCoord);
+    vec4 packed_specular = texture(gSpecular, screenCoord);
     vec3 albedo = packed_albedo.rgb;
     vec3 normal = packed_normal.rgb;
     vec3 specular = packed_specular.rgb;

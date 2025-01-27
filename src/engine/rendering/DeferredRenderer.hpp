@@ -91,13 +91,13 @@ class cevy::engine::DeferredRenderer {
     this->width = rhs.width;
     this->height = rhs.height;
     this->defaultMaterial = rhs.defaultMaterial;
+    this->null_shader.swap(rhs.null_shader);
     this->gBuffer_shader.swap(rhs.gBuffer_shader);
     this->compose_shader.swap(rhs.compose_shader);
     this->accumulate_shader.swap(rhs.accumulate_shader);
     // this->principled_shader.swap(rhs.principled_shader);
-    this->uboLights = rhs.uboLights;
     rhs.alive = "DeferredRenderer is moved-from";
-    rhs.uboLights = 0;
+    this->primitives.sphere = std::move(rhs.primitives.sphere);
   }
 
   ~DeferredRenderer() {
@@ -107,12 +107,13 @@ class cevy::engine::DeferredRenderer {
 
   void init();
   static void
-  render(DeferredRenderer& self, Query<Camera> cams,
+  render(DeferredRenderer &self, Query<Camera> cams,
          Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
          Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world);
 
   protected:
   GLFWwindow *glfWindow;
+  std::unique_ptr<ShaderProgram> null_shader = nullptr;
   std::unique_ptr<ShaderProgram> gBuffer_shader = nullptr;
   // std::unique_ptr<ShaderProgram> principled_shader = nullptr;
   std::unique_ptr<ShaderProgram> accumulate_shader = nullptr;
@@ -125,8 +126,9 @@ class cevy::engine::DeferredRenderer {
   int height;
   float aspect;
 
-  uint uboLights = 0;
-
   GBuffers gbuffer;
   Billboard billboard;
+  struct {
+    Model sphere;
+  } primitives;
 };
