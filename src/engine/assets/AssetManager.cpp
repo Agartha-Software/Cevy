@@ -8,7 +8,7 @@
 #include "AssetManager.hpp"
 #include "Asset.hpp"
 #include "PbrMaterial.hpp"
-#include "engine/Engine.hpp"
+#include "engine.hpp"
 
 void init_asset_manager(cevy::ecs::World &w) {
   w.init_resource(cevy::engine::AssetManager());
