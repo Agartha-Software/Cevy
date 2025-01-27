@@ -18,10 +18,6 @@ struct pipeline {
   /// represents glsl sampler2D
   struct sampler2D {};
 
-  struct constants {
-    inline static constexpr int lightCount = 15;
-  };
-
   struct uniforms {
     /// model transform matrix
     struct model {
@@ -56,18 +52,10 @@ struct pipeline {
     }; // struct environment
 
     struct lighting {
-      /// number of lights with data specified
-      struct activeLights {
-        using Type = int;
-        inline static constexpr auto name = "activeLights";
-      };
-      struct LightBlock {
-        using Type = int;
-        inline static constexpr auto binding = 1;
-        inline static constexpr auto name = "LightBlock";
-        struct lights {
-          using Type = Light[constants::lightCount];
-        };
+      /// multiplier of light energy in the compositor
+      struct exposure {
+        using Type = float;
+        inline static constexpr auto name = "exposure";
       };
     }; // struct lighting
     struct PbrMaterial {
@@ -75,17 +63,26 @@ struct pipeline {
         using Type = glm::vec3;
         inline static constexpr auto name = "albedo";
       };
-      struct specular_tint {
+      struct specular {
         using Type = glm::vec3;
-        inline static constexpr auto name = "specular_tint";
+        inline static constexpr auto name = "specular";
       };
-      struct phong_exponent {
+      struct roughness {
         using Type = float;
-        inline static constexpr auto name = "phong_exponent";
+        inline static constexpr auto name = "roughness";
+      };
+      struct emit {
+        using Type = glm::vec3;
+        inline static constexpr auto name = "emit";
       };
       struct halflambert {
         using Type = bool;
         inline static constexpr auto name = "halflambert";
+      };
+      /// non-physically based additionnal ambient
+      struct custom_ambient {
+        using Type = glm::vec3;
+        inline static constexpr auto name = "custom_ambient";
       };
       struct diffuseTexture {
         using Type = sampler2D;
@@ -134,12 +131,6 @@ struct pipeline {
           glm::vec4(0, 0, l.range, 0), //
           glm::vec4(position, 1)       //
       }; // collumn major, visually transposed
-      // this->model = {
-      //     glm::vec4(l.range, 0, 0, position.x), //
-      //     glm::vec4(0, l.range, 0, position.y), //
-      //     glm::vec4(0, 0, l.range, position.z), //
-      //     glm::vec4(0, 0, 0, 1)       //
-      // }; // collumn major, visually transposed
       this->radius = l.radius;
       this->range = l.range;
       this->color = l.color;
@@ -147,7 +138,6 @@ struct pipeline {
     }
     Light(glm::mat4 model, glm::vec3 color, float radius, Type type)
         : model(model), color(color), radius(radius), type(type) {};
-    // glm::vec4 position;
     glm::mat4 model;
     glm::vec3 color;
     float radius; /// 0 for directionnal, non-0 for point;

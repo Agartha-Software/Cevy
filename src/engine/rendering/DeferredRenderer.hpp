@@ -26,6 +26,7 @@ class cevy::engine::DeferredRenderer {
     using unorm8 = uint8_t; /// unsigned normalized: 1.0 is mapped to 255 etc
                             /// https://www.khronos.org/opengl/wiki/Normalized_Integer
     struct gBuffers {
+      /// light accumulation
       struct gRender {
         static constexpr uint attachment = GL_COLOR_ATTACHMENT0;
         using Type = glm::vec4;
@@ -57,19 +58,13 @@ class cevy::engine::DeferredRenderer {
         glm::vec<3, unorm8> color;
         unorm8 roughness; /// inverse of exponent - 1
       };
-      // struct gEmit {
-      //   static constexpr uint attachment = GL_COLOR_ATTACHMENT5;
-      //   using Type = glm::vec<4, unorm8>;
-      //   glm::vec<3, unorm8> color;
-      //   union {
-      //     unorm8 value;
-      //     enum MODE {
-      //       _,
-      //       halfLambert, /// enable halfLambert
-      //       ambient,     /// treat emit as additionnal ambient instead
-      //     } flags;
-      //   } mode; /// subject to change
-      // };
+    };
+    struct uniforms : engine::pipeline::uniforms {
+      /// mvp for the object acting as a canvas in the deferred rendering passes
+      struct canvas {
+        using Type = glm::mat4;
+        inline static constexpr auto name = "canvas";
+      };
     };
   };
 
