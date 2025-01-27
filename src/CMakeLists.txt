@@ -21,9 +21,13 @@ add_library(cevy SHARED ${CEVY_HEADERS})
 target_link_libraries(cevy PUBLIC ecs engine) # physics)
 set_target_properties(cevy PROPERTIES LINKER_LANGUAGE CXX)
 
+
 function(get_cevy_engine_assets target)
+add_custom_target(cevy_always
+        COMMAND ${CMAKE_COMMAND} -E echo "cevy_always:" "`date`")
+add_dependencies(${target} cevy_always)
 add_custom_command(
-    TARGET ${target} POST_BUILD
+    TARGET cevy_always POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "$<TARGET_PROPERTY:cevy,SOURCE_DIR>/../assets/engine/"
         "$<TARGET_PROPERTY:${target},RUNTIME_OUTPUT_DIRECTORY>/assets/engine/"
@@ -35,8 +39,11 @@ add_custom_command(
 endfunction()
 
 function(copy_cevy_engine_assets_to target directory)
+add_custom_target(cevy_always
+        COMMAND ${CMAKE_COMMAND} -E echo "cevy_always:" "`date`")
+add_dependencies(${target} cevy_always)
 add_custom_command(
-    TARGET ${target} POST_BUILD
+    TARGET cevy_always POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "$<TARGET_PROPERTY:cevy,SOURCE_DIR>/../assets/engine/"
         "${directory}/assets/engine/"
