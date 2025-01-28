@@ -84,7 +84,7 @@ class cevy::engine::DeferredRenderer {
     std::cout << " <<<< DeferredRenderer MOVE CONSTRUCT @" << this << " <<<<" << std::endl;
     this->width = rhs.width;
     this->height = rhs.height;
-    this->defaultMaterial = rhs.defaultMaterial;
+    this->defaultMaterial = std::move(rhs.defaultMaterial);
     this->null_shader.swap(rhs.null_shader);
     this->gBuffer_shader.swap(rhs.gBuffer_shader);
     this->compose_shader.swap(rhs.compose_shader);

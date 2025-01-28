@@ -171,12 +171,11 @@ void cevy::engine::DeferredRenderer::render_system(
   glUniformMatrix4fv(self.gBuffer_shader->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
   glUniformMatrix4fv(self.gBuffer_shader->uniform("invView"), 1, GL_FALSE, glm::value_ptr(invView));
 
-  for (auto [o_tm, h_model, o_h_material, o_color] : models) {
+  for (auto [o_tm, model, o_material, o_color] : models) {
     auto tm = o_tm ? o_tm->get_world().mat4() : glm::mat4(1);
-    const auto &model = h_model.get();
     glm::vec4 white = glm::vec4(1, 1, 1, 1);
     auto &color = o_color ? o_color.value().as_vec() : white;
-    PbrMaterial &material = o_h_material ? *o_h_material->get() : self.defaultMaterial;
+    PbrMaterial &material = o_material ? o_material->get() : self.defaultMaterial;
 
     glUniform3fv(self.gBuffer_shader->uniform("custom_ambient"), 1,
                  glm::value_ptr(material.ambient));

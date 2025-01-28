@@ -38,6 +38,8 @@ class PbrMaterial {
   float phong_exponent = 8;
   bool halflambert: 1;
 
-  std::optional<Texture> diffuse_texture = std::optional<Texture>();
+  std::optional<Handle<Texture>> diffuse_texture = std::nullopt;
+  std::optional<Handle<Texture>> specular_texture = std::nullopt;
+  std::optional<Handle<Texture>> emission_texture = std::nullopt;
 };
 } // namespace cevy::engine
