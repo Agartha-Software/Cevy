@@ -10,38 +10,18 @@
 #include "AssetManager.hpp"
 #include "Handle.hpp"
 #include "PbrMaterial.hpp"
+#include <utility>
 
 namespace cevy::engine {
 template <typename Type>
-class Asset {};
-
-template <>
-class Asset<PbrMaterial> {
-  using Type = PbrMaterial;
-
-  AssetManager &_ref;
+class Asset {
+  AssetManager &manager;
 
   public:
-  Asset(AssetManager &ref) : _ref(ref) {};
+  Asset(AssetManager &manager) : manager(manager) {};
 
-  Handle<PbrMaterial> load(PbrMaterial &&material) {
-    _ref._diffuses.push_back(material);
-    return Handle<PbrMaterial>(_ref._diffuses[_ref._diffuses.size() - 1]);
-  }
-};
-
-template <>
-class Asset<cevy::engine::Model> {
-  using Type = Model;
-
-  AssetManager &_ref;
-
-  public:
-  Asset(AssetManager &ref) : _ref(ref) {};
-
-  Handle<Model> load(Model &&model) {
-    _ref._meshs.emplace_back(std::forward<Model>(model));
-    return Handle<Model>(_ref._meshs[_ref._meshs.size() - 1]);
+  Handle<Type> load(Type &&asset, const std::string name = "") {
+    return this->manager.load(std::forward<Type>(asset), name);
   }
 };
 

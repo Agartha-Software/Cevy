@@ -11,6 +11,8 @@
 
 namespace cevy::engine {
 
+class AssetManager;
+
 #ifdef DEBUG
 struct DebugWindow {
   bool open;
