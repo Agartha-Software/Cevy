@@ -46,11 +46,6 @@ namespace cevy::ecs {
 class ResourceManager {
   private:
   using any = std::any_nc;
-  template <typename T, typename... Args>
-  static inline auto
-  make_any(Args &&...args) -> decltype(std::make_any_nc<T>(std::forward<Args>(args)...)) {
-    return std::make_any_nc<T>(std::forward<Args>(args)...);
-  }
   using resource_type = any;
 
   std::unordered_map<std::type_index, resource_type> _resources_map;
@@ -60,13 +55,13 @@ class ResourceManager {
 
   template <typename Content>
   void insert_resource(const Content &value) {
-    _resources_map.insert_or_assign(std::type_index(typeid(Content)), make_any<Content>(value));
+    _resources_map.insert_or_assign(std::type_index(typeid(Content)), cevy::make_any<Content>(value));
   }
 
   template <typename R, typename... Params>
   void emplace_resource(Params &&...params) {
     _resources_map.insert_or_assign(std::type_index(typeid(R)),
-                                    make_any<R>(std::forward<Params &&>(params)...));
+                                    cevy::make_any<R>(std::forward<Params &&>(params)...));
   }
 
   template <typename Content>
