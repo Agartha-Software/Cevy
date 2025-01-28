@@ -132,17 +132,13 @@ struct pipeline {
           glm::vec4(position, 1)       //
       }; // collumn major, visually transposed
       this->radius = l.radius;
-      this->range = l.range;
       this->color = l.color;
-      this->type = Type::Point;
     }
-    Light(glm::mat4 model, glm::vec3 color, float radius, Type type)
-        : model(model), color(color), radius(radius), type(type) {};
+    Light(glm::mat4 model, glm::vec3 color, float radius)
+        : model(model), color(color), radius(radius) {};
     glm::mat4 model;
     glm::vec3 color;
     float radius; /// 0 for directionnal, non-0 for point;
-    float range;
-    Type type;
   };
 };
 }; // namespace cevy::engine

@@ -240,7 +240,6 @@ void cevy::engine::DeferredRenderer::render(
     glUniform3fv(self.accumulate_shader->uniform("lightPosition"), 1, glm::value_ptr(pos));
     glUniform3fv(self.accumulate_shader->uniform("lightEnergy"), 1, glm::value_ptr(gl_light.color));
     glUniform1f(self.accumulate_shader->uniform("lightRadius"), gl_light.radius);
-    glUniform1f(self.accumulate_shader->uniform("lightRange"), gl_light.range);
     glUniform1i(self.accumulate_shader->uniform("debug_draw"), 0);
 
     glUniform1f(self.accumulate_shader->uniform("width"), self.width);
