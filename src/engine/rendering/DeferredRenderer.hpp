@@ -92,6 +92,7 @@ class cevy::engine::DeferredRenderer {
     // this->principled_shader.swap(rhs.principled_shader);
     rhs.alive = "DeferredRenderer is moved-from";
     this->primitives.sphere = std::move(rhs.primitives.sphere);
+    this->primitives.blank = std::move(rhs.primitives.blank);
   }
 
   ~DeferredRenderer() {
@@ -124,5 +125,6 @@ class cevy::engine::DeferredRenderer {
   Billboard billboard;
   struct {
     Model sphere;
+    Texture blank;
   } primitives;
 };

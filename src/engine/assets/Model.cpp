@@ -42,6 +42,9 @@ cevy::engine::Model::~Model() {
 }
 
 Model &cevy::engine::Model::operator=(Model &&other) {
+  if (this->initialized) {
+    gl_deinit();
+  }
   this->modelMatrix_ = std::move(other.modelMatrix_);
   this->t_normalMatrix = std::move(other.t_normalMatrix);
 
@@ -74,6 +77,9 @@ Model &cevy::engine::Model::operator=(Model &&other) {
 }
 
 Model &cevy::engine::Model::operator=(Model &other) {
+  if (this->initialized) {
+    gl_deinit();
+  }
   this->modelMatrix_ = other.modelMatrix_;
   this->t_normalMatrix = other.t_normalMatrix;
 

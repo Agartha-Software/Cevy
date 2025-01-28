@@ -21,7 +21,9 @@ uniform vec3 emit;
 uniform bool halflambert;
 uniform vec3 custom_ambient;
 
-layout (binding = 0) uniform sampler2D diffuseTexture;
+layout (binding = 0) uniform sampler2D diffuse_texture;
+layout (binding = 1) uniform sampler2D specular_texture;
+layout (binding = 2) uniform sampler2D emission_texture;
 // uniform sampler2D texture_specular1;
 
 void main() {
@@ -31,7 +33,7 @@ void main() {
     // vec3 albedo = has_texture ? texture(diffuseTexture, texCoord).xyz * albedo : albedo;
 
     int flags = (int(halflambert) << 2);
-    gAlbedo = vec4(albedo /* * texture(diffuseTexture, texCoord).rgb */, flags);
+    gAlbedo = vec4(color * albedo /* * texture(diffuseTexture, texCoord).rgb */, flags);
     gSpecular = vec4(specular, roughness);
 
     vec3 cameraPos = invView[3].xyz;// / invView[3].w;

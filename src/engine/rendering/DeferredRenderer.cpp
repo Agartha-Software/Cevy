@@ -15,8 +15,8 @@
 #endif
 #include <glm/gtc/type_ptr.hpp>
 
-#include "DeferredRenderer.hpp"
 #include "Atmosphere.hpp"
+#include "DeferredRenderer.hpp"
 #include "Model.hpp"
 #include "World.hpp"
 
@@ -39,7 +39,8 @@
 //     glEnableVertexAttribArray(0);
 //     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
 //     glEnableVertexAttribArray(1);
-//     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+//     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 *
+//     sizeof(float)));
 //   }
 //   glBindVertexArray(quadVAO);
 //   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -130,6 +131,7 @@ void cevy::engine::DeferredRenderer::init() {
   this->billboard.init();
 
   this->primitives.sphere = primitives::sphere(1, 10, 6);
+  this->primitives.blank = TextureBuilder::from({1, 1, 1, 1}, 2, 2);
 }
 
 void cevy::engine::DeferredRenderer::render_system(
@@ -193,10 +195,10 @@ void cevy::engine::DeferredRenderer::render_system(
     // glUniform1i(this->gBuffer_shader->uniform("has_texture"), model->tex_coordinates.size() !=
     // 0);
 
-    // if (material.diffuse_texture.has_value()) {
-    //   glActiveTexture(GL_TEXTURE0);
-    //   glBindTexture(GL_TEXTURE_2D, material.diffuse_texture->gl_handle);
-    // }
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, material.diffuse_texture.has_value()
+    //                                  ? material.diffuse_texture.value()->texture_handle()
+    //                                  : self.primitives.blank.texture_handle());
     model->draw();
   };
 

@@ -84,9 +84,20 @@ struct pipeline {
         using Type = glm::vec3;
         inline static constexpr auto name = "custom_ambient";
       };
-      struct diffuseTexture {
+      struct diffuse_texture {
         using Type = sampler2D;
-        inline static constexpr auto name = "diffuseTexture";
+        inline static constexpr auto name = "diffuse_texture";
+        inline static constexpr auto binding = 0;
+      };
+      struct specular_texture {
+        using Type = sampler2D;
+        inline static constexpr auto name = "specular_texture";
+        inline static constexpr auto binding = 1;
+      };
+      struct emission_texture {
+        using Type = sampler2D;
+        inline static constexpr auto name = "emission_texture";
+        inline static constexpr auto binding = 2;
       };
     }; // struct PbrMaterial
   }; // struct uniforms
