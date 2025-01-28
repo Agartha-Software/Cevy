@@ -386,7 +386,7 @@ class cevy::ecs::World {
   //   auto sys = [&func, this]() mutable { func(get_super<Args>(0)...); };
   //   sys();
   // }
-
+public:
   template <class R, class... Args>
   R run_system(std::function<R(Args...)> func) {
     static_assert(
@@ -409,12 +409,12 @@ class cevy::ecs::World {
   // }
 
   template <class GivenArgs, class R, class... Args>
-  R run_system_with(R (&&func)(GivenArgs, Args...), GivenArgs given) {
+  R run_system_with(R (&&func)(GivenArgs, Args...), GivenArgs&& given) {
     static_assert(
         all(Or<is_query<Args>, is_world<Args>, is_resource<Args>, is_commands<Args>,
                is_event_reader<Args>, is_event_writer<Args>>()...),
         "type must be reference to query, world, commands, event reader, event writer or resource");
-    auto sys = [&func, this, given]() mutable -> R { return func(given, get_super<Args>(0)...); };
+    auto sys = [&func, this, &given]() mutable -> R { return func(std::forward<GivenArgs>(given), get_super<Args>(0)...); };
     return sys();
   }
 
@@ -432,12 +432,12 @@ class cevy::ecs::World {
   // }
 
   template <class GivenArgs, class R, class... Args>
-  R run_system_with(std::function<R(GivenArgs, Args...)> func, GivenArgs given) {
+  R run_system_with(std::function<R(GivenArgs, Args...)> func, GivenArgs&& given) {
     static_assert(
         all(Or<is_query<Args>, is_world<Args>, is_resource<Args>, is_commands<Args>,
                is_event_reader<Args>, is_event_writer<Args>>()...),
         "type must be reference to query, world, commands, event reader, event writer or resource");
-    auto sys = [&func, this, given]() mutable -> R { return func(given, get_super<Args>(0)...); };
+    auto sys = [&func, this, given]() mutable -> R { return func(std::forward<GivenArgs>(given), get_super<Args>(0)...); };
     return sys();
   }
 
