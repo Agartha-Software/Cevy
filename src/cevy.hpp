@@ -56,6 +56,29 @@ constexpr std::function<R(Args...)> make_function(R (&&func)(Args...)) {
 /// @brief contains all of the engine bits
 namespace cevy {
 
+template <template <typename > typename M, typename T, typename R, typename F>
+class Map {
+  static inline constexpr M<R> map(M<T>&& mappable, F &&func);
+};
+
+template <typename T, typename R, typename F>
+class Map<std::optional, T, R, F> {
+public:
+  static inline constexpr std::optional<R> map(std::optional<T>&& opt, F &&func) {
+    if (opt) {
+      R ret = func(std::forward<T>(opt.value()));
+      return std::make_optional<R>(std::forward<R>(ret));;
+    } else {
+      return std::nullopt;
+    }
+  }
+};
+
+template <template <typename > typename M, typename T, typename F, typename R = typename std::invoke_result<F,T&&>::type>
+inline constexpr M<R> map(M<T> &&mappable, F &&func) {
+  return Map<M, T, R, F>::map(std::forward<M<T>>(mappable), std::forward<F>(func));
+}
+
 /// @brief holds the entity components system
 namespace ecs {};
 
@@ -66,9 +89,9 @@ namespace engine {};
 namespace physics {};
 
 using any = std::any_nc;
-template <typename... Args>
-auto make_any(Args &&...args) -> decltype(std::make_any_nc(std::forward<Args>(args)...)) {
-  return std::make_any_nc(std::forward<Args>(args)...);
+  template <typename T, typename... Args>
+auto make_any(Args &&...args) -> decltype(std::make_any_nc<T>(std::forward<Args>(args)...)) {
+  return std::make_any_nc<T>(std::forward<Args>(args)...);
 }
 
 } // namespace cevy
