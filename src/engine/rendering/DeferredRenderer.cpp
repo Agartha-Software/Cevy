@@ -16,40 +16,41 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "DeferredRenderer.hpp"
+#include "Atmosphere.hpp"
 #include "Model.hpp"
 #include "World.hpp"
 
-static void renderQuad() {
-  static uint quadVAO = 0;
-  static uint quadVBO;
-  if (quadVAO == 0) {
-    std::cout << "initting quad" << std::endl;
-    float quadVertices[] = {
-        // positions        // texture Coords
-        -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-        1.0f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f,  -1.0f, 0.0f, 1.0f, 0.0f,
-    };
-    // setup plane VAO
-    glGenVertexArrays(1, &quadVAO);
-    glGenBuffers(1, &quadVBO);
-    glBindVertexArray(quadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-  }
-  glBindVertexArray(quadVAO);
-  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-  glBindVertexArray(0);
-}
+// static void renderQuad() {
+//   static uint quadVAO = 0;
+//   static uint quadVBO;
+//   if (quadVAO == 0) {
+//     std::cout << "initting quad" << std::endl;
+//     float quadVertices[] = {
+//         // positions        // texture Coords
+//         -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+//         1.0f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f,  -1.0f, 0.0f, 1.0f, 0.0f,
+//     };
+//     // setup plane VAO
+//     glGenVertexArrays(1, &quadVAO);
+//     glGenBuffers(1, &quadVBO);
+//     glBindVertexArray(quadVAO);
+//     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+//     glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+//     glEnableVertexAttribArray(0);
+//     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+//     glEnableVertexAttribArray(1);
+//     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+//   }
+//   glBindVertexArray(quadVAO);
+//   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+//   glBindVertexArray(0);
+// }
 
-static glm::vec3 filmicToneMapping(glm::vec3 color) {
-  color = max(glm::vec3(0.), color - glm::vec3(0.004));
-  color = (color * (6.2f * color + .5f)) / (color * (6.2f * color + 1.7f) + 0.06f);
-  return color;
-}
+// static glm::vec3 filmicToneMapping(glm::vec3 color) {
+//   color = max(glm::vec3(0.), color - glm::vec3(0.004));
+//   color = (color * (6.2f * color + .5f)) / (color * (6.2f * color + 1.7f) + 0.06f);
+//   return color;
+// }
 
 void cevy::engine::DeferredRenderer::init() {
   this->alive = "DeferredRenderer is initialized";
@@ -131,7 +132,7 @@ void cevy::engine::DeferredRenderer::init() {
   this->primitives.sphere = primitives::sphere(1, 10, 6);
 }
 
-void cevy::engine::DeferredRenderer::render(
+void cevy::engine::DeferredRenderer::render_system(
     DeferredRenderer &self, Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
     Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world) {

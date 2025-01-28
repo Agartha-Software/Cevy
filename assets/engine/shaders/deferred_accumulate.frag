@@ -5,7 +5,6 @@ uniform mat4 invView;
 uniform vec3 lightPosition;
 uniform vec3 lightEnergy;
 uniform float lightRadius;
-uniform float lightRange;
 
 uniform float width;
 uniform float height;

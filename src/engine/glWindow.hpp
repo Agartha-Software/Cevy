@@ -108,7 +108,7 @@ class glWindow : public cevy::engine::Window::generic_window {
       return;
     }
 
-    world.run_system_with(Renderer::render, *this->renderer);
+    world.run_system_with(Renderer::render_system, *this->renderer);
 
     glfwSwapBuffers(this->glfWindow);
   }

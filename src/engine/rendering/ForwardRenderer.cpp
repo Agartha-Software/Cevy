@@ -71,7 +71,7 @@ void cevy::engine::ForwardRenderer::init() {
   glBindBufferBase(GL_UNIFORM_BUFFER, 1, this->uboLights);
 }
 
-void cevy::engine::ForwardRenderer::render(
+void cevy::engine::ForwardRenderer::render_system(
     ForwardRenderer &self,
     Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,

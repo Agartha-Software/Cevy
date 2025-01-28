@@ -52,7 +52,7 @@ class cevy::engine::ForwardRenderer {
   template <typename Windower = cevy::engine::Window::generic_window>
   ForwardRenderer(const Windower & /* win */) {}
   void init();
-  void static render(
+  void static render_system(
       ForwardRenderer &self, Query<Camera> cams,
       Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
       Query<option<Transform>, cevy::engine::PointLight> lights, const cevy::ecs::World &world);
