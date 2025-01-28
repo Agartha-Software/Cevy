@@ -38,7 +38,7 @@ void cevy::engine::ForwardRenderer::init() {
 
   std::cout << "allocated shaderProgram" << std::endl;
 
-  this->shaderProgram->initFromFiles("shaders/simple.vert", "shaders/simple.frag");
+  this->shaderProgram->initFromFiles("assets/engine/shaders/simple.vert", "assets/engine/shaders/simple.frag");
   std::cout << "inited shaderProgram" << std::endl;
 
   this->shaderProgram->addUniform("model");

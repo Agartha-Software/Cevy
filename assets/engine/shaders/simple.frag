@@ -2,7 +2,6 @@
 
 in vec3 color;
 in vec4 position;
-in vec4 v_position;
 in vec3 normal;
 in vec2 texCoord;
 
@@ -14,7 +13,7 @@ uniform float fog_far;
 uniform vec3 ambientColor;
 
 struct Light {
-	vec4 position;
+	mat4 transform;
 	vec3 color;
 	float radius;
 };
@@ -97,12 +96,12 @@ void main()
 	vec3 specular = ambientColor;
 
 	for (int i = 0; i < lightCount; ++i) {
-		shade_light(diffuse_light, specular, smooth_normal, dnv, float(i < activeLights) * lights[i].color, lights[i].position, 0, viewVec);
+		shade_light(diffuse_light, specular, smooth_normal, dnv, float(i < activeLights) * lights[i].color, lights[i].transform * vec4(0, 0, 0, 1), 0, viewVec);
 	}
 
 	vec3 surface = fresnel * diffuse_light * albedo * color + (1 - fresnel) * specular * specular_tint;
 
-	surface = mix(surface, fog, clamp(pow(v_position.z / fog_far, 0.5), 0, 1));
+	surface = mix(surface, fog, clamp(pow(position.w / fog_far, 0.5), 0, 1));
 	surface = filmicToneMapping(surface);
 
 	fragColor = vec4(surface, 1.0);
