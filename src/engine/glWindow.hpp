@@ -21,7 +21,6 @@
 #include "Handle.hpp"
 #include "Model.hpp"
 #include "PbrMaterial.hpp"
-#include "PointLight.hpp"
 #include "Query.hpp"
 #include "Scheduler.hpp"
 #include "pipeline.hpp"
@@ -91,20 +90,16 @@ class glWindow : public cevy::engine::Window::generic_window {
     return 0;
   }
   static void render_system(
-      Resource<cevy::engine::Window> win, Query<Camera> cams,
-      Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-      Query<option<Transform>, cevy::engine::PointLight> lights,
+      Resource<cevy::engine::Window> win,
       cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
-      const cevy::ecs::World &world) {
-    win.get().get_handler<glWindow, Renderer>()->render(cams, models, lights, close, world);
+      cevy::ecs::World &world) {
+    win.get().get_handler<glWindow, Renderer>()->render(close, world);
   }
 
   void
-  render(Query<Camera> cams,
-         Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-         Query<option<Transform>, cevy::engine::PointLight> lights,
+  render(
          cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
-         const cevy::ecs::World &world) {
+         cevy::ecs::World &world) {
 
     glfwPollEvents();
 
@@ -113,7 +108,7 @@ class glWindow : public cevy::engine::Window::generic_window {
       return;
     }
 
-    Renderer::render(*this->renderer, cams, models, lights, world);
+    world.run_system_with(Renderer::render, *this->renderer);
 
     glfwSwapBuffers(this->glfWindow);
   }
