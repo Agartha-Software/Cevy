@@ -23,15 +23,14 @@
 #include <optional>
 #include <stdexcept>
 
-using cevy::engine::Texture;
 using cevy::engine::PbrMaterial;
+using cevy::engine::Texture;
 using cevy::engine::TextureBuilder;
 template <typename T>
 using Handle = cevy::engine::Handle<T>;
 
-std::optional<Texture>
-Texture::from_tinyobj(const std::string &file_name,
-                                    const tinyobj::texture_option_t & /* _option */) {
+std::optional<Texture> Texture::from_tinyobj(const std::string &file_name,
+                                             const tinyobj::texture_option_t & /* _option */) {
   Texture new_texture;
   new_texture.file_name = file_name;
 
@@ -55,7 +54,7 @@ Texture::from_tinyobj(const std::string &file_name,
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                  image_data); // HERE
     glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -101,8 +100,7 @@ PbrMaterial PbrMaterial::gold() {
   return PbrMaterial({0.003, 0.00225, 0.001}, {0.6, 0.4, 0.1}, 10);
 }
 
-PbrMaterial
-PbrMaterial::from_tinyobj(const tinyobj::material_t &material) {
+PbrMaterial PbrMaterial::from_tinyobj(const tinyobj::material_t &material) {
   PbrMaterial new_material;
 
   printf("name %s\n", material.name.c_str());
@@ -128,17 +126,41 @@ TextureBuilder::~TextureBuilder() {
   data = nullptr;
 }
 
-Texture TextureBuilder::from(const glm::vec4 &pixel, int width,
-                                                         int height) {
+
+Texture TextureBuilder::from(const glm::vec4u8 &pixel, int width, int height) {
   TextureBuilder builder;
   builder.width = width;
   builder.height = height;
-  builder.data = static_cast<uint8_t *>(malloc(width * height * sizeof(uint8_t)));
-  glm::vec<4, uint8_t> pixel_int = pixel * 255.f;
+  builder.data = malloc(width * height * 4 * sizeof(uint8_t));
+  builder.type = Texture::Type::U8;
 
-  std::fill(reinterpret_cast<glm::vec<4, uint8_t>*>(builder.data), reinterpret_cast<glm::vec<4, uint8_t>*>(builder.data) + width * height, pixel_int);
+  for (int x = 0; x < width; ++x)
+    for (int y = 0; y < height; ++y) {
+      static_cast<glm::vec4u8*>(builder.data)[x + y * width] = pixel;
+    }
+
+  // std::fill(reinterpret_cast<glm::vec<4, uint8_t> *>(builder.data),
+  //           reinterpret_cast<glm::vec<4, uint8_t> *>(builder.data) + width * height, pixel);
   return builder.build().value();
 }
+
+Texture TextureBuilder::from(const glm::vec4 &pixel, int width, int height) {
+  TextureBuilder builder;
+  builder.width = width;
+  builder.height = height;
+  builder.data = malloc(width * height * 4 * sizeof(float));
+  builder.type = Texture::Type::F16;
+
+  for (int x = 0; x < width; ++x)
+    for (int y = 0; y < height; ++y) {
+      static_cast<glm::vec4*>(builder.data)[x + y * width] = pixel;
+    }
+
+  // std::fill(reinterpret_cast<glm::vec4 *>(builder.data),
+  //           reinterpret_cast<glm::vec4 *>(builder.data) + width * height, pixel);
+  return builder.build().value();
+}
+
 
 static uint8_t *normalize_image_data(uint8_t *image_data, int width, int height, int nrChannels,
                                      uint8_t default_value = 0) {
@@ -177,7 +199,8 @@ int TextureBuilder::load_rgb() {
   uint8_t *image_data = stbi_load(this->rgb_file_name.c_str(), &width, &height, &nrChannels, 0);
 
   if (!image_data) {
-    std::cerr << "Error: load_rgb: Failed to load [" << this->rgb_file_name << "] texture" << std::endl;
+    std::cerr << "Error: load_rgb: Failed to load [" << this->rgb_file_name << "] texture"
+              << std::endl;
     return -1;
   }
 
@@ -192,6 +215,7 @@ int TextureBuilder::load_rgb() {
   uint8_t *new_data = normalize_image_data(image_data, width, height, nrChannels, 255);
   stbi_image_free(image_data);
   this->data = new_data;
+  this->type = Texture::Type::U8_sRGB;
   return 0;
 }
 
@@ -205,7 +229,8 @@ int TextureBuilder::load_alpha() {
   uint8_t *alpha_data = stbi_load(this->rgb_file_name.c_str(), &width, &height, &nrChannels, 0);
 
   if (!alpha_data) {
-    std::cerr << "Error: load_alpha: Failed to load [" << this->rgb_file_name << "] texture" << std::endl;
+    std::cerr << "Error: load_alpha: Failed to load [" << this->rgb_file_name << "] texture"
+              << std::endl;
     return -1;
   }
 
@@ -218,9 +243,10 @@ int TextureBuilder::load_alpha() {
   if (!this->data) {
     this->data = static_cast<uint8_t *>(malloc(width * height * sizeof(DataType)));
     std::memset(this->data, 255, width * height * sizeof(DataType));
+    this->type = Texture::Type::U8_sRGB;
   }
 
-  splice_image_data(this->data, alpha_data, this->width, this->height, nrChannels, 1);
+  splice_image_data(static_cast<uint8_t*>(this->data), alpha_data, this->width, this->height, nrChannels, 1);
   return 0;
 }
 
@@ -234,9 +260,10 @@ int TextureBuilder::get_alpha(const TextureBuilder &other) {
   if (!this->data) {
     this->data = static_cast<uint8_t *>(malloc(width * height * sizeof(DataType)));
     std::memset(this->data, 255, width * height * sizeof(DataType));
+    this->type = Texture::Type::U8_sRGB;
   }
 
-  splice_image_data(this->data, other.data, this->width, this->height, 4, 3);
+  splice_image_data(static_cast<uint8_t*>(this->data), static_cast<uint8_t*>(other.data), this->width, this->height, 4, 3);
   return 0;
 }
 
@@ -267,8 +294,12 @@ std::optional<Texture> TextureBuilder::build() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                 this->data);
+    glTexImage2D(GL_TEXTURE_2D, 0, TextureBuilder::formats[int(this->type)][0], this->width,
+                 this->height, 0, GL_RGBA, TextureBuilder::formats[int(this->type)][1], this->data);
+
+
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+    //              this->data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     return Texture(texture, name_full);
@@ -276,8 +307,7 @@ std::optional<Texture> TextureBuilder::build() {
   return std::nullopt;
 }
 
-
-std::optional<Handle<Texture>> TextureBuilder::build(AssetManager& manager) {
+std::optional<Handle<Texture>> TextureBuilder::build(AssetManager &manager) {
   std::string name_full = this->rgb_file_name;
   if (this->alpha_file_name != "") {
     name_full += this->alpha_file_name;
@@ -319,10 +349,6 @@ std::optional<Handle<Texture>> TextureBuilder::build(AssetManager& manager) {
   return std::nullopt;
 }
 
-void cevy::engine::Texture::init() {
+void cevy::engine::Texture::init() {}
 
-}
-
-void cevy::engine::Texture::deinit() {
-
-}
+void cevy::engine::Texture::deinit() {}

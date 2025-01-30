@@ -5,17 +5,17 @@
 ** Deferred G buffer encapsulation
 */
 
-#include <algorithm>
-#include <iostream>
-#include <sys/types.h>
-#include <vector>
-
 #if (_WIN32)
 #include <GL/gl3w.h>
 #endif
 #if (__linux__)
 #include <GL/glew.h>
 #endif
+
+#include <algorithm>
+#include <iostream>
+#include <sys/types.h>
+#include <vector>
 
 class GBuffers {
   public:

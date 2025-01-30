@@ -9,6 +9,13 @@
 #include <optional>
 #include <string>
 
+#if (_WIN32)
+#include <GL/gl3w.h>
+#endif
+#if (__linux__)
+#include <GL/glew.h>
+#endif
+
 namespace cevy::engine {
 class Texture {
   bool initted = false;
@@ -24,6 +31,12 @@ class Texture {
   }
 
   public:
+  enum class Type : int {
+    U8_sRGB = 0,
+    U8 = 1,
+    F16 = 2,
+  };
+
   Texture() = default;
   ~Texture() {
     deinit();
@@ -58,9 +71,10 @@ class Texture {
 };
 
 struct TextureBuilder {
-  std::string rgb_file_name;
-  std::string alpha_file_name;
-  uint8_t *data = nullptr;
+  std::string rgb_file_name = "";
+  std::string alpha_file_name = "";
+  void *data = nullptr;
+  Texture::Type type;
   int width;
   int height;
   struct {
@@ -68,6 +82,13 @@ struct TextureBuilder {
     bool has_rgb : 1;
     bool has_alpha : 1;
   } flags;
+
+  inline static constexpr GLenum formats[][2] = {
+    {GL_SRGB8_ALPHA8, GL_UNSIGNED_BYTE}, // Texture::Type::U8_sRGB
+    {GL_RGB, GL_UNSIGNED_BYTE}, // Texture::Type::U8;
+    {GL_RGBA16F, GL_FLOAT}, // Texture::Type::F16
+  };
+
 
   // AssetManager* manager = nullptr;
 
@@ -77,6 +98,7 @@ struct TextureBuilder {
   TextureBuilder(TextureBuilder&&) = delete;
 
   static Texture from(const glm::vec4& pixel, int width, int height);
+  static Texture from(const glm::vec<4, uint8_t>& pixel, int width, int height);
 
   int load_rgb();
   int load_alpha();
