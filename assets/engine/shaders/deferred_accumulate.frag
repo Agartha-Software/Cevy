@@ -76,7 +76,6 @@ void main() {
     float viewDistance = length(viewVec);
     viewVec /= viewDistance;
     float dnv = -dot(normal, viewVec);
-    float fresnel = 1.125 - 0.45 / (max(0, dnv) + 0.4);
     vec3 ray = position.xyz - lightPosition;
 
     vec3 diffuse_light;
@@ -94,8 +93,8 @@ void main() {
         roughness,
         halflambert);
 
-    vec3 surface = diffuse_light * albedo * fresnel;
-    surface += (1 - fresnel) * specular_light * specular;
+    vec3 surface = diffuse_light * albedo;
+    surface += specular_light * specular;
 
     bool debug_draw_override = debug_draw;
 

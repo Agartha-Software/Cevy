@@ -59,22 +59,27 @@ struct pipeline {
       };
     }; // struct lighting
     struct PbrMaterial {
-      struct albedo {
+      // diffuse constant
+      struct diffuse {
         using Type = glm::vec3;
-        inline static constexpr auto name = "albedo";
+        inline static constexpr auto name = "diffuse_const";
       };
+      // specular constant
       struct specular {
         using Type = glm::vec3;
-        inline static constexpr auto name = "specular";
+        inline static constexpr auto name = "specular_const";
       };
+      // roughness constant
       struct roughness {
         using Type = float;
-        inline static constexpr auto name = "roughness";
+        inline static constexpr auto name = "roughness_const";
       };
+      // emission constant
       struct emit {
         using Type = glm::vec3;
-        inline static constexpr auto name = "emit";
+        inline static constexpr auto name = "emit_const";
       };
+      // lambertian method
       struct halflambert {
         using Type = bool;
         inline static constexpr auto name = "halflambert";

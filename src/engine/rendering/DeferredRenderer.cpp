@@ -120,11 +120,11 @@ void cevy::engine::DeferredRenderer::init() {
   this->gBuffer_shader->addUniform("model_normal");
   this->gBuffer_shader->addUniform("view");
   this->gBuffer_shader->addUniform("invView");
-  this->gBuffer_shader->addUniform("emit");
   this->gBuffer_shader->addUniform("custom_ambient");
-  this->gBuffer_shader->addUniform("albedo");
-  this->gBuffer_shader->addUniform("specular");
-  this->gBuffer_shader->addUniform("roughness");
+  this->gBuffer_shader->addUniform("diffuse_const");
+  this->gBuffer_shader->addUniform("specular_const");
+  this->gBuffer_shader->addUniform("roughness_const");
+  this->gBuffer_shader->addUniform("emit_const");
   this->gBuffer_shader->addUniform("halflambert");
 
   this->gbuffer.init_default();
@@ -181,13 +181,13 @@ void cevy::engine::DeferredRenderer::render_system(
 
     glUniform3fv(self.gBuffer_shader->uniform("custom_ambient"), 1,
                  glm::value_ptr(material.ambient));
-    glUniform3fv(self.gBuffer_shader->uniform("emit"), 1, glm::value_ptr(material.emit));
-    glUniform3fv(self.gBuffer_shader->uniform("albedo"), 1,
+    glUniform3fv(self.gBuffer_shader->uniform("emit_const"), 1, glm::value_ptr(material.emit));
+    glUniform3fv(self.gBuffer_shader->uniform("diffuse_const"), 1,
                  glm::value_ptr(material.diffuse * color.xyz()));
-    glUniform3fv(self.gBuffer_shader->uniform("specular"), 1,
+    glUniform3fv(self.gBuffer_shader->uniform("specular_const"), 1,
                  glm::value_ptr(material.specular_tint));
+    glUniform1f(self.gBuffer_shader->uniform("roughness_const"), 1 / material.phong_exponent);
     glUniform1i(self.gBuffer_shader->uniform("halflambert"), material.halflambert);
-    glUniform1f(self.gBuffer_shader->uniform("roughness"), 1 / material.phong_exponent);
     glUniformMatrix4fv(self.gBuffer_shader->uniform("model"), 1, GL_FALSE,
                        glm::value_ptr(tm * model->modelMatrix()));
     glUniformMatrix3fv(self.gBuffer_shader->uniform("model_normal"), 1, GL_TRUE,
