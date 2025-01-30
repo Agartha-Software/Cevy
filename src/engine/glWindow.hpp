@@ -5,6 +5,8 @@
 ** openGL window handling
 */
 
+#pragma once
+
 // clang-format off
 #include "ShaderProgram.hpp"
 // clang-format on
@@ -19,6 +21,7 @@
 #include "PointLight.hpp"
 #include "Query.hpp"
 #include "Scheduler.hpp"
+#include "state.hpp"
 #include "pipeline.hpp"
 #include <memory>
 
@@ -72,6 +75,10 @@ class glWindow {
 
   void setupEnv();
 
+  void pollEvents();
+  std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyPressed>>> keyPressedWriter;
+  std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyReleased>>> keyReleasedWriter;
+
   protected:
   void updateSize(int width, int height);
   void keyInput(int key, int scancode, int action, int mods);
@@ -79,6 +86,7 @@ class glWindow {
   void mouseInput(int button, int action, int mods);
   bool init_context();
   bool unload_context();
+
 
   static glWindow *getFromWin(GLFWwindow *glfWindow) {
     return static_cast<glWindow *>(glfwGetWindowUserPointer(glfWindow));
@@ -89,7 +97,6 @@ class glWindow {
   GLuint uboLights = 0;
   ShaderProgram *shaderProgram;
   GLFWwindow *glfWindow;
-
   PbrMaterial defaultMaterial;
 };
 

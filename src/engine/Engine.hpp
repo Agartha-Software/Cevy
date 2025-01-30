@@ -18,8 +18,7 @@ struct DebugWindow {
 };
 #endif
 
-class StartupRenderStage : public cevy::ecs::core_stage::after<cevy::ecs::core_stage::PreStartup> {
-};
+class StartupRenderStage : public cevy::ecs::core_stage::after<cevy::ecs::core_stage::PreStartup> {};
 class PreStartupRenderStage : public cevy::ecs::core_stage::before<StartupRenderStage> {};
 class PostStartupRenderStage : public cevy::ecs::core_stage::after<StartupRenderStage> {};
 

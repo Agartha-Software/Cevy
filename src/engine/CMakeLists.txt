@@ -23,9 +23,10 @@ add_library(engine
 
 add_subdirectory(math)
 add_subdirectory(assets)
+add_subdirectory(input)
 add_subdirectory(rendering)
 
-target_link_libraries(engine PUBLIC ecs math assets rendering)
+target_link_libraries(engine PUBLIC ecs math assets input rendering)
 target_link_libraries(engine PRIVATE imgui) #PRIVATE
 # target_link_libraries(engine PRIVATE raylib imgui rlImGui) #PRIVATE
 
@@ -43,6 +44,7 @@ target_include_directories(engine PUBLIC
 #   .
   ./math
   assets
+  input
   rendering
 )
 

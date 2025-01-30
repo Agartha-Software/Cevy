@@ -5,6 +5,7 @@
 ** openGL window handling
 */
 
+#include <cstdio>
 #define GLM_FORCE_SWIZZLE
 
 #include "Atmosphere.hpp"
@@ -18,7 +19,9 @@
 #if (__linux__)
 #include <GL/glew.h>
 #endif
+#include <GLFW/glfw3.h>
 #include "glWindow.hpp"
+#include "state.hpp"
 #include <glm/gtc/type_ptr.hpp>
 
 static glm::vec3 hsv2rgb(glm::vec3 c) {
@@ -102,6 +105,10 @@ void glWindow::render_system(
   win.get()->render(cams, atmo, models, lights, close);
 }
 
+void glWindow::pollEvents() {
+    glfwPollEvents();
+}
+
 void glWindow::render(
     Query<Camera> cams, std::optional<ref<cevy::engine::Atmosphere>> atmosphere,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
@@ -109,7 +116,6 @@ void glWindow::render(
     cevy::ecs::EventWriter<cevy::ecs::AppExit> close) {
 
   glfwSwapBuffers(this->glfWindow);
-  glfwPollEvents();
 
   auto atmo = atmosphere.has_value() ? atmosphere->get() : cevy::engine::Atmosphere();
 
@@ -201,7 +207,11 @@ void glWindow::updateSize(int width, int height) {
 
 void glWindow::keyInput(int key, int scancode, int action, int mods) {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-    glfwSetWindowShouldClose(this->glfWindow, GLFW_TRUE);
+    glfwSetWindowShouldClose(glfWindow, GLFW_TRUE);
+  if (action == GLFW_PRESS && this->keyPressedWriter.has_value())
+    this->keyPressedWriter->get().send(cevy::input::keyPressed { static_cast<cevy::input::KeyCode>(key) });
+  if (action == GLFW_RELEASE && this->keyReleasedWriter.has_value())
+    this->keyReleasedWriter->get().send(cevy::input::keyReleased { static_cast<cevy::input::KeyCode>(key) });
 }
 
 void glWindow::cursor(double xpos, double ypos) {}

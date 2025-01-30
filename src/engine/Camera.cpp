@@ -10,6 +10,8 @@
 #include "Transform.hpp"
 #include "cevy.hpp"
 #include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/quaternion_common.hpp>
+#include <glm/fwd.hpp>
 
 cevy::engine::Camera::Camera() {
   this->fov = 70;
