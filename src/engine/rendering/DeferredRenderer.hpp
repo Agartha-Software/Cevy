@@ -126,5 +126,7 @@ class cevy::engine::DeferredRenderer {
   struct {
     Model sphere;
     Texture blank;
+    Texture black;
+    Texture flat;
   } primitives;
 };

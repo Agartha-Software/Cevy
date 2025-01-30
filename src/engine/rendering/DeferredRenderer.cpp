@@ -131,7 +131,9 @@ void cevy::engine::DeferredRenderer::init() {
   this->billboard.init();
 
   this->primitives.sphere = primitives::sphere(1, 10, 6);
-  this->primitives.blank = TextureBuilder::from({1, 1, 1, 1}, 2, 2);
+  this->primitives.blank = TextureBuilder::from(glm::vec4u8(1, 1, 1, 1), 2, 2);
+  // this->primitives.black = TextureBuilder::from(glm::vec4u8(0, 0, 0, 1), 2, 2);
+  // this->primitives.flat = TextureBuilder::from(glm::vec4(0.5, 0.5, 0.5, 1), 2, 2);
 }
 
 void cevy::engine::DeferredRenderer::render_system(
@@ -192,13 +194,21 @@ void cevy::engine::DeferredRenderer::render_system(
                        glm::value_ptr(tm * model->modelMatrix()));
     glUniformMatrix3fv(self.gBuffer_shader->uniform("model_normal"), 1, GL_TRUE,
                        glm::value_ptr(model->tNormalMatrix() * glm::inverse(glm::mat3(tm))));
-    // glUniform1i(this->gBuffer_shader->uniform("has_texture"), model->tex_coordinates.size() !=
-    // 0);
 
-    // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, material.diffuse_texture.has_value()
-    //                                  ? material.diffuse_texture.value()->texture_handle()
-    //                                  : self.primitives.blank.texture_handle());
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, material.diffuse_texture.has_value()
+                                     ? material.diffuse_texture.value()->texture_handle()
+                                     : self.primitives.blank.texture_handle());
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, material.specular_texture.has_value()
+                                     ? material.specular_texture.value()->texture_handle()
+                                     : self.primitives.blank.texture_handle());
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, material.emission_texture.has_value()
+                                     ? material.emission_texture.value()->texture_handle()
+                                     : self.primitives.blank.texture_handle());
     model->draw();
   };
 
