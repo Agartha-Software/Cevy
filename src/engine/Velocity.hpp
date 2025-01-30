@@ -8,10 +8,10 @@
 #pragma once
 
 #include "PhysicsProps.hpp"
+#include "Query.hpp"
+#include "Resource.hpp"
+#include "Time.hpp"
 #include "Transform.hpp"
-#include "ecs/Query.hpp"
-#include "ecs/Resource.hpp"
-#include "ecs/Time.hpp"
 #include <glm/ext/quaternion_geometric.hpp>
 #include <glm/ext/vector_float3.hpp>
 
@@ -25,6 +25,11 @@ class Velocity : public glm::vec3 {
   private:
 };
 
+inline static glm::vec3 lerp( const glm::vec3& A, const glm::vec3& B, float t ){
+  return A*t + B*(1.f-t) ;
+}
+
+
 class TransformVelocity : public engine::Transform {
   public:
   TransformVelocity() : engine::Transform(){};
@@ -33,10 +38,10 @@ class TransformVelocity : public engine::Transform {
 
   /// delta scale
   TransformVelocity &operator*=(float s) {
-    invalidate();
 
-    rotation = glm::normalize(glm::slerp(glm::quat(), rotation, std::max(0.f, s)));
     position *= s;
+    rotation = glm::slerp(glm::identity<glm::quat>(), rotation, s);
+    scale = glm::pow(scale, glm::vec3(s, s, s));
 
     return *this;
   }
@@ -48,20 +53,26 @@ class TransformVelocity : public engine::Transform {
     return ret;
   }
 
+  protected:
+  template<template<typename> typename Windower, typename Renderer>
+  friend class Engine;
   static void
   system(ecs::Query<engine::Transform, TransformVelocity, option<cevy::engine::PhysicsProps>> q,
          ecs::Resource<cevy::ecs::Time> time) {
     float delta_t = time.get().delta_seconds();
     for (auto [tm, vel, phys] : q) {
-      float decay = 0.995;
-      if (phys.has_value())
+      auto scaled = vel * delta_t;
+      tm.position += scaled.position;
+      tm.rotation *= scaled.rotation;
+      tm.scale *= scaled.scale;
+      float decay = 1;
+      if (phys.has_value()) {
         decay = 1 - phys.value().decay;
-      tm *= vel * delta_t;
-      vel *= powf(decay, delta_t);
+        vel *= powf(decay, delta_t);
+      }
     }
   }
 
-  protected:
   private:
 };
 } // namespace cevy::engine

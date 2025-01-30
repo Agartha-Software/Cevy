@@ -42,10 +42,10 @@ uniform float phong_exponent;
 uniform bool halflambert;
 uniform bool has_texture;
 
-uniform sampler2D diffuseTexture;
+layout (binding = 0) uniform sampler2D diffuseTexture;
+
 
 out vec4 fragColor;
-
 
 vec3 filmicToneMapping(vec3 color)
 {
@@ -59,7 +59,7 @@ void shade_light(inout vec3 diffuse_light, inout vec3 specular, vec3 smooth_norm
 	float lightDist = length(lightVec);
 	lightVec /= lightDist;
 
-	vec3 light = lightColor / (lightDist * lightDist);
+	vec3 light = max(lightColor / (lightDist * lightDist), vec3(0));
 
 	float lambert = dot(smooth_normal, lightVec);
 

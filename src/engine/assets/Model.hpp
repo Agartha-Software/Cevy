@@ -20,6 +20,14 @@ namespace cevy::engine {
 class Model {
   public:
   Model();
+  Model(Model&& other);
+  Model(Model& other);
+
+  ~Model();
+
+  Model& operator=(Model&& other);
+  Model& operator=(Model& other);
+
   void load(const std::vector<glm::vec3> &vertices, const std::vector<glm::vec3> &normals,
             const std::vector<uint32_t> &indices);
   void load(const std::vector<glm::vec4> &vertices, const std::vector<glm::vec3> &normals,
@@ -35,7 +43,7 @@ class Model {
   static void trim_geometry(std::vector<glm::vec3> &vertices, std::vector<index_t> &indices,
                             std::vector<T> &...cleanups);
 
-  void draw();
+  void draw() const;
 
   // void calculate_normals();
 
@@ -54,6 +62,7 @@ class Model {
   const glm::mat3 &tNormalMatrix() const { return t_normalMatrix; }
 
   void gl_init();
+  void gl_deinit();
 
   std::vector<glm::vec4> vertices;
   std::vector<glm::vec3> normals;
@@ -65,12 +74,14 @@ class Model {
   glm::mat4 modelMatrix_;
   glm::mat3 t_normalMatrix;
 
-  uint vaoHandle;
-  uint vbo_positions;
-  uint vbo_colors;
-  uint vbo_normals;
-  uint vbo_tex_coordinates;
-  uint ibo;
+  uint vaoHandle = 0;
+  uint vbo_normals = 0;
+  uint vbo_positions = 0;
+  uint vbo_colors = 0;
+  uint vbo_tex_coordinates = 0;
+  uint ibo = 0;
+
+  uint elements;
 
   bool initialized;
 };
@@ -149,4 +160,10 @@ void Model::merge_by_distance(std::vector<glm::vec3> &vertices, std::vector<uint
 
   Model::trim_geometry(vertices, indices, cleanups...);
 }
+namespace primitives {
+Model cube(float size);
+// inline Model cube(float size) { return cube({size, size, size}); };
+Model plane(float size, uint subu, uint subv);
+Model sphere(float size, uint slices, uint stacks);
+} // namespace primitives
 } // namespace cevy::engine

@@ -7,7 +7,7 @@ if (NOT EXISTS ${CMAKE_BINARY_DIR}/_deps/rlimgui) # If there's none, fetch and b
       SOURCE_DIR ${CMAKE_BINARY_DIR}/_deps/rlimgui
     )
 
-  FetchContent_Populate(rlimgui)
+  FetchContent_MakeAvailable(rlimgui)
 endif()
 
 set(RLIMGUI_FOLDER ${CMAKE_BINARY_DIR}/_deps/rlimgui)
