@@ -15,18 +15,16 @@
 void update_input(
     cevy::ecs::EventWriter<cevy::input::keyPressed> keyPressedWriter,
     cevy::ecs::EventWriter<cevy::input::keyReleased> keyReleasedWriter,
-    cevy::ecs::Resource<cevy::engine::Window> win_res,
+    cevy::ecs::Resource<cevy::engine::Window> window,
     cevy::ecs::Resource<cevy::input::ButtonInput<cevy::input::KeyCode>> keyboard_res,
     cevy::ecs::World &world) {
-
-    auto &window = win_res.get();
     auto &keyboard = keyboard_res.get();
 
-    window->keyPressedWriter = keyPressedWriter;
-    window->keyReleasedWriter = keyReleasedWriter;
-    window->pollEvents();
-    window->keyPressedWriter.reset();
-    window->keyReleasedWriter.reset();
+    window.get()->setKeyPressedWriter(keyPressedWriter);
+    window.get()->setKeyReleasedWriter(keyReleasedWriter);
+    window.get()->pollEvents();
+    window.get()->getKeyPressedWriter().reset();
+    window.get()->getKeyReleasedWriter().reset();
 
     keyboard.clear();
 

@@ -1,7 +1,19 @@
-FetchContent_Populate(imgui
+# FetchContent_MakeAvailable(imgui
+#   URL https://github.com/ocornut/imgui/archive/docking.zip
+#   SOURCE_DIR ${CMAKE_BINARY_DIR}/_deps/imgui
+# )
+
+FetchContent_Declare(
+  imgui
+  DOWNLOAD_EXTRACT_TIMESTAMP OFF
   URL https://github.com/ocornut/imgui/archive/docking.zip
   SOURCE_DIR ${CMAKE_BINARY_DIR}/_deps/imgui
 )
+
+FetchContent_GetProperties(imgui)
+if(NOT imgui_POPULATED)
+ FetchContent_MakeAvailable(imgui)
+endif()
 
 set(OpenGL_GL_PREFERENCE "LEGACY")
 find_package(OpenGL 2 REQUIRED)

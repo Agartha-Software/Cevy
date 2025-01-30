@@ -10,5 +10,3 @@ add_library(math
   Vector.cpp
   Vector.hpp
   )
-
-target_link_libraries(math PRIVATE raylib)

@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_library(ecs
 STATIC
+  ecs.cpp
   SparseVector.cpp
   Entity.cpp
   World.cpp
@@ -22,6 +23,7 @@ target_include_directories(ecs PUBLIC .)
 
 target_link_libraries(ecs PUBLIC cevy_headers)
 
+
 add_subdirectory(commands)
 
-target_link_libraries(ecs PUBLIC commands)
+target_link_libraries(ecs PUBLIC commands )

@@ -31,6 +31,70 @@ Model::Model() {
   this->initialized = false;
 }
 
+cevy::engine::Model::Model(Model &&other) : Model() { *this = std::move(other); }
+
+cevy::engine::Model::Model(Model &other) : Model() { *this = other; }
+
+cevy::engine::Model::~Model() {
+  if (this->initialized) {
+    this->gl_deinit();
+  }
+}
+
+Model &cevy::engine::Model::operator=(Model &&other) {
+  if (this->initialized) {
+    gl_deinit();
+  }
+  this->modelMatrix_ = std::move(other.modelMatrix_);
+  this->t_normalMatrix = std::move(other.t_normalMatrix);
+
+  this->vertices = std::move(other.vertices);
+  this->indices = std::move(other.indices);
+  this->normals = std::move(other.normals);
+  this->colors = std::move(other.colors);
+  this->tex_coordinates = std::move(other.tex_coordinates);
+
+  this->vaoHandle = other.vaoHandle;
+  other.vaoHandle = 0;
+
+  this->vbo_normals = other.vbo_normals;
+  other.vbo_normals = 0;
+  this->vbo_positions = other.vbo_positions;
+  other.vbo_positions = 0;
+  this->vbo_colors = other.vbo_colors;
+  other.vbo_colors = 0;
+  this->vbo_tex_coordinates = other.vbo_tex_coordinates;
+  other.vbo_tex_coordinates = 0;
+  this->ibo = other.ibo;
+  other.ibo = 0;
+
+  this->elements = other.elements;
+  other.elements = 0;
+
+  this->initialized = other.initialized;
+  other.initialized = false;
+  return *this;
+}
+
+Model &cevy::engine::Model::operator=(Model &other) {
+  if (this->initialized) {
+    gl_deinit();
+  }
+  this->modelMatrix_ = other.modelMatrix_;
+  this->t_normalMatrix = other.t_normalMatrix;
+
+  this->vertices = other.vertices;
+  this->indices = other.indices;
+  this->normals = other.normals;
+  this->colors = other.colors;
+  this->tex_coordinates = other.tex_coordinates;
+  this->ibo = other.ibo;
+
+  if (other.initialized)
+    this->gl_init();
+  return *this;
+}
+
 void Model::load(const std::vector<glm::vec3> &vertices, const std::vector<glm::vec3> &normals,
                  const std::vector<uint32_t> &indices) {
   this->vertices.clear();
@@ -83,17 +147,18 @@ void Model::load(const std::vector<float> &vertices, const std::vector<float> &n
   this->gl_init();
 }
 
-void Model::draw() {
+void Model::draw() const {
   if (!initialized)
     return;
 
   glBindVertexArray(vaoHandle);
-  int size;
-  glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+  // int size;
+  // glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 
   // std::cout << "drawing " << size / sizeof(uint32_t) << " vertices" << std::endl;
   // glDrawElements(GL_LINES_ADJACENCY, size / sizeof(uint32_t), GL_UNSIGNED_INT, 0);
-  glDrawElements(GL_TRIANGLES, size / sizeof(uint32_t), GL_UNSIGNED_INT, 0);
+  // glDrawElements(GL_TRIANGLES, size / sizeof(uint32_t), GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, this->elements, GL_UNSIGNED_INT, 0);
 }
 
 // void Model::calculate_normals()
@@ -171,7 +236,7 @@ void Model::gl_init() {
   );
   glEnableVertexAttribArray(1);
 
-  glGenBuffers(2, &this->vbo_normals);
+  glGenBuffers(1, &this->vbo_normals);
   glBindBuffer(GL_ARRAY_BUFFER, this->vbo_normals);
   glBufferData(GL_ARRAY_BUFFER, this->normals.size() * sizeof(this->normals[0]),
                this->normals.data(), GL_STATIC_DRAW);
@@ -184,7 +249,7 @@ void Model::gl_init() {
   glEnableVertexAttribArray(2);
 
   if (this->tex_coordinates.size() != 0) {
-    glGenBuffers(3, &this->vbo_tex_coordinates);
+    glGenBuffers(1, &this->vbo_tex_coordinates);
     glBindBuffer(GL_ARRAY_BUFFER, this->vbo_tex_coordinates);
     glBufferData(GL_ARRAY_BUFFER, this->tex_coordinates.size() * sizeof(this->tex_coordinates[0]),
                  this->tex_coordinates.data(), GL_STATIC_DRAW);
@@ -206,5 +271,27 @@ void Model::gl_init() {
 
   glBindVertexArray(0); // deactivate vao
 
+  this->elements = this->indices.size();
+
   initialized = true;
+}
+
+void cevy::engine::Model::gl_deinit() {
+  glDeleteBuffers(1, &this->vbo_positions);
+  glDeleteBuffers(1, &this->vbo_colors);
+  glDeleteBuffers(1, &this->vbo_normals);
+  glDeleteBuffers(1, &this->vbo_tex_coordinates);
+  glDeleteBuffers(1, &this->ibo);
+  glDeleteVertexArrays(1, &this->vaoHandle);
+
+  this->vaoHandle = 0;
+  this->vbo_positions = 0;
+  this->vbo_colors = 0;
+  this->vbo_normals = 0;
+  this->vbo_tex_coordinates = 0;
+  this->ibo = 0;
+
+  this->elements = 0;
+
+  this->initialized = false;
 }

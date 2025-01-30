@@ -7,224 +7,206 @@
 
 #pragma once
 
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/ext/vector_float3.hpp>
-#include <glm/ext/vector_relational.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include "Entity.hpp"
+#include "Query.hpp"
+#include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-
-#include "Pointer.hpp"
+#include <map>
 
 namespace cevy {
 namespace engine {
+
+struct Parent {
+  ecs::Entity entity;
+};
 class Transform {
   public:
-  glm::quat rotation;
   glm::vec3 position;
+  glm::quat rotation;
   glm::vec3 scale;
 
-  Transform() : rotation(glm::identity<glm::quat>()), position(0, 0, 0), scale(1, 1, 1) {}
+  Transform()
+      : position(0, 0, 0), rotation(glm::identity<glm::quat>()), scale(1, 1, 1),
+        world_position(position), world_rotation(rotation), world_scale(scale) {}
   Transform(float x, float y, float z)
-      : rotation(glm::identity<glm::quat>()), position(x, y, z), scale(1, 1, 1) {}
+      : position(x, y, z), rotation(glm::identity<glm::quat>()), scale(1, 1, 1),
+        world_position(position), world_rotation(rotation), world_scale(scale) {}
+
   Transform(const glm::vec3 &vec)
-      : rotation(glm::identity<glm::quat>()), position(vec), scale(1, 1, 1) {}
-  Transform(const glm::quat &quat) : rotation(quat), position(0, 0, 0), scale(1, 1, 1) {}
+      : position(vec), rotation(glm::identity<glm::quat>()), scale(1, 1, 1),
+        world_position(position), world_rotation(rotation), world_scale(scale) {}
+
+  Transform(const glm::quat &quat)
+      : position(0, 0, 0), rotation(quat), scale(1, 1, 1), world_position(position),
+        world_rotation(rotation), world_scale(scale) {}
+
+  Transform(const glm::vec3 &vec, const glm::quat &quat, const glm::vec3 scale)
+      : position(vec), rotation(quat), scale(scale), world_position(position),
+        world_rotation(rotation), world_scale(scale) {}
 
   glm::mat4 mat4() const {
-    return glm::mat4(rotation) * glm::translate(glm::mat4(1), position) *
-           glm::scale(glm::mat4(1), scale);
+    return glm::translate(glm::mat4(1), this->position) *
+           (glm::mat4(this->rotation) * glm::scale(glm::mat4(1), this->scale));
   }
 
   operator glm::mat4() const { return mat4(); }
 
-  std::tuple<glm::vec3, glm::quat, glm::vec3> get() const {
-    if (!cache_valid()) {
-      if (_parent) {
-        auto [p_vec, p_rot, p_scale] = _parent->get();
-        _cache_vector = p_vec;
-        _cache_scale = p_scale;
-        _cache_quaternion = p_rot * _cache_quaternion;
-        auto v = position * _cache_quaternion;
-        _cache_vector += glm::vec3(v);
-      } else {
-        _cache_quaternion = rotation;
-        _cache_vector = position * _cache_quaternion;
-        _cache_scale = scale;
-      }
-    }
-    return {_cache_vector, _cache_quaternion, _cache_scale};
+  Transform get_world() const {
+    return {this->world_position, this->world_rotation, this->world_scale};
   }
 
   Transform &operator*=(const Transform &other) {
-    invalidate();
-    auto [vec, rot, sca] = other.get();
-    rotation = rotation * rot;
-    position += vec;
-    // scale += sca;
+    this->position = other.scale * this->position;
+    this->scale = this->scale * other.scale;
+
+    this->position = other.rotation * this->position;
+    this->rotation = other.rotation * this->rotation;
+
+    this->position += other.position;
     return *this;
   }
 
-  glm::vec3 operator*(const glm::vec3 &v) const {
-    glm::vec3 w = v;
-    auto [vec, rot, scale] = get();
-    w = w * rot;
-    w += vec;
-    // w *= scale;
-    return w;
+  Transform operator*(const Transform &other) const {
+    Transform tm = other;
+    tm *= *this;
+    return tm;
   }
 
+  // glm::vec3 operator*(const glm::vec3 &v) const {
+  //   glm::vec3 w = v;
+  //   auto [vec, rot, scale] = get_world();
+  //   w = w * rot;
+  //   w += vec;
+  //   // w *= scale;
+  //   return w;
+  // }
+
   Transform &rotateX(float deg) {
-    invalidate();
     rotation = rotation * glm::quat(glm::vec3(deg, 0, 0));
     return *this;
   }
 
   Transform &rotateY(float deg) {
-    invalidate();
     rotation = rotation * glm::quat(glm::vec3(0, deg, 0));
     return *this;
   }
 
   Transform &rotateZ(float deg) {
-    invalidate();
     rotation = rotation * glm::quat(glm::vec3(0, 0, deg));
     return *this;
   }
 
   Transform &rotateXYZ(float x, float y, float z) {
-    invalidate();
     rotation = rotation * glm::quat(glm::vec3(x, y, z));
     return *this;
   }
 
   Transform &rotateXYZ(const glm::vec3 &vec) {
-    invalidate();
     rotation = rotation * glm::quat(vec);
     return *this;
   }
 
   Transform &setRotationX(float deg) {
-    invalidate();
     rotation = glm::quat(glm::vec3(deg, 0, 0));
     return *this;
   }
 
   Transform &setRotationY(float deg) {
-    invalidate();
     rotation = glm::quat(glm::vec3(0, deg, 0));
     return *this;
   }
 
   Transform &setRotationZ(float deg) {
-    invalidate();
     rotation = glm::quat(glm::vec3(0, 0, deg));
     return *this;
   }
 
   Transform &setRotationXYZ(float x, float y, float z) {
-    invalidate();
     rotation = glm::quat(glm::vec3(x, y, z));
     return *this;
   }
 
   Transform &setRotationXYZ(const glm::vec3 &vec) {
-    invalidate();
     rotation = glm::quat(glm::vec3(vec.x, vec.y, vec.z));
     return *this;
   }
 
   Transform &translateX(float x) {
-    invalidate();
     position.x += x;
     return *this;
   }
 
   Transform &translateY(float y) {
-    invalidate();
     position.y += y;
     return *this;
   }
 
   Transform &translateZ(float z) {
-    invalidate();
     position.z += z;
     return *this;
   }
 
   Transform &translateXYZ(float x, float y, float z) {
-    invalidate();
     position += glm::vec3(x, y, z);
     return *this;
   }
 
   Transform &translateXYZ(const glm::vec3 &vec) {
-    invalidate();
     position += vec;
     return *this;
   }
 
   Transform &setPositionX(float x) {
-    invalidate();
     position.x = x;
     return *this;
   }
 
   Transform &setPositionY(float y) {
-    invalidate();
     position.y = y;
     return *this;
   }
 
   Transform &setPositionZ(float z) {
-    invalidate();
     position.z = z;
     return *this;
   }
 
   Transform &setPositionXYZ(float x, float y, float z) {
-    invalidate();
     position = glm::vec3(x, y, z);
     return *this;
   }
 
   Transform &setPositionXYZ(const glm::vec3 &vec) {
-    invalidate();
     position = vec;
     return *this;
   }
 
   Transform &scaleX(float deg) {
-    invalidate();
     scale.x *= deg;
     return *this;
   }
 
   Transform &scaleY(float deg) {
-    invalidate();
     scale.y *= deg;
     return *this;
   }
 
   Transform &scaleZ(float deg) {
-    invalidate();
     scale.z *= deg;
     return *this;
   }
 
   Transform &scaleXYZ(float x, float y, float z) {
-    invalidate();
     scale *= glm::vec3(x, y, z);
     return *this;
   }
 
   Transform &scaleXYZ(const glm::vec3 &vec) {
-    invalidate();
     scale *= vec;
     return *this;
   }
 
   Transform &scaleXYZ(float deg) {
-    invalidate();
     scale.x *= deg;
     scale.y *= deg;
     scale.z *= deg;
@@ -232,37 +214,31 @@ class Transform {
   }
 
   Transform &setScaleX(float deg) {
-    invalidate();
     scale.x = deg;
     return *this;
   }
 
   Transform &setScaleY(float deg) {
-    invalidate();
     scale.y = deg;
     return *this;
   }
 
   Transform &setScaleZ(float deg) {
-    invalidate();
     scale.z = deg;
     return *this;
   }
 
   Transform &setScaleXYZ(float x, float y, float z) {
-    invalidate();
     scale = glm::vec3{x, y, z};
     return *this;
   }
 
   Transform &setScaleXYZ(const glm::vec3 &vec) {
-    invalidate();
     scale = vec;
     return *this;
   }
 
   Transform &setScaleXYZ(float deg) {
-    invalidate();
     scale.x = deg;
     scale.y = deg;
     scale.z = deg;
@@ -278,64 +254,94 @@ class Transform {
 
   glm::vec3 fwd() const {
     glm::vec3 v{0, 0, 1};
-    auto [vec, rot, sc] = get();
-    v = v * rot;
+    v = v * this->rotation;
     return v;
   }
 
   glm::vec3 up() const {
     glm::vec3 v{0, 1, 0};
-    auto [vec, rot, sc] = get();
-    v = v * rot;
+    v = v * this->rotation;
     return v;
   }
 
   glm::vec3 right() const {
     glm::vec3 v{0, 1, 0};
-    auto [vec, rot, _] = get();
-    v = v * rot;
+    v = v * this->rotation;
     return v;
   }
 
   glm::vec3 tan() const {
     glm::vec3 v{1, 0, 0};
-    auto [vec, rot, _] = get();
-    v = v * rot;
+    v = v * this->rotation;
     return v;
   }
 
   glm::vec3 cotan() const {
     glm::vec3 v{0, 1, 0};
-    auto [vec, rot, _] = get();
-    v = v * rot;
+    v = v * this->rotation;
     return v;
   }
 
-  Transform &parent(const Transform &other) {
-    invalidate();
-    _parent = pointer<Transform>(other._lock, other);
+  protected:
+  template<template<typename T> typename Windower, typename Renderer>
+  friend class Engine;
+
+  Transform &parent(const Transform &parent) {
+    auto world = parent.get_world();
+    this->world_position = this->position;
+    this->world_rotation = this->rotation;
+    this->world_scale = this->scale;
+
+    this->world_position = world.scale * this->world_position;
+    this->world_scale *= world.scale;
+
+    this->world_position = world.rotation * this->world_position;
+    this->world_rotation = world.rotation * this->world_rotation;
+
+    this->world_position += world.position;
     return *this;
   }
 
-  protected:
-  inline void invalidate() const { _cache_validity = false; }
-
-  inline bool cache_valid() const {
-    if (!_cache_validity) {
-      return false;
-    }
-    if (_parent)
-      return _parent->cache_valid();
-    else
-      return true;
+  void reset_world() {
+    this->world_position = this->position;
+    this->world_rotation = this->rotation;
+    this->world_scale = this->scale;
   }
 
-  pointer<Transform> _parent;
-  std::shared_ptr<int> _lock = std::make_shared<int>();
-  mutable glm::vec3 _cache_vector;
-  mutable glm::vec3 _cache_scale;
-  mutable glm::quat _cache_quaternion;
-  mutable bool _cache_validity;
+  glm::vec3 world_position;
+  glm::quat world_rotation;
+  glm::vec3 world_scale;
+
+  static void parent_callback(std::map<size_t, std::tuple<Transform*, size_t>> storage, Transform& self, size_t parent) {
+    if (storage.find(parent) != storage.end()) {
+      auto& [p_tm, p_p] = storage.at(parent);
+      // std::get<1>(storage.at(parent)) = size_t(-1);
+      p_p = size_t(-1);
+      parent_callback(storage, *p_tm, p_p);
+      self.parent(*p_tm);
+    }
+  };
+
+  static int children_system(ecs::Query<cevy::ecs::Entity, Parent, Transform> children, ecs::Query<ecs::Entity, Transform> all) {
+    std::map<size_t, std::tuple<Transform*, size_t>> storage;
+    for (auto [c_en, parent, c_tm] : children) {
+      c_tm.reset_world();
+      storage[c_en] = std::make_tuple(&c_tm, size_t(parent.entity));
+      if (storage.find(parent.entity) == storage.end()) {
+        auto q_parent = all.get(parent.entity);
+        if (q_parent) {
+          auto [_, p_tm] = q_parent.value();
+          p_tm.reset_world();
+          storage[parent.entity] = std::make_tuple(&p_tm, size_t(-1));
+        }
+      }
+    }
+    for (auto [en, s]: storage) {
+      auto [tm, p] = s;
+      parent_callback(storage, *tm, p);
+    }
+    return 0;
+  }
 };
 } // namespace engine
 } // namespace cevy

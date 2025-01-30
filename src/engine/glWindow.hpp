@@ -10,26 +10,27 @@
 // clang-format off
 #include "ShaderProgram.hpp"
 // clang-format on
+#include "Window.hpp"
+#if (_WIN32)
+#include <GL/gl3w.h>
+#endif
+#if (__linux__)
+#include <GL/glew.h>
+#endif
 
-#include "Atmosphere.hpp"
 #include "Camera.hpp"
 #include "Color.hpp"
 #include "GLFW/glfw3.h"
 #include "Handle.hpp"
 #include "Model.hpp"
 #include "PbrMaterial.hpp"
-#include "PointLight.hpp"
 #include "Query.hpp"
 #include "Scheduler.hpp"
-#include "state.hpp"
 #include "pipeline.hpp"
-#include <memory>
+#include "input/state.hpp"
 
-namespace cevy::engine {
-class Window;
-}
-
-class glWindow {
+template <typename Renderer>
+class glWindow : public cevy::engine::Window::generic_window {
   template <typename T>
   using Handle = cevy::engine::Handle<T>;
 
@@ -46,46 +47,184 @@ class glWindow {
   using glLight = cevy::engine::pipeline::Light;
 
   public:
-  glWindow(int width, int height);
-  glWindow(glWindow &&rhs) noexcept {
+  glWindow(int width, int height) : width(width), height(height) {
+    // std::cout << " <<<< glWindow(width, height) @" << this << "  <<<<" << std::endl;
+    this->renderer = std::make_unique<Renderer>(*this);
+    open();
+    this->renderer->init();
+  }
+  glWindow(glWindow &&rhs) noexcept :  width(width), height(height), renderer(nullptr) {
+    this->renderer.swap(rhs.renderer);
+    // std::cout << " <<<< glWindow MOVE CONSTRUCT @" << this << "  <<<<" << std::endl;
     this->width = rhs.width;
     this->height = rhs.height;
-    this->shaderProgram = rhs.shaderProgram;
     this->glfWindow = rhs.glfWindow;
-    rhs.shaderProgram = nullptr;
     rhs.glfWindow = nullptr;
-    this->defaultMaterial = rhs.defaultMaterial;
 
     glfwSetWindowUserPointer(this->glfWindow, this);
   }
   glWindow(const glWindow &) = delete;
-  ~glWindow();
-  bool open();
-  bool close();
+
+  ~glWindow() {
+    // std::cout << " <<<< ~glWindow @" << this << "  <<<<" << std::endl;
+
+    this->renderer.reset();
+
+    if (this->glfWindow) {
+      /*importantly, since children depend on the gl context for destruction,
+       we only destroy the gl context after destroying its dependants */
+      std::cerr << " <<<< TERMINATING GL WINDOW <<<<" << std::endl;
+      glfwDestroyWindow(this->glfWindow);
+      glfwTerminate();
+    }
+  };
+
+  glm::vec<2, int> size() const override {
+    return {width, height};
+  }
+  void setSize(int /* width */, int /* height */) override {
+
+  }
+  void setFullscreen(bool /* fullscreen */) override {
+
+  }
+
+  bool open() override {
+    this->init_context();
+    return 0;
+  }
   static void render_system(
-      Resource<cevy::engine::Window> win, Query<Camera> cams,
-      Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-      Query<option<Transform>, cevy::engine::PointLight> lights,
-      cevy::ecs::EventWriter<cevy::ecs::AppExit> close, cevy::ecs::World &world);
+      Resource<cevy::engine::Window> win,
+      cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
+      cevy::ecs::World &world) {
+    win.get().get_handler<glWindow, Renderer>()->render(close, world);
+  }
+
   void
-  render(Query<Camera> cams, std::optional<ref<cevy::engine::Atmosphere>> atmosphere,
-         Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-         Query<option<Transform>, cevy::engine::PointLight> lights,
-         cevy::ecs::EventWriter<cevy::ecs::AppExit> close);
+  render(
+         cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
+         cevy::ecs::World &world) {
 
-  void setupEnv();
+    glfwPollEvents();
 
-  void pollEvents();
+    if (glfwWindowShouldClose(this->glfWindow)) {
+      close.send(cevy::ecs::AppExit());
+      return;
+    }
+
+    world.run_system_with(Renderer::render_system, *this->renderer);
+
+    glfwSwapBuffers(this->glfWindow);
+  }
+
+  void pollEvents() {
+    glfwPollEvents();
+  }
+
   std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyPressed>>> keyPressedWriter;
   std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyReleased>>> keyReleasedWriter;
 
+  void setKeyPressedWriter(std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyPressed>> writer) {
+    keyPressedWriter = writer;
+  }
+
+  void setKeyReleasedWriter(std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyReleased>> writer) {
+    keyReleasedWriter = writer;
+  }
+
+  std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyPressed>>> getKeyPressedWriter() {
+    return keyPressedWriter;
+  }
+
+  std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyReleased>>> getKeyReleasedWriter() {
+    return keyReleasedWriter;
+  }
+
   protected:
-  void updateSize(int width, int height);
-  void keyInput(int key, int scancode, int action, int mods);
-  void cursor(double xpos, double ypos);
-  void mouseInput(int button, int action, int mods);
-  bool init_context();
-  bool unload_context();
+  void updateSize(int width, int height) {
+    this->width = width;
+    this->height = height;
+  }
+
+  void keyInput(int key, int /* scancode */, int action, int /* mods */) {
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+      glfwSetWindowShouldClose(glfWindow, GLFW_TRUE);
+    if (action == GLFW_PRESS && this->keyPressedWriter.has_value())
+      this->keyPressedWriter->get().send(cevy::input::keyPressed { static_cast<cevy::input::KeyCode>(key) });
+    if (action == GLFW_RELEASE && this->keyReleasedWriter.has_value())
+      this->keyReleasedWriter->get().send(cevy::input::keyReleased { static_cast<cevy::input::KeyCode>(key) });
+  }
+
+  void cursor(double /* xpos */, double /* ypos */) {}
+
+  void mouseInput(int /* button */, int /* action */, int /* mods */) {}
+
+  bool init_context() {
+    if (!glfwInit()) {
+      throw std::runtime_error("failed to init glfw");
+      // Initialization failed
+    }
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    this->glfWindow = glfwCreateWindow(width, height, "C++evy glWindow", NULL, NULL);
+    if (!this->glfWindow) {
+      glfwTerminate();
+      throw std::runtime_error("failed to create window");
+    }
+    glfwSetWindowUserPointer(this->glfWindow, this);
+    glfwMakeContextCurrent(this->glfWindow);
+
+    glfwSetWindowSizeCallback(this->glfWindow, [](GLFWwindow *win, int width, int height) {
+      getFromWin(win)->updateSize(width, height);
+    });
+    glfwSetMouseButtonCallback(this->glfWindow,
+                               [](GLFWwindow *win, int button, int action, int mods) {
+                                 getFromWin(win)->mouseInput(button, action, mods);
+                               });
+    glfwSetCursorPosCallback(this->glfWindow, [](GLFWwindow *win, double xpos, double ypos) {
+      getFromWin(win)->cursor(xpos, ypos);
+    });
+    glfwSetKeyCallback(this->glfWindow,
+                       [](GLFWwindow *win, int key, int scancode, int action, int mods) {
+                         getFromWin(win)->keyInput(key, scancode, action, mods);
+                       });
+
+#if _WIN32
+    if (gl3wInit()) {
+      fprintf(stderr, "failed to initialize OpenGL\n");
+      return -1;
+    }
+    if (!gl3wIsSupported(4, 2)) {
+      fprintf(stderr, "OpenGL 4.2 not supported\n");
+      return -1;
+    }
+#elif __linux__
+    if (glewInit()) {
+      // std::string err(glewGetErrorString());
+      throw std::runtime_error("failed to init glew");
+
+      // fprintf(stderr, "failed to initialize OpenGL\n");
+      return -1;
+    }
+    if (!glewIsSupported("GL_VERSION_4_2")) {
+      throw std::runtime_error("glew unsupported");
+      // fprintf(stderr, "OpenGL 4.2 not supported\n");
+      return -1;
+    }
+#endif // _WIN32
+
+    printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION),
+           glGetString(GL_SHADING_LANGUAGE_VERSION));
+    glfwSwapInterval(1); // enable vsync
+    return 0;
+  }
+
+  bool unload_context() {
+    glfwTerminate();
+    return 0;
+  }
 
 
   static glWindow *getFromWin(GLFWwindow *glfWindow) {
@@ -94,23 +233,7 @@ class glWindow {
 
   int width;
   int height;
-  GLuint uboLights = 0;
-  ShaderProgram *shaderProgram;
   GLFWwindow *glfWindow;
   PbrMaterial defaultMaterial;
+  std::unique_ptr<Renderer> renderer;
 };
-
-namespace cevy::engine {
-class Window {
-  public:
-  Window(glWindow &&win) { this->window = std::make_shared<glWindow>(std::forward<glWindow>(win)); }
-  Window(int width, int height) { this->window = std::make_shared<glWindow>(width, height); }
-  glWindow *operator->() { return this->window.get(); }
-  glWindow *get() { return this->window.get(); }
-  glWindow &operator*() { return *this->window; }
-  const glWindow &operator*() const { return *this->window; }
-
-  protected:
-  std::shared_ptr<glWindow> window;
-};
-} // namespace cevy::engine
