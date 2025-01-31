@@ -95,13 +95,14 @@ class cevy::NetworkBase {
   void tcp_client_connect() {
     std::cout << "async tcp connect" << std::endl;
     _tcp_connexions.emplace(_tcp_connexions.end(), _io_context)
-        ->socket.async_connect(
-            tcp::endpoint(asio::ip::make_address(_dest_ip), _dest_tcp_port),
-            [this](asio::error_code error) {
-              std::cout << "triggered here, maybe with error : " << error.message() << std::endl;
-              on_client_tcp_connect();
-              read_one_TCP(_tcp_connexions.back());
-            });
+        ->socket.async_connect(tcp::endpoint(asio::ip::make_address(_dest_ip), _dest_tcp_port),
+                               [this](asio::error_code error) {
+                                 std::cout
+                                     << "triggered here, maybe with error : " << error.message()
+                                     << std::endl;
+                                 on_client_tcp_connect();
+                                 read_one_TCP(_tcp_connexions.back());
+                               });
     std::cout << "set async connect" << std::endl;
   }
 

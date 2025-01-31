@@ -10,6 +10,7 @@
 #include <iterator>
 #include <tuple>
 #include <vector>
+#include <iostream>
 
 namespace cevy::ecs {
 class World;
@@ -38,8 +39,14 @@ class EventWriter {
   public:
   using value_type = T;
 
-  void send(T &&event) {
-    _event_access.event_queue.push_back(std::make_tuple(std::move(event), _idx));
+  void clear() {
+    for (int i = _event_access.event_queue.size() - 1; i >= 0; i--)
+      if (std::get<1>(_event_access.event_queue.at(i)) == _idx)
+        _event_access.event_queue.erase(_event_access.event_queue.begin() + i);
+  }
+
+  void send(const T& event) {
+    _event_access.event_queue.push_back(std::make_tuple(event, _idx));
   }
 };
 

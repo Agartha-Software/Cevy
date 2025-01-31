@@ -7,18 +7,27 @@
 
 #pragma once
 
-#include "raylib.hpp"
+#include <glm/fwd.hpp>
+#include <glm/glm.hpp>
 
 namespace cevy::engine {
 class Color {
   public:
-  unsigned char r; // Color red value
-  unsigned char g; // Color green value
-  unsigned char b; // Color blue value
-  unsigned char a; // Color alpha value
+  float r; // Color red value
+  float g; // Color green value
+  float b; // Color blue value
+  float a; // Color alpha value
 
-  Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255);
-  operator ::Color();
-  operator const ::Color() const;
+  Color(float r = 1., float g = 1., float b = 1., float a = 1.);
+
+  const glm::vec4 &as_vec() const;
+
+  operator const glm::vec4 &() const;
+  operator const glm::vec3 &() const;
+  // operator glm::vec4 &&();
+  // operator glm::vec3 &&();
+
+  private:
+  const glm::vec3 &as_vec3() const;
 };
 } // namespace cevy::engine

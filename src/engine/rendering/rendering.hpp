@@ -1,14 +1,16 @@
 /*
-** Agartha-Software, 2023
-** C++evy
+** AgarthaSoftware, 2024
+** Cevy
 ** File description:
-** Rendering
+** Rendering forward declarations
 */
 
 #pragma once
 
-#include "ecs.hpp"
-
-void render_models(cevy::ecs::World &world);
-
-void render_lines(cevy::ecs::World &w);
+namespace cevy::engine {
+class PointLight;
+class Renderer;
+class ForwardRenderer;
+class DeferredRenderer;
+class Window;
+} // namespace cevy::engine

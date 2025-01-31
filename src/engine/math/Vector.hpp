@@ -7,8 +7,7 @@
 
 #pragma once
 
-#include "../network/network.hpp"
-#include "raylib.hpp"
+#include "network/network.hpp"
 #include <ostream>
 
 namespace cevy::engine {

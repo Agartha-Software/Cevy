@@ -5,7 +5,7 @@
 ## Cevy project cmake
 ##
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.10)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -17,6 +17,20 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/lib")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_subdirectory(deps)
+
+find_package(glm CONFIG REQUIRED)
+
+if (WIN32)
+  find_package(gl3w CONFIG REQUIRED)
+endif()
+if (UNIX)
+find_package(GLEW REQUIRED)
+set(OpenGL_GL_PREFERENCE "GLVND")
+find_package(OpenGL REQUIRED)
+endif()
+
+find_package(glfw3 CONFIG REQUIRED)
+
 
 add_compile_options(-Wall -Wextra)
 

@@ -7,15 +7,15 @@
 
 #pragma once
 
-#include "Vector.hpp"
+#include <glm/glm.hpp>
 
 namespace cevy::engine {
 class Line {
   public:
-  Vector start;
-  Vector end;
+  glm::vec3 start;
+  glm::vec3 end;
 
-  Line(Vector start, Vector end) : start(start), end(end) {}
-  operator Ray() { return Ray{.position = start, .direction = end}; }
+  Line(glm::vec3 start, glm::vec3 end) : start(start), end(end) {}
+  // operator Ray() { return Ray{.position = start, .direction = end}; }
 };
 } // namespace cevy::engine

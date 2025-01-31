@@ -33,7 +33,7 @@ class pointer {
     _value = nullptr;
   }
 
-  pointer(const std::shared_ptr<int> &lock, const T &value) {
+  pointer(const std::shared_ptr<int> &lock, T &value) {
     _weak = lock;
     _value = &value;
   };
@@ -74,7 +74,7 @@ class pointer {
 
   private:
   std::weak_ptr<void> _weak;
-  const T *_value;
+  T *_value;
 };
 } // namespace engine
 } // namespace cevy

@@ -5,6 +5,7 @@
 ** Vector
 */
 
+/*
 #include "Vector.hpp"
 #include <algorithm>
 #include <cmath>
@@ -257,3 +258,5 @@ Vector Vector::random(float degree, const Vector &source) {
 }
 
 #endif
+
+*/

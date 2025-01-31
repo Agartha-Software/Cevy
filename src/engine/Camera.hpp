@@ -7,19 +7,24 @@
 
 #pragma once
 
+#include "Resource.hpp"
+#include "Window.hpp"
 #include "Query.hpp"
 #include "Target.hpp"
 #include "Transform.hpp"
 #include "cevy.hpp"
-#include "raylib.hpp"
 
 namespace cevy::engine {
 class Camera {
   public:
-  Camera3D camera;
-  operator Camera3D &();
-  operator Camera3D *();
-  operator Camera3D() const;
+  float fov;
+  float aspect;
+  float near;
+  float far;
+  glm::vec3 up;
+  float tilt;
+  glm::mat4 projection;
+  glm::mat4 view;
   Camera();
   ~Camera();
 };
@@ -27,4 +32,4 @@ class Camera {
 
 void update_camera(cevy::ecs::Query<cevy::engine::Camera, option<cevy::engine::Target>,
                                     option<cevy::engine::Transform>>
-                       cams);
+                       cams, cevy::ecs::Resource<cevy::engine::Window> window);
