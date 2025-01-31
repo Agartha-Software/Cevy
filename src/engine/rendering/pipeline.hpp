@@ -19,6 +19,12 @@ struct pipeline {
   struct sampler2D {};
 
   struct uniforms {
+    enum class NormalMode : int {
+      None = 0b00,
+      Tangeant = 0b01,
+      Model = 0b11,
+    };
+
     /// model transform matrix
     struct model {
       using Type = glm::mat4;
@@ -83,6 +89,11 @@ struct pipeline {
       struct halflambert {
         using Type = bool;
         inline static constexpr auto name = "halflambert";
+      };
+      // lambertian method
+      struct normal_mode {
+        using Type = NormalMode;
+        inline static constexpr auto name = "normal_mode";
       };
       /// non-physically based additionnal ambient
       struct custom_ambient {

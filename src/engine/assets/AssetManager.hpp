@@ -14,6 +14,7 @@
 #include "ecs.hpp"
 
 #include <optional>
+#include <unordered_map>
 #include <vector>
 
 void init_asset_manager(cevy::ecs::World &w);

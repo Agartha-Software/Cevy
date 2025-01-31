@@ -18,6 +18,10 @@ class Asset {
   AssetManager &manager;
 
   public:
+
+  operator AssetManager& () {
+    return manager;
+  }
   Asset(AssetManager &manager) : manager(manager) {};
 
   Handle<Type> load(Type &&asset, const std::string name = "") {

@@ -1,5 +1,19 @@
+/*
+** Agartha-Software, 2024
+** C++evy
+** File description:
+** Material definition
+*/
+
 
 #pragma once
+
+#if (_WIN32)
+#include <GL/gl3w.h>
+#endif
+#if (__linux__)
+#include <GL/glew.h>
+#endif
 
 #include "Handle.hpp"
 #include "engine.hpp"
@@ -9,18 +23,12 @@
 #include <optional>
 #include <string>
 
-#if (_WIN32)
-#include <GL/gl3w.h>
-#endif
-#if (__linux__)
-#include <GL/glew.h>
-#endif
 
 namespace cevy::engine {
 class Texture {
   bool initted = false;
   std::string file_name;
-  uint32_t gl_handle;
+  uint32_t gl_handle = 0;
   friend struct TextureBuilder;
 
   protected:
@@ -58,7 +66,7 @@ class Texture {
     return *this;
   }
 
-  uint texture_handle() const {return this->gl_handle; };
+  uint texture_handle() const { return this->gl_handle; };
 
   void init();
 
@@ -126,6 +134,7 @@ public:
     color_tex diffuse;
     color_tex specular;
     color_tex emit;
+    std::string normal = "";
     // additionnal
     data_tex roughness;
     data_tex alpha;
@@ -138,8 +147,8 @@ public:
 
   PbrMaterial(AssetManager &mngr, const definition &def);
 
-  PbrMaterial(glm::vec3 &&diffuse, glm::vec3 &&specular, float exponent)
-      : diffuse(diffuse), specular_tint(specular), phong_exponent(exponent) {
+  PbrMaterial(glm::vec3 &&diffuse, glm::vec3 &&specular, float roughness)
+      : diffuse(diffuse), specular_tint(specular), roughness(roughness) {
         halflambert = true;
       }
   ~PbrMaterial(){};
@@ -152,7 +161,13 @@ public:
     this->emit = other.emit;
     this->ambient = other.ambient;
     this->specular_tint = other.specular_tint;
-    this->phong_exponent = other.phong_exponent;
+    this->roughness = other.roughness;
+    this->diffuse = other.diffuse;
+
+    this->diffuse_texture = std::move(other.diffuse_texture);
+    this->specular_texture = std::move(other.specular_texture);
+    this->emission_texture = std::move(other.emission_texture);
+    this->normal_texture = std::move(other.normal_texture);
     return *this;
   }
 
@@ -163,11 +178,12 @@ public:
   glm::vec3 ambient = {0, 0, 0};
   glm::vec3 diffuse = {0.8, 0.8, 0.8};
   glm::vec3 specular_tint = {1, 1, 1};
-  float phong_exponent = 8;
+  float roughness = 1;
   bool halflambert: 1;
 
   std::optional<Handle<Texture>> diffuse_texture = std::nullopt;
   std::optional<Handle<Texture>> specular_texture = std::nullopt;
   std::optional<Handle<Texture>> emission_texture = std::nullopt;
+  std::optional<Handle<Texture>> normal_texture = std::nullopt;
 };
 } // namespace cevy::engine

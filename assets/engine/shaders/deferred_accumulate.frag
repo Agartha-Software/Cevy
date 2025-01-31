@@ -45,13 +45,13 @@ void shade_light(
     float phong;
 
     float exponent = 1 + 1 / roughness;
-    phong = max(0, lambert) * pow(max(0, dot(normal, halfway)), exponent * 2) * exponent / 2;
+    phong = max(0, lambert) * pow(max(0, dot(normal, halfway)), exponent * 2) * exponent;
     // phong = max(0, lambert) * pow(max(0, dot(reflect(-ray, normal), -viewVec)), exponent) * exponent / 4;
 
     float hl = halflambert * 0.5;
     lambert = lambert * (1 - hl) + hl;
     diffuse_light = light * max(0, lambert);
-    specular_light = light * phong;
+    specular_light = light * phong * 3;
 }
 
 void main() {
@@ -90,10 +90,11 @@ void main() {
         ray,
         lightRadius,
         viewVec,
-        roughness,
+        roughness * roughness,
         halflambert);
 
-    vec3 surface = diffuse_light * albedo;
+    vec3 surface = vec3(0);
+    surface += diffuse_light * albedo;
     surface += specular_light * specular;
 
     bool debug_draw_override = debug_draw;

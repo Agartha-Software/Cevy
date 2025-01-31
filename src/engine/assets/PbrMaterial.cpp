@@ -69,6 +69,7 @@ PbrMaterial::PbrMaterial(AssetManager &mngr, const definition &def) : PbrMateria
   TextureBuilder diffuse_builder;
   TextureBuilder specular_builder;
   TextureBuilder emit_builder;
+  TextureBuilder normal_builder;
 
   if (def.diffuse.a) {
     this->diffuse = def.diffuse.a.value();
@@ -91,9 +92,20 @@ PbrMaterial::PbrMaterial(AssetManager &mngr, const definition &def) : PbrMateria
     specular_builder.alpha_file_name = def.roughness.b.value();
   }
 
+  if (def.normal != "") {
+    normal_builder.rgb_file_name = def.normal;
+  }
+
   this->diffuse_texture = diffuse_builder.build(mngr);
   this->specular_texture = specular_builder.build(mngr);
   this->emission_texture = emit_builder.build(mngr);
+  this->normal_texture = normal_builder.build(mngr);
+
+  std::cout << "genereated material:" << std::endl;
+  std::cout << "diffuse:" << this->diffuse_texture.has_value() << std::endl;
+  std::cout << "specular:" << this->specular_texture.has_value() << std::endl;
+  std::cout << "emission:" << this->emission_texture.has_value() << std::endl;
+  std::cout << "normal:" << this->normal_texture.has_value() << std::endl;
 }
 
 PbrMaterial PbrMaterial::gold() {
@@ -116,7 +128,7 @@ PbrMaterial PbrMaterial::from_tinyobj(const tinyobj::material_t &material) {
   new_material.diffuse_texture =
       Texture::from_tinyobj(material.diffuse_texname, material.diffuse_texopt);
   // printf("name '%s'\n", new_material.diffuse_texture->file_name.c_str());
-  new_material.phong_exponent = material.shininess;
+  new_material.roughness = 1 / (material.shininess - 1);
   return new_material;
 }
 
@@ -165,7 +177,7 @@ Texture TextureBuilder::from(const glm::vec4 &pixel, int width, int height) {
 static uint8_t *normalize_image_data(uint8_t *image_data, int width, int height, int nrChannels,
                                      uint8_t default_value = 0) {
   using DataType = uint8_t;
-  uint8_t *new_data = static_cast<uint8_t *>(malloc(width * height * sizeof(DataType)));
+  uint8_t *new_data = static_cast<uint8_t *>(malloc(width * height * sizeof(DataType) * 4));
 
   for (int x = 0; x < width; ++x) {
     for (int y = 0; y < height; ++y) {
@@ -216,6 +228,7 @@ int TextureBuilder::load_rgb() {
   stbi_image_free(image_data);
   this->data = new_data;
   this->type = Texture::Type::U8_sRGB;
+  // this->type = Texture::Type::U8;
   return 0;
 }
 
@@ -226,10 +239,10 @@ int TextureBuilder::load_alpha() {
   int nrChannels = 0;
 
   stbi_set_flip_vertically_on_load(true);
-  uint8_t *alpha_data = stbi_load(this->rgb_file_name.c_str(), &width, &height, &nrChannels, 0);
+  uint8_t *alpha_data = stbi_load(this->alpha_file_name.c_str(), &width, &height, &nrChannels, 0);
 
   if (!alpha_data) {
-    std::cerr << "Error: load_alpha: Failed to load [" << this->rgb_file_name << "] texture"
+    std::cerr << "Error: load_alpha: Failed to load [" << this->alpha_file_name << "] texture"
               << std::endl;
     return -1;
   }
@@ -310,7 +323,7 @@ std::optional<Texture> TextureBuilder::build() {
 std::optional<Handle<Texture>> TextureBuilder::build(AssetManager &manager) {
   std::string name_full = this->rgb_file_name;
   if (this->alpha_file_name != "") {
-    name_full += this->alpha_file_name;
+    name_full += "_" + this->alpha_file_name;
   }
 
   auto o_tex = manager.get<Texture>();
@@ -340,10 +353,19 @@ std::optional<Handle<Texture>> TextureBuilder::build(AssetManager &manager) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+    // glTexImage2D(GL_TEXTURE_2D, 0, TextureBuilder::formats[int(this->type)][0], this->width,
+    //              this->height, 0, GL_RGBA, TextureBuilder::formats[int(this->type)][1], this->data);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                 this->data);
+                this->data);
+
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+    //         this->data);
+
+
+
     glGenerateMipmap(GL_TEXTURE_2D);
 
+    std::cout << "successfully generated '" << name_full << "'" << std:: endl;
     return manager.load(Texture(texture, name_full), name_full);
   }
   return std::nullopt;
