@@ -8,9 +8,13 @@
 #pragma once
 
 // clang-format off
+#include "App.hpp"
+#include "Plugin.hpp"
 #include "ShaderProgram.hpp"
 // clang-format on
 #include "Window.hpp"
+#include <optional>
+#include <stdexcept>
 #if (_WIN32)
 #include <GL/gl3w.h>
 #endif
@@ -47,15 +51,21 @@ class glWindow : public cevy::engine::Window::generic_window {
   using glLight = cevy::engine::pipeline::Light;
 
   public:
+  class Plugin : public cevy::ecs::Plugin {
+    public:
+    void build(cevy::ecs::App &app) override {
+      app.add_systems<cevy::ecs::core_stage::Startup>(glWindow<Renderer>::init_system);
+      app.add_systems<cevy::engine::RenderStage>(glWindow<Renderer>::render_system);
+    }
+  };
+
   glWindow(int width, int height) : width(width), height(height) {
-    // std::cout << " <<<< glWindow(width, height) @" << this << "  <<<<" << std::endl;
     this->renderer = std::make_unique<Renderer>(*this);
     open();
     this->renderer->init();
   }
   glWindow(glWindow &&rhs) noexcept :  width(width), height(height), renderer(nullptr) {
     this->renderer.swap(rhs.renderer);
-    // std::cout << " <<<< glWindow MOVE CONSTRUCT @" << this << "  <<<<" << std::endl;
     this->width = rhs.width;
     this->height = rhs.height;
     this->glfWindow = rhs.glfWindow;
@@ -66,8 +76,6 @@ class glWindow : public cevy::engine::Window::generic_window {
   glWindow(const glWindow &) = delete;
 
   ~glWindow() {
-    // std::cout << " <<<< ~glWindow @" << this << "  <<<<" << std::endl;
-
     this->renderer.reset();
 
     if (this->glfWindow) {
@@ -93,6 +101,15 @@ class glWindow : public cevy::engine::Window::generic_window {
     this->init_context();
     return 0;
   }
+
+  static void init_system(
+      Resource<cevy::engine::Window> win, cevy::ecs::EventWriter<cevy::input::keyPressed> keyPressedWriter,
+    cevy::ecs::EventWriter<cevy::input::keyReleased> keyReleasedWriter) {
+      glWindow<Renderer>& self = *win->get_handler<glWindow, Renderer>();
+      self.keyReleasedWriter.emplace(keyReleasedWriter);
+      self.keyPressedWriter.emplace(keyPressedWriter);
+    }
+
   static void render_system(
       Resource<cevy::engine::Window> win,
       cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
@@ -104,6 +121,9 @@ class glWindow : public cevy::engine::Window::generic_window {
   render(
          cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
          cevy::ecs::World &world) {
+    this->keyReleasedWriter->clear();
+    this->keyPressedWriter->clear();
+
 
     glfwPollEvents();
 
@@ -121,23 +141,28 @@ class glWindow : public cevy::engine::Window::generic_window {
     glfwPollEvents();
   }
 
-  std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyPressed>>> keyPressedWriter;
-  std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyReleased>>> keyReleasedWriter;
+  // std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyPressed>>> keyPressedWriter;
+  // std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyReleased>>> keyReleasedWriter;
+
+  std::optional<cevy::ecs::EventWriter<cevy::input::keyPressed>> keyPressedWriter;
+  std::optional<cevy::ecs::EventWriter<cevy::input::keyReleased>> keyReleasedWriter;
+
+
 
   void setKeyPressedWriter(std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyPressed>> writer) {
-    keyPressedWriter = writer;
+    // keyPressedWriter = writer;
   }
 
   void setKeyReleasedWriter(std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyReleased>> writer) {
-    keyReleasedWriter = writer;
+    // keyReleasedWriter = writer;
   }
 
-  std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyPressed>>> getKeyPressedWriter() {
-    return keyPressedWriter;
+  std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyPressed>>> &getKeyPressedWriter() {
+    // return keyPressedWriter;
   }
 
-  std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyReleased>>> getKeyReleasedWriter() {
-    return keyReleasedWriter;
+  std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyReleased>>> &getKeyReleasedWriter() {
+    // return keyReleasedWriter;
   }
 
   protected:
@@ -147,12 +172,15 @@ class glWindow : public cevy::engine::Window::generic_window {
   }
 
   void keyInput(int key, int /* scancode */, int action, int /* mods */) {
+    if (!this->keyPressedWriter.has_value() || !this->keyReleasedWriter.has_value()) {
+      throw std::runtime_error("callback access outside of poll");
+    }
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
       glfwSetWindowShouldClose(glfWindow, GLFW_TRUE);
-    if (action == GLFW_PRESS && this->keyPressedWriter.has_value())
-      this->keyPressedWriter->get().send(cevy::input::keyPressed { static_cast<cevy::input::KeyCode>(key) });
-    if (action == GLFW_RELEASE && this->keyReleasedWriter.has_value())
-      this->keyReleasedWriter->get().send(cevy::input::keyReleased { static_cast<cevy::input::KeyCode>(key) });
+    if (action == GLFW_PRESS)
+      this->keyPressedWriter.value().send(cevy::input::keyPressed { static_cast<cevy::input::KeyCode>(key) });
+    if (action == GLFW_RELEASE)
+      this->keyReleasedWriter.value().send(cevy::input::keyReleased { static_cast<cevy::input::KeyCode>(key) });
   }
 
   void cursor(double /* xpos */, double /* ypos */) {}

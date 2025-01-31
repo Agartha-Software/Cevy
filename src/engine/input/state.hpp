@@ -157,13 +157,13 @@ enum class ButtonState : uint8_t {
   JustReleasedAndPressed = 0b111,
 };
 
-typedef struct keyPressed_s {
+struct keyPressed {
   KeyCode keycode;
-} keyPressed;
+};
 
-typedef struct keyReleased_s {
+struct keyReleased {
   KeyCode keycode;
-} keyReleased;
+};
 
 template <typename InputType, std::size_t N = 0, typename std::enable_if<std::is_enum<InputType>::value>::type* = nullptr>
 class ButtonInput {
