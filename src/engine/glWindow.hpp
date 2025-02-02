@@ -90,6 +90,7 @@ class glWindow : public cevy::engine::Window::generic_window {
   glm::vec<2, int> size() const override {
     return {width, height};
   }
+
   void setSize(int /* width */, int /* height */) override {
 
   }
@@ -103,12 +104,16 @@ class glWindow : public cevy::engine::Window::generic_window {
   }
 
   static void init_system(
-      Resource<cevy::engine::Window> win, cevy::ecs::EventWriter<cevy::input::keyPressed> keyPressedWriter,
-    cevy::ecs::EventWriter<cevy::input::keyReleased> keyReleasedWriter) {
-      glWindow<Renderer>& self = *win->get_handler<glWindow, Renderer>();
-      self.keyReleasedWriter.emplace(keyReleasedWriter);
-      self.keyPressedWriter.emplace(keyPressedWriter);
-    }
+      Resource<cevy::engine::Window> win,
+      cevy::ecs::EventWriter<cevy::input::keyPressed> keyPressedWriter,
+      cevy::ecs::EventWriter<cevy::input::keyReleased> keyReleasedWriter,
+      cevy::ecs::EventWriter<cevy::input::cursorMoved> cursorMovedWriter
+  ) {
+    glWindow<Renderer>& self = *win->get_handler<glWindow, Renderer>();
+    self.keyReleasedWriter.emplace(keyReleasedWriter);
+    self.keyPressedWriter.emplace(keyPressedWriter);
+    self.cursorMovedWriter.emplace(cursorMovedWriter);
+  }
 
   static void render_system(
       Resource<cevy::engine::Window> win,
@@ -121,12 +126,6 @@ class glWindow : public cevy::engine::Window::generic_window {
   render(
          cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
          cevy::ecs::World &world) {
-    this->keyReleasedWriter->clear();
-    this->keyPressedWriter->clear();
-
-
-    glfwPollEvents();
-
     if (glfwWindowShouldClose(this->glfWindow)) {
       close.send(cevy::ecs::AppExit());
       return;
@@ -135,35 +134,22 @@ class glWindow : public cevy::engine::Window::generic_window {
     world.run_system_with(Renderer::render_system, *this->renderer);
 
     glfwSwapBuffers(this->glfWindow);
+
+    this->keyReleasedWriter->clear();
+    this->keyPressedWriter->clear();
+    this->cursorMovedWriter->clear();
+
+    glfwPollEvents();
   }
 
   void pollEvents() {
     glfwPollEvents();
   }
 
-  // std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyPressed>>> keyPressedWriter;
-  // std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyReleased>>> keyReleasedWriter;
-
   std::optional<cevy::ecs::EventWriter<cevy::input::keyPressed>> keyPressedWriter;
   std::optional<cevy::ecs::EventWriter<cevy::input::keyReleased>> keyReleasedWriter;
 
-
-
-  void setKeyPressedWriter(std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyPressed>> writer) {
-    // keyPressedWriter = writer;
-  }
-
-  void setKeyReleasedWriter(std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyReleased>> writer) {
-    // keyReleasedWriter = writer;
-  }
-
-  std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyPressed>>> &getKeyPressedWriter() {
-    // return keyPressedWriter;
-  }
-
-  std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyReleased>>> &getKeyReleasedWriter() {
-    // return keyReleasedWriter;
-  }
+  std::optional<cevy::ecs::EventWriter<cevy::input::cursorMoved>> cursorMovedWriter;
 
   protected:
   void updateSize(int width, int height) {
@@ -171,7 +157,7 @@ class glWindow : public cevy::engine::Window::generic_window {
     this->height = height;
   }
 
-  void keyInput(int key, int /* scancode */, int action, int /* mods */) {
+  void keyInput(int key, int /*scancode*/, int action, int /* mods */) {
     if (!this->keyPressedWriter.has_value() || !this->keyReleasedWriter.has_value()) {
       throw std::runtime_error("callback access outside of poll");
     }
@@ -183,7 +169,12 @@ class glWindow : public cevy::engine::Window::generic_window {
       this->keyReleasedWriter.value().send(cevy::input::keyReleased { static_cast<cevy::input::KeyCode>(key) });
   }
 
-  void cursor(double /* xpos */, double /* ypos */) {}
+  void cursor(double xpos, double ypos) {
+    if (!this->cursorMovedWriter.has_value()) {
+      throw std::runtime_error("callback access outside of poll");
+    }
+    this->cursorMovedWriter.value().send(cevy::input::cursorMoved { { xpos, ypos }} );
+  }
 
   void mouseInput(int /* button */, int /* action */, int /* mods */) {}
 
