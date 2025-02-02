@@ -25,6 +25,7 @@
 #include "engine.hpp"
 #include "glWindow.hpp"
 #include "App.hpp"
+#include "input/input.hpp"
 
 namespace cevy::engine {
 template <template <typename T> typename Windower = glWindow, typename Renderer = ForwardRenderer>
@@ -57,7 +58,7 @@ class Engine : public cevy::ecs::Plugin {
     app.init_component<cevy::engine::Color>();
     // app.init_component<cevy::engine::Atmosphere>();
     app.add_plugins(cevy::engine::AssetManagerPlugin());
-    // app.add_plugins(cevy::input::InputPlugin());
+    app.add_plugins(cevy::input::InputPlugin());
     app.add_plugins(typename Windower<Renderer>::Plugin());
     app.add_systems<cevy::engine::PreRenderStage>(update_camera);
     app.add_systems<ecs::core_stage::PostUpdate>(TransformVelocity::system);

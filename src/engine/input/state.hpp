@@ -8,7 +8,9 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 #include <cstdint>
+#include <glm/fwd.hpp>
 #include <unordered_set>
 
 namespace cevy {
@@ -163,6 +165,18 @@ struct keyPressed {
 
 struct keyReleased {
   KeyCode keycode;
+};
+
+struct mouseMotion {
+  glm::vec<2, int> delta;
+};
+
+struct cursorMoved {
+  glm::vec<2, int> pos;
+};
+
+struct cursorPosition {
+  glm::vec<2, int> pos;
 };
 
 template <typename InputType, std::size_t N = 0, typename std::enable_if<std::is_enum<InputType>::value>::type* = nullptr>

@@ -7,12 +7,9 @@
 
 #pragma once
 
-#include "Event.hpp"
 #include "Plugin.hpp"
-#include "input/state.hpp"
 #include <glm/glm.hpp>
 #include <memory>
-#include <optional>
 #include <type_traits>
 
 namespace cevy::engine {
@@ -22,12 +19,6 @@ class Window {
     generic_window() {};
     virtual bool open() = 0;
     virtual void pollEvents() = 0;
-
-    virtual void setKeyPressedWriter(std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyPressed>> writer) = 0;
-    virtual void setKeyReleasedWriter(std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyReleased>> writer) = 0;
-
-    virtual std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyPressed>>> &getKeyPressedWriter() = 0;
-    virtual std::optional<std::reference_wrapper<cevy::ecs::EventWriter<cevy::input::keyReleased>>> &getKeyReleasedWriter() = 0;
 
     virtual glm::vec<2, int> size() const = 0;
     virtual void setSize(int width, int height) = 0;
