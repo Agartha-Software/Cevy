@@ -14,6 +14,7 @@ void update_input(
     cevy::ecs::EventReader<cevy::input::keyPressed> keyPressedReader,
     cevy::ecs::EventReader<cevy::input::keyReleased> keyReleasedReader,
     cevy::ecs::EventReader<cevy::input::cursorMoved> cursorMovedReader,
+    cevy::ecs::EventReader<cevy::input::windowFocused> windowFocusedReader,
     cevy::ecs::EventWriter<cevy::input::mouseMotion> mouseMotionWriter,
     cevy::ecs::Resource<cevy::input::ButtonInput<cevy::input::KeyCode>> keyboard,
     cevy::ecs::Resource<cevy::input::cursorPosition> cursorPosition) {
@@ -30,6 +31,9 @@ void update_input(
     for (const auto &released : keyReleasedReader) {
         keyboard->release(released.keycode);
     }
+    for (const auto &focused: windowFocusedReader) {
+        std::cout << focused.focused << std::endl;
+    }
 }
 
 void cevy::input::InputPlugin::build(cevy::ecs::App &app) {
@@ -37,6 +41,7 @@ void cevy::input::InputPlugin::build(cevy::ecs::App &app) {
     app.add_event<keyReleased>();
     app.add_event<mouseMotion>();
     app.add_event<cursorMoved>();
+    app.add_event<windowFocused>();
     app.init_resource<ButtonInput<KeyCode>>(ButtonInput<KeyCode>());
     app.init_resource<cevy::input::cursorPosition>(cevy::input::cursorPosition{{0 , 0}});
     app.add_systems<ecs::core_stage::PreUpdate>(update_input);

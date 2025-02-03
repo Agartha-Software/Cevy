@@ -159,6 +159,13 @@ enum class ButtonState : uint8_t {
   JustReleasedAndPressed = 0b111,
 };
 
+/// An event that indicates a window has received or lost focus.
+/// Multiples windows are not supported yet
+struct windowFocused {
+  //Entity window;
+  bool focused;
+};
+
 struct keyPressed {
   KeyCode keycode;
 };
@@ -167,14 +174,17 @@ struct keyReleased {
   KeyCode keycode;
 };
 
+/// An event reporting the change in position of the cursor.
 struct mouseMotion {
   glm::vec<2, int> delta;
 };
 
+/// An event reporting that the mouse cursor has moved inside a window.
 struct cursorMoved {
   glm::vec<2, int> pos;
 };
 
+//// BLLL Do better
 struct cursorPosition {
   glm::vec<2, int> pos;
 };
