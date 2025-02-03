@@ -166,12 +166,9 @@ struct windowFocused {
   bool focused;
 };
 
-struct keyPressed {
+struct keyboardInput {
   KeyCode keycode;
-};
-
-struct keyReleased {
-  KeyCode keycode;
+  bool pressed;
 };
 
 /// An event reporting the change in position of the cursor.
