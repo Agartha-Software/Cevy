@@ -9,6 +9,7 @@
 
 // clang-format off
 #include "App.hpp"
+#include "Event.hpp"
 #include "Plugin.hpp"
 #include "ShaderProgram.hpp"
 // clang-format on
@@ -107,12 +108,14 @@ class glWindow : public cevy::engine::Window::generic_window {
       Resource<cevy::engine::Window> win,
       cevy::ecs::EventWriter<cevy::input::keyPressed> keyPressedWriter,
       cevy::ecs::EventWriter<cevy::input::keyReleased> keyReleasedWriter,
-      cevy::ecs::EventWriter<cevy::input::cursorMoved> cursorMovedWriter
+      cevy::ecs::EventWriter<cevy::input::cursorMoved> cursorMovedWriter,
+      cevy::ecs::EventWriter<cevy::input::windowFocused> windowFocusedWriter
   ) {
     glWindow<Renderer>& self = *win->get_handler<glWindow, Renderer>();
     self.keyReleasedWriter.emplace(keyReleasedWriter);
     self.keyPressedWriter.emplace(keyPressedWriter);
     self.cursorMovedWriter.emplace(cursorMovedWriter);
+    self.windowFocusedWriter.emplace(windowFocusedWriter);
   }
 
   static void render_system(
@@ -138,6 +141,7 @@ class glWindow : public cevy::engine::Window::generic_window {
     this->keyReleasedWriter->clear();
     this->keyPressedWriter->clear();
     this->cursorMovedWriter->clear();
+    this->windowFocusedWriter->clear();
 
     glfwPollEvents();
   }
@@ -150,6 +154,8 @@ class glWindow : public cevy::engine::Window::generic_window {
   std::optional<cevy::ecs::EventWriter<cevy::input::keyReleased>> keyReleasedWriter;
 
   std::optional<cevy::ecs::EventWriter<cevy::input::cursorMoved>> cursorMovedWriter;
+
+  std::optional<cevy::ecs::EventWriter<cevy::input::windowFocused>> windowFocusedWriter;
 
   protected:
   void updateSize(int width, int height) {
@@ -169,11 +175,19 @@ class glWindow : public cevy::engine::Window::generic_window {
       this->keyReleasedWriter.value().send(cevy::input::keyReleased { static_cast<cevy::input::KeyCode>(key) });
   }
 
+
   void cursor(double xpos, double ypos) {
     if (!this->cursorMovedWriter.has_value()) {
       throw std::runtime_error("callback access outside of poll");
     }
     this->cursorMovedWriter.value().send(cevy::input::cursorMoved { { xpos, ypos }} );
+  }
+
+  void windowFocused(int focused) {
+    if (!this->windowFocusedWriter.has_value()) {
+      throw std::runtime_error("callback access outside of poll");
+    }
+    this->windowFocusedWriter.value().send(cevy::input::windowFocused { bool(focused)});
   }
 
   void mouseInput(int /* button */, int /* action */, int /* mods */) {}
@@ -209,7 +223,10 @@ class glWindow : public cevy::engine::Window::generic_window {
                        [](GLFWwindow *win, int key, int scancode, int action, int mods) {
                          getFromWin(win)->keyInput(key, scancode, action, mods);
                        });
-
+    glfwSetWindowFocusCallback(this->glfWindow,
+                                [](GLFWwindow* win, int focused) {
+                         getFromWin(win)->windowFocused(focused);
+                       });
 #if _WIN32
     if (gl3wInit()) {
       fprintf(stderr, "failed to initialize OpenGL\n");
