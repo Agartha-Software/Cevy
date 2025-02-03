@@ -17,6 +17,17 @@
 namespace cevy {
 namespace input {
 
+enum class MouseButton: unsigned int {
+  Left = GLFW_MOUSE_BUTTON_LEFT,
+  Right = GLFW_MOUSE_BUTTON_RIGHT,
+  Middle = GLFW_MOUSE_BUTTON_MIDDLE,
+  Button_1 = GLFW_MOUSE_BUTTON_4,
+  Button_2 = GLFW_MOUSE_BUTTON_5,
+  Button_3 = GLFW_MOUSE_BUTTON_6,
+  Button_4 = GLFW_MOUSE_BUTTON_7,
+  Button_5 = GLFW_MOUSE_BUTTON_8
+};
+
 enum class KeyCode: unsigned int {
   Space = GLFW_KEY_SPACE,
   Apostriophe = GLFW_KEY_APOSTROPHE,
@@ -174,9 +185,24 @@ struct windowFocus {
   bool focused;
 };
 
+/// A resource that indicates if the cursor is inside or outside the window
+struct cursorInWindow {
+  bool entered;
+};
+
+/// A event specifing if the cursor is entering the window
+struct cursorEntered {};
+
+/// A event specifing if the cursor is leaving the window
+struct cursorLeft {};
 
 struct keyboardInput {
   KeyCode keycode;
+  bool pressed;
+};
+
+struct mouseInput {
+  MouseButton button;
   bool pressed;
 };
 
