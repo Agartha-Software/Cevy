@@ -106,14 +106,12 @@ class glWindow : public cevy::engine::Window::generic_window {
 
   static void init_system(
       Resource<cevy::engine::Window> win,
-      cevy::ecs::EventWriter<cevy::input::keyPressed> keyPressedWriter,
-      cevy::ecs::EventWriter<cevy::input::keyReleased> keyReleasedWriter,
+      cevy::ecs::EventWriter<cevy::input::keyboardInput> keyboardInputWriter,
       cevy::ecs::EventWriter<cevy::input::cursorMoved> cursorMovedWriter,
       cevy::ecs::EventWriter<cevy::input::windowFocused> windowFocusedWriter
   ) {
     glWindow<Renderer>& self = *win->get_handler<glWindow, Renderer>();
-    self.keyReleasedWriter.emplace(keyReleasedWriter);
-    self.keyPressedWriter.emplace(keyPressedWriter);
+    self.keyboardInputWriter.emplace(keyboardInputWriter);
     self.cursorMovedWriter.emplace(cursorMovedWriter);
     self.windowFocusedWriter.emplace(windowFocusedWriter);
   }
@@ -138,8 +136,7 @@ class glWindow : public cevy::engine::Window::generic_window {
 
     glfwSwapBuffers(this->glfWindow);
 
-    this->keyReleasedWriter->clear();
-    this->keyPressedWriter->clear();
+    this->keyboardInputWriter->clear();
     this->cursorMovedWriter->clear();
     this->windowFocusedWriter->clear();
 
@@ -150,8 +147,7 @@ class glWindow : public cevy::engine::Window::generic_window {
     glfwPollEvents();
   }
 
-  std::optional<cevy::ecs::EventWriter<cevy::input::keyPressed>> keyPressedWriter;
-  std::optional<cevy::ecs::EventWriter<cevy::input::keyReleased>> keyReleasedWriter;
+  std::optional<cevy::ecs::EventWriter<cevy::input::keyboardInput>> keyboardInputWriter;
 
   std::optional<cevy::ecs::EventWriter<cevy::input::cursorMoved>> cursorMovedWriter;
 
@@ -164,15 +160,21 @@ class glWindow : public cevy::engine::Window::generic_window {
   }
 
   void keyInput(int key, int /*scancode*/, int action, int /* mods */) {
-    if (!this->keyPressedWriter.has_value() || !this->keyReleasedWriter.has_value()) {
+    if (!this->keyboardInputWriter.has_value()) {
       throw std::runtime_error("callback access outside of poll");
     }
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
       glfwSetWindowShouldClose(glfWindow, GLFW_TRUE);
-    if (action == GLFW_PRESS)
-      this->keyPressedWriter.value().send(cevy::input::keyPressed { static_cast<cevy::input::KeyCode>(key) });
-    if (action == GLFW_RELEASE)
-      this->keyReleasedWriter.value().send(cevy::input::keyReleased { static_cast<cevy::input::KeyCode>(key) });
+    }
+
+    if (action == GLFW_PRESS) {
+      this->keyboardInputWriter->send(cevy::input::keyboardInput { static_cast<cevy::input::KeyCode>(key), true });
+    }
+
+    if (action == GLFW_RELEASE) {
+      this->keyboardInputWriter->send(cevy::input::keyboardInput { static_cast<cevy::input::KeyCode>(key), false });
+    }
   }
 
 
@@ -180,14 +182,14 @@ class glWindow : public cevy::engine::Window::generic_window {
     if (!this->cursorMovedWriter.has_value()) {
       throw std::runtime_error("callback access outside of poll");
     }
-    this->cursorMovedWriter.value().send(cevy::input::cursorMoved { { xpos, ypos }} );
+    this->cursorMovedWriter->send(cevy::input::cursorMoved { { xpos, ypos }} );
   }
 
   void windowFocused(int focused) {
     if (!this->windowFocusedWriter.has_value()) {
       throw std::runtime_error("callback access outside of poll");
     }
-    this->windowFocusedWriter.value().send(cevy::input::windowFocused { bool(focused)});
+    this->windowFocusedWriter->send(cevy::input::windowFocused { bool(focused)});
   }
 
   void mouseInput(int /* button */, int /* action */, int /* mods */) {}

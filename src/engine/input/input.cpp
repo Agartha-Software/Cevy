@@ -11,10 +11,9 @@
 #include "input.hpp"
 
 void update_input(
-    cevy::ecs::EventReader<cevy::input::keyPressed> keyPressedReader,
-    cevy::ecs::EventReader<cevy::input::keyReleased> keyReleasedReader,
+    cevy::ecs::EventReader<cevy::input::keyboardInput> keyboardInputReader,
     cevy::ecs::EventReader<cevy::input::cursorMoved> cursorMovedReader,
-    cevy::ecs::EventReader<cevy::input::windowFocused> windowFocusedReader,
+    //cevy::ecs::EventReader<cevy::input::windowFocused> windowFocusedReader,
     cevy::ecs::EventWriter<cevy::input::mouseMotion> mouseMotionWriter,
     cevy::ecs::Resource<cevy::input::ButtonInput<cevy::input::KeyCode>> keyboard,
     cevy::ecs::Resource<cevy::input::cursorPosition> cursorPosition) {
@@ -25,20 +24,17 @@ void update_input(
         cursorPosition->pos = cursorMoved.pos;
     }
 
-    for (const auto &pressed : keyPressedReader) {
-        keyboard->press(pressed.keycode);
-    }
-    for (const auto &released : keyReleasedReader) {
-        keyboard->release(released.keycode);
-    }
-    for (const auto &focused: windowFocusedReader) {
-        std::cout << focused.focused << std::endl;
+    for (const auto &input : keyboardInputReader) {
+        if (input.pressed) {
+            keyboard->press(input.keycode);
+        } else {
+            keyboard->release(input.keycode);
+        }
     }
 }
 
 void cevy::input::InputPlugin::build(cevy::ecs::App &app) {
-    app.add_event<keyPressed>();
-    app.add_event<keyReleased>();
+    app.add_event<keyboardInput>();
     app.add_event<mouseMotion>();
     app.add_event<cursorMoved>();
     app.add_event<windowFocused>();
