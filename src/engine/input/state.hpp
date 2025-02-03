@@ -11,6 +11,7 @@
 #include <glm/glm.hpp>
 #include <cstdint>
 #include <glm/fwd.hpp>
+#include <optional>
 #include <unordered_set>
 
 namespace cevy {
@@ -166,6 +167,14 @@ struct windowFocused {
   bool focused;
 };
 
+/// A resource that indicates a window has received or lost focus.
+/// Multiples windows are not supported yet
+struct windowFocus {
+  //Entity window;
+  bool focused;
+};
+
+
 struct keyboardInput {
   KeyCode keycode;
   bool pressed;
@@ -173,17 +182,19 @@ struct keyboardInput {
 
 /// An event reporting the change in position of the cursor.
 struct mouseMotion {
-  glm::vec<2, int> delta;
+  glm::vec<2, int> pos;
+  std::optional<glm::vec<2, int>> delta;
 };
 
 /// An event reporting that the mouse cursor has moved inside a window.
+
 struct cursorMoved {
   glm::vec<2, int> pos;
 };
 
-//// BLLL Do better
 struct cursorPosition {
   glm::vec<2, int> pos;
+  std::optional<glm::vec<2, int>> delta;
 };
 
 template <typename InputType, std::size_t N = 0, typename std::enable_if<std::is_enum<InputType>::value>::type* = nullptr>
