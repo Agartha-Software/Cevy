@@ -44,14 +44,14 @@ class cevy::NetworkActions : public ecs::Plugin {
   };
 
   /// Contructor
-  NetworkActions(CevyNetwork &net) : _net(net) {};
+  NetworkActions(CevyNetwork &net) : _net(net){};
 
   /// deleted copy-constructor
   NetworkActions(const NetworkActions &) = delete;
 
   NetworkActions &operator=(const NetworkActions &) = delete;
   NetworkActions &operator=(NetworkActions &&) = delete;
-  ~NetworkActions() {};
+  ~NetworkActions(){};
 
   using ActionFailureMode = CevyNetwork::ActionFailureMode;
   using EActionFailureMode = ActionFailureMode::EActionFailureMode;

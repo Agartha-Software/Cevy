@@ -167,7 +167,8 @@ void cevy::engine::DeferredRenderer::render_system(
   self.gBuffer_shader->use();
 
   auto invView = camera.view;
-  auto view = glm::scale(camera.projection, glm::vec3(1, camera.aspect, 1)) * glm::inverse(camera.view);
+  auto view =
+      glm::scale(camera.projection, glm::vec3(1, camera.aspect, 1)) * glm::inverse(camera.view);
   view = view / std::abs(view[3][3]);
 
   // invView = invView / invView[3][3];

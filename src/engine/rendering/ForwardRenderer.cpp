@@ -38,7 +38,8 @@ void cevy::engine::ForwardRenderer::init() {
 
   std::cout << "allocated shaderProgram" << std::endl;
 
-  this->shaderProgram->initFromFiles("assets/engine/shaders/simple.vert", "assets/engine/shaders/simple.frag");
+  this->shaderProgram->initFromFiles("assets/engine/shaders/simple.vert",
+                                     "assets/engine/shaders/simple.frag");
   std::cout << "inited shaderProgram" << std::endl;
 
   this->shaderProgram->addUniform("model");
@@ -72,8 +73,7 @@ void cevy::engine::ForwardRenderer::init() {
 }
 
 void cevy::engine::ForwardRenderer::render_system(
-    ForwardRenderer &self,
-    Query<Camera> cams,
+    ForwardRenderer &self, Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
     Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world) {
 

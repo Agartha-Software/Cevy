@@ -38,16 +38,11 @@ class Texture {
   };
 
   Texture() = default;
-  ~Texture() {
-    deinit();
-  }
+  ~Texture() { deinit(); }
 
+  Texture(Texture &&other) : Texture() { *this = std::move(other); };
 
-  Texture(Texture &&other) : Texture() {
-    *this = std::move(other);
-  };
-
-  Texture& operator=(Texture &&other) {
+  Texture &operator=(Texture &&other) {
     if (this->initted) {
       deinit();
     }
@@ -58,13 +53,13 @@ class Texture {
     return *this;
   }
 
-  uint texture_handle() const {return this->gl_handle; };
+  uint texture_handle() const { return this->gl_handle; };
 
   void init();
 
   void deinit();
 
-  static std::optional<Texture> load(const std::string& file_name);
+  static std::optional<Texture> load(const std::string &file_name);
 
   static std::optional<Texture> from_tinyobj(const std::string &file_name,
                                              const tinyobj::texture_option_t &_option);
@@ -84,40 +79,43 @@ struct TextureBuilder {
   } flags;
 
   inline static constexpr GLenum formats[][2] = {
-    {GL_SRGB8_ALPHA8, GL_UNSIGNED_BYTE}, // Texture::Type::U8_sRGB
-    {GL_RGB, GL_UNSIGNED_BYTE}, // Texture::Type::U8;
-    {GL_RGBA16F, GL_FLOAT}, // Texture::Type::F16
+      {GL_SRGB8_ALPHA8, GL_UNSIGNED_BYTE}, // Texture::Type::U8_sRGB
+      {GL_RGB, GL_UNSIGNED_BYTE},          // Texture::Type::U8;
+      {GL_RGBA16F, GL_FLOAT},              // Texture::Type::F16
   };
-
 
   // AssetManager* manager = nullptr;
 
-  TextureBuilder() { flags.initted = false; flags.has_alpha = false; flags.has_rgb = false; };
+  TextureBuilder() {
+    flags.initted = false;
+    flags.has_alpha = false;
+    flags.has_rgb = false;
+  };
   ~TextureBuilder();
-  TextureBuilder(const TextureBuilder&) = delete;
-  TextureBuilder(TextureBuilder&&) = delete;
+  TextureBuilder(const TextureBuilder &) = delete;
+  TextureBuilder(TextureBuilder &&) = delete;
 
-  static Texture from(const glm::vec4& pixel, int width, int height);
-  static Texture from(const glm::vec<4, uint8_t>& pixel, int width, int height);
+  static Texture from(const glm::vec4 &pixel, int width, int height);
+  static Texture from(const glm::vec<4, uint8_t> &pixel, int width, int height);
 
   int load_rgb();
   int load_alpha();
-  int get_alpha(const TextureBuilder& other);
+  int get_alpha(const TextureBuilder &other);
   std::optional<cevy::engine::Texture> build();
-  std::optional<Handle<cevy::engine::Texture>> build(AssetManager& manager);
+  std::optional<Handle<cevy::engine::Texture>> build(AssetManager &manager);
 };
 
 class PbrMaterial {
-public:
-  template<typename T, typename V>
+  public:
+  template <typename T, typename V>
   struct pair {
     std::optional<T> a;
     std::optional<V> b;
-    pair() : a(std::nullopt), b(std::nullopt) {};
-    pair(T&& t) : a(std::forward<T>(t)), b(std::nullopt) {};
-    pair(V&& v) : a(std::nullopt), b(std::forward<V>(v)) {};
-    pair(T&& t, V&& v) : a(std::forward<T>(t)), b(std::forward<V>(v)) {};
-    pair(V&& v, T&& t) : a(std::forward<T>(t)), b(std::forward<V>(v)) {};
+    pair() : a(std::nullopt), b(std::nullopt){};
+    pair(T &&t) : a(std::forward<T>(t)), b(std::nullopt){};
+    pair(V &&v) : a(std::nullopt), b(std::forward<V>(v)){};
+    pair(T &&t, V &&v) : a(std::forward<T>(t)), b(std::forward<V>(v)){};
+    pair(V &&v, T &&t) : a(std::forward<T>(t)), b(std::forward<V>(v)){};
   };
 
   using color_tex = pair<glm::vec4, std::string>;
@@ -132,23 +130,19 @@ public:
   };
 
   public:
-  PbrMaterial(){
-    halflambert = true;
-  };
+  PbrMaterial() { halflambert = true; };
 
   PbrMaterial(AssetManager &mngr, const definition &def);
 
   PbrMaterial(glm::vec3 &&diffuse, glm::vec3 &&specular, float exponent)
       : diffuse(diffuse), specular_tint(specular), phong_exponent(exponent) {
-        halflambert = true;
-      }
+    halflambert = true;
+  }
   ~PbrMaterial(){};
 
-  PbrMaterial(PbrMaterial &&other) : PbrMaterial() {
-    *this = std::move(other);
-  };
+  PbrMaterial(PbrMaterial &&other) : PbrMaterial() { *this = std::move(other); };
 
-  PbrMaterial& operator=(PbrMaterial &&other) {
+  PbrMaterial &operator=(PbrMaterial &&other) {
     this->emit = other.emit;
     this->ambient = other.ambient;
     this->specular_tint = other.specular_tint;
@@ -164,7 +158,7 @@ public:
   glm::vec3 diffuse = {0.8, 0.8, 0.8};
   glm::vec3 specular_tint = {1, 1, 1};
   float phong_exponent = 8;
-  bool halflambert: 1;
+  bool halflambert : 1;
 
   std::optional<Handle<Texture>> diffuse_texture = std::nullopt;
   std::optional<Handle<Texture>> specular_texture = std::nullopt;

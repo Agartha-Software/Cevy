@@ -80,15 +80,17 @@ class GBuffers {
     glBindFramebuffer(GL_FRAMEBUFFER, this->framebuffer);
 
     glGenTextures(1, &this->depthbuffer);
-    glBindTexture(GL_TEXTURE_2D,  this->depthbuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH32F_STENCIL8, this->width, this->height, 0, GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV, NULL);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,  this->depthbuffer, 0);
+    glBindTexture(GL_TEXTURE_2D, this->depthbuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH32F_STENCIL8, this->width, this->height, 0,
+                 GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV, NULL);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
+                           this->depthbuffer, 0);
 
     GLenum Status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
     if (Status != GL_FRAMEBUFFER_COMPLETE) {
-        printf("FB error, status: 0x%x\n", Status);
-        // throw "framebuffer gen";
+      printf("FB error, status: 0x%x\n", Status);
+      // throw "framebuffer gen";
     }
 
     this->initted = true;

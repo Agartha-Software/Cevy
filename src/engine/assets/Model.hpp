@@ -20,13 +20,13 @@ namespace cevy::engine {
 class Model {
   public:
   Model();
-  Model(Model&& other);
-  Model(Model& other);
+  Model(Model &&other);
+  Model(Model &other);
 
   ~Model();
 
-  Model& operator=(Model&& other);
-  Model& operator=(Model& other);
+  Model &operator=(Model &&other);
+  Model &operator=(Model &other);
 
   void load(const std::vector<glm::vec3> &vertices, const std::vector<glm::vec3> &normals,
             const std::vector<uint32_t> &indices);

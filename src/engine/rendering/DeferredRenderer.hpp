@@ -101,10 +101,10 @@ class cevy::engine::DeferredRenderer {
   }
 
   void init();
-  static void
-  render_system(DeferredRenderer &self, Query<Camera> cams,
-         Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-         Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world);
+  static void render_system(
+      DeferredRenderer &self, Query<Camera> cams,
+      Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+      Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world);
 
   protected:
   GLFWwindow *glfWindow;

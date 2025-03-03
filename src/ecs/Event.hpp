@@ -7,10 +7,10 @@
 
 #pragma once
 
+#include <iostream>
 #include <iterator>
 #include <tuple>
 #include <vector>
-#include <iostream>
 
 namespace cevy::ecs {
 class World;
@@ -45,9 +45,7 @@ class EventWriter {
         _event_access.event_queue.erase(_event_access.event_queue.begin() + i);
   }
 
-  void send(const T& event) {
-    _event_access.event_queue.push_back(std::make_tuple(event, _idx));
-  }
+  void send(const T &event) { _event_access.event_queue.push_back(std::make_tuple(event, _idx)); }
 };
 
 template <typename T>

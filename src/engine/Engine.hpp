@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "App.hpp"
 #include "AssetManager.hpp"
 #include "Atmosphere.hpp"
 #include "Camera.hpp"
@@ -24,7 +25,6 @@
 #include "ecs.hpp"
 #include "engine.hpp"
 #include "glWindow.hpp"
-#include "App.hpp"
 #include "input/input.hpp"
 
 namespace cevy::engine {
