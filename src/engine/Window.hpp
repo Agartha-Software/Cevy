@@ -48,9 +48,8 @@ class Window {
   glm::vec<2, int> size() const { return this->window->size(); }
   void setSize(int width, int height) { this->window->setSize(width, height); }
   void setFullscreen(bool fullscreen) { this->window->setFullscreen(fullscreen); }
-  generic_window *operator->() {
-    return window.get();
-  }
+  generic_window *operator->() { return window.get(); }
+
   protected:
   std::shared_ptr<generic_window> window;
 };

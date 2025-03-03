@@ -18,4 +18,5 @@ class InputPlugin : public ecs::Plugin {
   void build(ecs::App &app);
 };
 
-}};  // namespace cevy::engine
+} // namespace input
+}; // namespace cevy
