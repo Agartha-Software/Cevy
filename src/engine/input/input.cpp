@@ -32,7 +32,10 @@ void update_mouse_motion_window_focus(
   cevy::ecs::EventReader<cevy::input::windowFocused> windowFocusedReader,
   cevy::ecs::EventWriter<cevy::input::mouseMotion> mouseMotionWriter,
   cevy::ecs::Resource<cevy::input::windowFocus> windowFocusState,
-  cevy::ecs::Resource<cevy::input::cursorPosition> cursorPosition
+  cevy::ecs::Resource<cevy::input::cursorPosition> cursorPosition,
+  cevy::ecs::Resource<cevy::input::cursorInWindow> cursorInWindow,
+  cevy::ecs::EventReader<cevy::input::cursorEntered> cursorEnteredReader,
+  cevy::ecs::EventReader<cevy::input::cursorLeft> cursorLeftReader
 ) {
   for (const auto &windowFocusChange: windowFocusedReader) {
     windowFocusState->focused = windowFocusChange.focused;
@@ -55,6 +58,11 @@ void update_mouse_motion_window_focus(
     cursorPosition->pos = cursorMoved.pos;
     cursorPosition->delta = delta;
   }
+
+  auto left = cursorLeftReader.raw_data.event_queue.size();
+  auto entered = cursorEnteredReader.raw_data.event_queue.size();
+
+  cursorInWindow->inside = bool((cursorInWindow->inside + left + entered) % 2);
 }
 
 void update_keyboard_input(
@@ -81,7 +89,8 @@ void cevy::input::InputPlugin::build(cevy::ecs::App &app) {
   app.add_event<cursorLeft>();
   app.init_resource<ButtonInput<KeyCode>>(ButtonInput<KeyCode>());
   app.init_resource<ButtonInput<MouseButton>>(ButtonInput<MouseButton>());
-  app.init_resource<windowFocus>(windowFocus { true});
+  app.init_resource<windowFocus>(windowFocus { true });
+  app.init_resource<cursorInWindow>(cursorInWindow {false});
   app.init_resource<cevy::input::cursorPosition>(cevy::input::cursorPosition{{0 , 0}, std::nullopt});
   app.add_systems<ecs::core_stage::PreUpdate>(update_mouse_motion_window_focus);
   app.add_systems<ecs::core_stage::PreUpdate>(update_keyboard_input);

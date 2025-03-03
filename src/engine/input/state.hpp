@@ -187,7 +187,7 @@ struct windowFocus {
 
 /// A resource that indicates if the cursor is inside or outside the window
 struct cursorInWindow {
-  bool entered;
+  bool inside;
 };
 
 /// A event specifing if the cursor is entering the window

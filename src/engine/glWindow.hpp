@@ -109,6 +109,7 @@ class glWindow : public cevy::engine::Window::generic_window {
 
   static void init_system(
       Resource<cevy::engine::Window> win,
+      Resource<cevy::input::cursorInWindow> cursorInWindow,
       EventWriter<cevy::input::keyboardInput> keyboardInputWriter,
       EventWriter<cevy::input::mouseInput> mouseInputWriter,
       EventWriter<cevy::input::cursorMoved> cursorMovedWriter,
@@ -118,12 +119,17 @@ class glWindow : public cevy::engine::Window::generic_window {
   ) {
     glWindow<Renderer>& self = *win->get_handler<glWindow, Renderer>();
 
+    cursorInWindow->inside = glfwGetWindowAttrib(self.glfWindow, GLFW_HOVERED);
+
     self.keyboardInputWriter.emplace(keyboardInputWriter);
     self.mouseInputWriter.emplace(mouseInputWriter);
     self.cursorMovedWriter.emplace(cursorMovedWriter);
     self.windowFocusedWriter.emplace(windowFocusedWriter);
     self.cursorEnteredWriter.emplace(cursorEnteredWriter);
     self.cursorLeftWriter.emplace(cursorLeftWriter);
+    if (cursorInWindow->inside) {
+      cursorEnteredWriter.send(cevy::input::cursorEntered {});
+    }
   }
 
   static void render_system(
