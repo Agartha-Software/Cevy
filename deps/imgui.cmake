@@ -27,6 +27,8 @@ add_library(imgui STATIC
   ${IMGUI_FOLDER}/imgui_demo.cpp
   ${IMGUI_FOLDER}/imgui_tables.cpp
   ${IMGUI_FOLDER}/imgui_widgets.cpp
+  ${IMGUI_FOLDER}/backends/imgui_impl_glfw.cpp
+  ${IMGUI_FOLDER}/backends/imgui_impl_opengl3.cpp
 )
 
 set(RLIMGUI_FOLDER ${CMAKE_BINARY_DIR}/_deps/rlimgui)

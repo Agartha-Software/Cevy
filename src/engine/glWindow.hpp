@@ -33,6 +33,9 @@
 #include "Scheduler.hpp"
 #include "input/state.hpp"
 #include "pipeline.hpp"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 template <typename Renderer>
 class glWindow : public cevy::engine::Window::generic_window {
@@ -81,7 +84,11 @@ class glWindow : public cevy::engine::Window::generic_window {
   ~glWindow() {
     this->renderer.reset();
 
+
     if (this->glfWindow) {
+      ImGui_ImplOpenGL3_Shutdown();
+      ImGui_ImplGlfw_Shutdown();
+      ImGui::DestroyContext();
       /*importantly, since children depend on the gl context for destruction,
        we only destroy the gl context after destroying its dependants */
       std::cerr << " <<<< TERMINATING GL WINDOW <<<<" << std::endl;
@@ -134,7 +141,15 @@ class glWindow : public cevy::engine::Window::generic_window {
       return;
     }
 
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGui::ShowDemoWindow(); // Show demo window! :)
+
     world.run_system_with(Renderer::render_system, *this->renderer);
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glfwSwapBuffers(this->glfWindow);
 
@@ -146,6 +161,7 @@ class glWindow : public cevy::engine::Window::generic_window {
     this->cursorLeftWriter->clear();
 
     glfwPollEvents();
+
   }
 
   void pollEvents() { glfwPollEvents(); }
@@ -291,6 +307,19 @@ class glWindow : public cevy::engine::Window::generic_window {
     printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION),
            glGetString(GL_SHADING_LANGUAGE_VERSION));
     glfwSwapInterval(1); // enable vsync
+
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
+
+    ImGui::StyleColorsDark();
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(this->glfWindow, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+    ImGui_ImplOpenGL3_Init();
     return 0;
   }
 
