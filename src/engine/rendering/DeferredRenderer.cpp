@@ -53,7 +53,7 @@
 //   return color;
 // }
 
-void cevy::engine::DeferredRenderer::init() {
+void cevy::engine::DeferredRenderer::init(glWindow&) {
   this->alive = "DeferredRenderer is initialized";
   // std::cerr << " <<<< DeferredRenderer::init() <<<<" << std::endl;
 
@@ -136,10 +136,14 @@ void cevy::engine::DeferredRenderer::init() {
   // this->primitives.flat = TextureBuilder::from(glm::vec4(0.5, 0.5, 0.5, 1), 2, 2);
 }
 
+void cevy::engine::DeferredRenderer::deinit(glWindow&) {
+}
+
 void cevy::engine::DeferredRenderer::render_system(
-    DeferredRenderer &self, Query<Camera> cams,
+    Resource<Window> win, Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
     Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world) {
+  DeferredRenderer &self = win->get_handler<glWindow>().get_module<DeferredRenderer>();
 
   auto r_atmo = world.get_resource<const Atmosphere>();
   const auto &atmosphere = r_atmo.has_value() ? r_atmo->get() : cevy::engine::Atmosphere();

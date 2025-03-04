@@ -14,8 +14,11 @@
 #include "ShaderProgram.hpp"
 // clang-format on
 #include "Window.hpp"
+#include "cevy.hpp"
 #include <optional>
 #include <stdexcept>
+#include <type_traits>
+#include <unordered_map>
 #if (_WIN32)
 #include <GL/gl3w.h>
 #endif
@@ -33,12 +36,20 @@
 #include "Scheduler.hpp"
 #include "input/state.hpp"
 #include "pipeline.hpp"
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
 
-template <typename Renderer>
 class glWindow : public cevy::engine::Window::generic_window {
+  public:
+
+  template<typename... Modules>
+  struct Builder ;
+
+  struct Module {
+    virtual void init(glWindow&) = 0;
+    virtual void deinit(glWindow&) = 0;
+    virtual void build(cevy::ecs::App &app) = 0;
+  };
+
+  protected:
   template <typename T>
   using Handle = cevy::engine::Handle<T>;
 
@@ -60,18 +71,53 @@ class glWindow : public cevy::engine::Window::generic_window {
   class Plugin : public cevy::ecs::Plugin {
     public:
     void build(cevy::ecs::App &app) override {
-      app.add_systems<cevy::ecs::core_stage::Startup>(glWindow<Renderer>::init_system);
-      app.add_systems<cevy::engine::RenderStage>(glWindow<Renderer>::render_system);
+      app.add_systems<cevy::ecs::core_stage::Startup>(glWindow::init_system);
+      app.add_systems<cevy::engine::PreRenderStage>(glWindow::pre_render_system);
+      app.add_systems<cevy::engine::PostRenderStage>(glWindow::post_render_system);
     }
   };
 
+  protected:
   glWindow(int width, int height) : width(width), height(height) {
-    this->renderer = std::make_unique<Renderer>(*this);
     open();
-    this->renderer->init();
+
+    // this->renderer = std::make_unique<Renderer>(*this);
   }
-  glWindow(glWindow &&rhs) noexcept : width(width), height(height), renderer(nullptr) {
-    this->renderer.swap(rhs.renderer);
+  public:
+
+  template<typename... Mod>
+  glWindow& add_modules() {
+    static_assert(all(std::is_base_of_v<Module, Mod>...),
+            "Given Modules do not derive from Module class");
+    ([this](){
+      this->module_keys.emplace(std::type_index(typeid(Mod)), this->modules.size());
+      this->modules.push_back(std::make_unique<Mod>(*this));
+      this->modules.back()->init(*this);
+    }(), ...);
+    return *this;
+  }
+
+  template<typename Mod>
+  glWindow& add_module() {
+    static_assert(std::is_base_of_v<Module, Mod>,
+            "Given Module does not derive from Module class");
+    this->module_keys.emplace(std::type_index(typeid(Mod)), this->modules.size());
+    this->modules.push_back(std::make_unique<Mod>(*this));
+    this->modules.back()->init(*this);
+    return *this;
+  }
+
+  template<typename Mod>
+  Mod& get_module() {
+    auto key = this->module_keys.at(std::type_index(typeid(Mod)));
+    return dynamic_cast<Mod&>(*this->modules[key]);
+  }
+
+  glWindow(glWindow &&rhs) noexcept {
+    this->modules = std::move(rhs.modules);
+    this->module_keys = std::move(rhs.module_keys);
+    rhs.modules.clear();
+    rhs.module_keys.clear();
     this->width = rhs.width;
     this->height = rhs.height;
     this->glfWindow = rhs.glfWindow;
@@ -82,13 +128,19 @@ class glWindow : public cevy::engine::Window::generic_window {
   glWindow(const glWindow &) = delete;
 
   ~glWindow() {
-    this->renderer.reset();
+    // this->renderer.reset();
+
+    for (auto& module: this->modules) {
+      module->deinit(*this);
+    }
+    this->modules.clear();
+    this->module_keys.clear();
 
 
     if (this->glfWindow) {
-      ImGui_ImplOpenGL3_Shutdown();
-      ImGui_ImplGlfw_Shutdown();
-      ImGui::DestroyContext();
+      // ImGui_ImplOpenGL3_Shutdown();
+      // ImGui_ImplGlfw_Shutdown();
+      // ImGui::DestroyContext();
       /*importantly, since children depend on the gl context for destruction,
        we only destroy the gl context after destroying its dependants */
       std::cerr << " <<<< TERMINATING GL WINDOW <<<<" << std::endl;
@@ -115,7 +167,7 @@ class glWindow : public cevy::engine::Window::generic_window {
                           EventWriter<cevy::input::windowFocused> windowFocusedWriter,
                           EventWriter<cevy::input::cursorEntered> cursorEnteredWriter,
                           EventWriter<cevy::input::cursorLeft> cursorLeftWriter) {
-    glWindow<Renderer> &self = *win->get_handler<glWindow, Renderer>();
+    glWindow &self = win->get_handler<glWindow>();
 
     cursorInWindow->inside = glfwGetWindowAttrib(self.glfWindow, GLFW_HOVERED);
 
@@ -130,26 +182,33 @@ class glWindow : public cevy::engine::Window::generic_window {
     }
   }
 
-  static void render_system(Resource<cevy::engine::Window> win,
+  static void pre_render_system(Resource<cevy::engine::Window> win,
                             EventWriter<cevy::ecs::AppExit> close, cevy::ecs::World &world) {
-    win.get().get_handler<glWindow, Renderer>()->render(close, world);
+    win.get().get_handler<glWindow>().pre_render(close, world);
   }
 
-  void render(EventWriter<cevy::ecs::AppExit> close, cevy::ecs::World &world) {
+  static void post_render_system(Resource<cevy::engine::Window> win,
+                            EventWriter<cevy::ecs::AppExit> close, cevy::ecs::World &world) {
+    win.get().get_handler<glWindow>().post_render(close, world);
+  }
+
+  void pre_render(EventWriter<cevy::ecs::AppExit> close, cevy::ecs::World &world) {
     if (glfwWindowShouldClose(this->glfWindow)) {
       close.send(cevy::ecs::AppExit());
       return;
     }
+  }
 
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-    ImGui::ShowDemoWindow(); // Show demo window! :)
+  void post_render(EventWriter<cevy::ecs::AppExit> close, cevy::ecs::World &world) {
+    // ImGui_ImplOpenGL3_NewFrame();
+    // ImGui_ImplGlfw_NewFrame();
+    // ImGui::NewFrame();
+    // ImGui::ShowDemoWindow(); // Show demo window! :)
 
-    world.run_system_with(Renderer::render_system, *this->renderer);
+    // (world.run_system_with(Mod::render_system, *this->renderer), ...);
 
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    // ImGui::Render();
+    // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glfwSwapBuffers(this->glfWindow);
 
@@ -164,7 +223,7 @@ class glWindow : public cevy::engine::Window::generic_window {
 
   }
 
-  void pollEvents() { glfwPollEvents(); }
+  void pollEvents() override { glfwPollEvents(); }
 
   std::optional<EventWriter<cevy::input::keyboardInput>> keyboardInputWriter;
   std::optional<EventWriter<cevy::input::mouseInput>> mouseInputWriter;
@@ -309,17 +368,17 @@ class glWindow : public cevy::engine::Window::generic_window {
     glfwSwapInterval(1); // enable vsync
 
     // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
+    // IMGUI_CHECKVERSION();
+    // ImGui::CreateContext();
+    // ImGuiIO& io = ImGui::GetIO();
+    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    // //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    // //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
 
-    ImGui::StyleColorsDark();
-    // Setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForOpenGL(this->glfWindow, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
-    ImGui_ImplOpenGL3_Init();
+    // ImGui::StyleColorsDark();
+    // // Setup Platform/Renderer backends
+    // ImGui_ImplGlfw_InitForOpenGL(this->glfWindow, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+    // ImGui_ImplOpenGL3_Init();
     return 0;
   }
 
@@ -336,5 +395,23 @@ class glWindow : public cevy::engine::Window::generic_window {
   int height;
   GLFWwindow *glfWindow;
   PbrMaterial defaultMaterial;
-  std::unique_ptr<Renderer> renderer;
+  std::vector<std::unique_ptr<Module>> modules;
+  std::unordered_map<std::type_index, size_t> module_keys;
+  // std::unique_ptr<Renderer> renderer;
+};
+
+template<typename... Mod>
+struct glWindow::Builder : public glWindow {
+  Builder(int width, int height) : glWindow(width, height) {
+    this->add_modules<Mod...>();
+  }
+  struct Plugin : public cevy::ecs::Plugin {
+    void build(cevy::ecs::App& app) override {
+      app.add_plugins(glWindow::Plugin());
+      for (auto& module : app.resource<cevy::engine::Window>().get_handler<glWindow>().modules) {
+        module->build(app);
+      }
+      // app.add_plugins(typename Mod::Plugin()...);
+    }
+  };
 };

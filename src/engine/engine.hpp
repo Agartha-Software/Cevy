@@ -11,6 +11,9 @@
 
 namespace cevy::engine {
 
+template <typename Windower>
+class Engine;
+
 class AssetManager;
 
 #ifdef DEBUG

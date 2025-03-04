@@ -283,7 +283,7 @@ class Transform {
   }
 
   protected:
-  template <template <typename T> typename Windower, typename Renderer>
+  template <typename Windower>
   friend class Engine;
 
   Transform &parent(const Transform &parent) {
