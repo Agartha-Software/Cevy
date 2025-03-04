@@ -14,6 +14,7 @@
 // clang-format on
 #include "Window.hpp"
 #include "cevy.hpp"
+#include <glm/fwd.hpp>
 #include <optional>
 
 #include <type_traits>
@@ -115,9 +116,9 @@ class glWindow : public cevy::engine::Window::generic_window {
 
   ~glWindow();
 
-  glm::vec<2, int> size() const override;
+  glm::vec<2, int> windowSize() const override;
+  glm::vec<2, int> renderSize() const override;
 
-  void setSize(int /* width */, int /* height */) override;
   void setFullscreen(bool /* fullscreen */) override;
 
   bool open() override;
@@ -151,8 +152,9 @@ class glWindow : public cevy::engine::Window::generic_window {
 
   std::optional<EventWriter<cevy::input::windowFocused>> windowFocusedWriter;
 
+  void setWindowSize(int width, int height) override;
+  void setRenderSize(int width, int height) override;
   protected:
-  void updateSize(int width, int height);
   void keyInput(int key, int /*scancode*/, int action, int /* mods */);
 
   void cursor(double xpos, double ypos);
@@ -167,15 +169,24 @@ class glWindow : public cevy::engine::Window::generic_window {
 
   bool unload_context();
 
-  static glWindow *getFromWin(GLFWwindow *glfWindow);
 
   public:
-  GLFWwindow *getGLFWwindow();
+  static glWindow *getFromWin(GLFWwindow *glfWindow);
+  GLFWwindow *getGLFWwindow() const;
+  GLuint getCurrentFrameBuffer() {
+    return framebuffer;
+  }
+
+  GLuint getRenderTarget() const {
+    return this->render_target;
+  }
 
   protected:
-  int width;
-  int height;
+  glm::vec<2, int>  window_size;
+  glm::vec<2, int>  render_size;
   GLFWwindow *glfWindow;
+  GLuint framebuffer;
+  GLuint render_target;
   PbrMaterial defaultMaterial;
   std::vector<std::unique_ptr<Module>> modules;
   std::unordered_map<std::type_index, size_t> module_keys;

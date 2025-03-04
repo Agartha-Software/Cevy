@@ -25,8 +25,11 @@ class Editor : public glWindow::Module {
   void deinit(glWindow &);
   void build(cevy::ecs::App &app);
 
-  static void pre_render();
-  static void render();
+  static void pre_render(cevy::ecs::Resource<cevy::engine::Window> windower);
+  static void render(cevy::ecs::Resource<cevy::engine::Window> windower);
+
+  GLuint texture;
+  GLuint framebuffer;
 };
 
 } // namespace editor

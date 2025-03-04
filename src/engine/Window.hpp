@@ -20,8 +20,10 @@ class Window {
     virtual bool open() = 0;
     virtual void pollEvents() = 0;
 
-    virtual glm::vec<2, int> size() const = 0;
-    virtual void setSize(int width, int height) = 0;
+    virtual glm::vec<2, int> windowSize() const = 0;
+    virtual glm::vec<2, int> renderSize() const = 0;
+    virtual void setWindowSize(int width, int height) = 0;
+    virtual void setRenderSize(int width, int height) = 0;
     virtual void setFullscreen(bool fullscreen) = 0;
     using Plugin = ecs::NullPlugin;
   };
@@ -50,8 +52,10 @@ class Window {
   }
 
   bool open() { return this->window->open(); }
-  glm::vec<2, int> size() const { return this->window->size(); }
-  void setSize(int width, int height) { this->window->setSize(width, height); }
+  glm::vec<2, int> windowSize() const { return this->window->windowSize(); }
+  glm::vec<2, int> renderSize() const { return this->window->renderSize(); }
+  void setWindowSize(int width, int height) { this->window->setWindowSize(width, height); }
+  void setRenderSize(int width, int height) { this->window->setRenderSize(width, height); }
   void setFullscreen(bool fullscreen) { this->window->setFullscreen(fullscreen); }
   generic_window *operator->() { return window.get(); }
 

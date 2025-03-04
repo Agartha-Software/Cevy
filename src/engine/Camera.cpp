@@ -36,7 +36,7 @@ void update_camera(cevy::ecs::Query<cevy::engine::Camera, option<cevy::engine::T
       // cam.view = glm::inverse(glm::mat4(tm));
     }
     if (cam.aspect < 0) {
-      auto size = window.get().size();
+      auto size = window.get().renderSize();
       cam.aspect = float(size.x) / size.y;
     }
   }

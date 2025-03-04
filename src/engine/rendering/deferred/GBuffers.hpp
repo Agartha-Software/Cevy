@@ -25,8 +25,8 @@ class GBuffers {
     int filter = -1;
     int active = 0;
   };
-  GBuffers(uint width = 0, uint height = 0) : width(width), height(height) {
-    std::cout << " <<<< GBuffers(width, height) @" << this << "  <<<<" << std::endl;
+  GBuffers(uint width, uint height) : width(width), height(height) {
+    std::cout << " <<<< GBuffers(" << width << "," << height << ") @" << this << "  <<<<" << std::endl;
   };
 
   GBuffers(GBuffers &&rhs) {
@@ -38,6 +38,8 @@ class GBuffers {
     this->attachments = std::move(rhs.attachments);
     this->framebuffer = rhs.framebuffer;
     this->depthbuffer = rhs.depthbuffer;
+    this->width = rhs.width;
+    this->height = rhs.height;
     rhs.clear();
   }
 
@@ -160,7 +162,9 @@ class GBuffers {
       std::cout << "built " << i << ": (" << this->specs[i].attachment << ", " << this->textures[i]
                 << ")" << std::endl;
     }
+    glBindFramebuffer(GL_FRAMEBUFFER, this->framebuffer);
     glDrawBuffers(this->attachments.size(), &this->attachments[0]);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
 
   void read() const {
@@ -174,7 +178,10 @@ class GBuffers {
     }
   }
 
-  void write() const { glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->framebuffer); }
+  void write() const {
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, this->framebuffer);
+  }
 
   uint getFramebuffer() const { return this->framebuffer; }
 
@@ -193,9 +200,12 @@ class GBuffers {
                  NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, spec.filter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, spec.filter);
+
     glBindFramebuffer(GL_FRAMEBUFFER, this->framebuffer);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + spec.attachment, GL_TEXTURE_2D,
                            *texture, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
   }
 
   size_t MAX_SIZE = 0;

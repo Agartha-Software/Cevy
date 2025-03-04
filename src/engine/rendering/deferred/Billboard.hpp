@@ -108,6 +108,6 @@ class Billboard {
     glBindBuffer(GL_ARRAY_BUFFER, this->quadVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(decltype(verts)::value_type) * verts.size(), &verts,
                  GL_DYNAMIC_DRAW);
-    // glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
   }
 };

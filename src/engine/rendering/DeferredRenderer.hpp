@@ -76,9 +76,8 @@ class cevy::engine::DeferredRenderer : public glWindow::Module {
   using Resource = ecs::Resource<T>;
 
   public:
-  template <typename Windower>
-  DeferredRenderer(const Windower &win)
-      : width(win.size().x), height(win.size().y), gbuffer(width, height) {
+  DeferredRenderer(const glWindow &win)
+      : glfWindow(win.getGLFWwindow()), width(win.renderSize().x), height(win.renderSize().y), gbuffer(width, height) {
     this->aspect = float(width) / float(height);
     std::cout << " <<<< DeferredRenderer(win) @" << this << " <<<<" << std::endl;
   }

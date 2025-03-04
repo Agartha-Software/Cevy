@@ -11,6 +11,7 @@
 #include "ShaderProgram.hpp"
 // clang-format on
 #include "Window.hpp"
+#include <GL/glext.h>
 #include <optional>
 #include <stdexcept>
 #include <unordered_map>
@@ -26,7 +27,8 @@
 #include "input/state.hpp"
 #include "glWindow.hpp"
 
-glWindow::glWindow(int width, int height) : width(width), height(height) {
+// glWindow::glWindow(int width, int height) : window_size(width, height), render_size(width, height) {
+glWindow::glWindow(int width, int height) : window_size(width, height), render_size(width * 2 / 3, height * 2 / 3) {
   open();
   // this->renderer = std::make_unique<Renderer>(*this);
 }
@@ -36,9 +38,13 @@ glWindow::glWindow(glWindow &&rhs) noexcept {
   this->module_keys = std::move(rhs.module_keys);
   rhs.modules.clear();
   rhs.module_keys.clear();
-  this->width = rhs.width;
-  this->height = rhs.height;
+  this->window_size = rhs.window_size;
+  this->render_size = rhs.render_size;
   this->glfWindow = rhs.glfWindow;
+  this->framebuffer = rhs.framebuffer;
+  rhs.framebuffer = 0;
+  this->render_target = rhs.render_target;
+  rhs.render_target = 0;
   rhs.glfWindow = nullptr;
 
   glfwSetWindowUserPointer(this->glfWindow, this);
@@ -57,14 +63,19 @@ glWindow::~glWindow() {
     /*importantly, since children depend on the gl context for destruction,
       we only destroy the gl context after destroying its dependants */
     std::cerr << " <<<< TERMINATING GL WINDOW <<<<" << std::endl;
+
+    glDeleteFramebuffers(1, &this->framebuffer);
+    glDeleteTextures(1, &this->render_target);
+    this->render_target = 0;
+
     glfwDestroyWindow(this->glfWindow);
     glfwTerminate();
   }
 };
 
-glm::vec<2, int> glWindow::size() const { return {width, height}; }
+glm::vec<2, int> glWindow::windowSize() const { return window_size; }
+glm::vec<2, int> glWindow::renderSize() const { return render_size; }
 
-void glWindow::setSize(int /* width */, int /* height */) {}
 void glWindow::setFullscreen(bool /* fullscreen */) {}
 
 bool glWindow::open() {
@@ -112,6 +123,12 @@ void glWindow::pre_render(EventWriter<cevy::ecs::AppExit> close) {
 }
 
 void glWindow::post_render() {
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, this->framebuffer);
+
+  glBlitFramebuffer(0, 0, this->window_size.x, this->window_size.y, 0, 0, this->window_size.x, this->window_size.y,
+                  GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
   glfwSwapBuffers(this->glfWindow);
 
   this->keyboardInputWriter->clear();
@@ -128,9 +145,15 @@ void glWindow::pollEvents() {
   glfwPollEvents();
 }
 
-void glWindow::updateSize(int width, int height) {
-  this->width = width;
-  this->height = height;
+void glWindow::setWindowSize(int width, int height) {
+  this->window_size = { width, height };
+  glBindTexture(GL_TEXTURE_2D, this->render_target);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void glWindow::setRenderSize(int width, int height) {
+  this->render_size = { width, height };
 }
 
 void glWindow::keyInput(int key, int /*scancode*/, int action, int /* mods */) {
@@ -204,7 +227,7 @@ bool glWindow::init_context() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  this->glfWindow = glfwCreateWindow(width, height, "C++evy glWindow", NULL, NULL);
+  this->glfWindow = glfwCreateWindow(window_size.x, window_size.y, "C++evy glWindow", NULL, NULL);
   if (!this->glfWindow) {
     glfwTerminate();
     throw std::runtime_error("failed to create window");
@@ -213,7 +236,7 @@ bool glWindow::init_context() {
   glfwMakeContextCurrent(this->glfWindow);
 
   glfwSetWindowSizeCallback(this->glfWindow, [](GLFWwindow *win, int width, int height) {
-    getFromWin(win)->updateSize(width, height);
+    getFromWin(win)->setWindowSize(width, height);
   });
   glfwSetMouseButtonCallback(this->glfWindow,
                               [](GLFWwindow *win, int button, int action, int mods) {
@@ -259,6 +282,19 @@ bool glWindow::init_context() {
   printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION),
           glGetString(GL_SHADING_LANGUAGE_VERSION));
   glfwSwapInterval(1); // enable vsync
+
+  glGenFramebuffers(1, &this->framebuffer);
+
+  glGenTextures(1, &this->render_target);
+
+  glBindTexture(GL_TEXTURE_2D, this->render_target);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->window_size.x, this->window_size.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glBindFramebuffer(GL_FRAMEBUFFER, this->framebuffer);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->render_target, 0);
+
   return 0;
 }
 
@@ -271,6 +307,6 @@ glWindow *glWindow::getFromWin(GLFWwindow *glfWindow) {
   return static_cast<glWindow *>(glfwGetWindowUserPointer(glfWindow));
 }
 
-GLFWwindow *glWindow::getGLFWwindow() {
+GLFWwindow *glWindow::getGLFWwindow() const {
   return glfWindow;
 }

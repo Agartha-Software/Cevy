@@ -45,6 +45,9 @@ void main() {
     float emit_illum = 1 - emit_ambient;
     float halflambert = float((flags & 4) >> 2);
 
+    // fragColor = vec4(albedo, 1);
+    // return;
+
     vec3 cameraPos = invView[3].xyz;// / invView[3].w;
     vec3 viewVec = position.xyz - cameraPos;
     float viewDistance = length(viewVec);
@@ -53,7 +56,10 @@ void main() {
 
     float fresnel = 1.125 - 0.45 / (max(0, dnv) + 0.4);
 
-    vec3 surface = max(vec3(0, 0, 0), texture(renderBuffer, texCoord).rgb);
+    vec3 surface = max(vec3(0, 0, 0), texture(renderBuffer, screenCoord).rgb);
+
+    // fragColor = vec4(screenCoord, 0, 1);
+    // return;
 
     surface += ambientColor * (albedo * fresnel + (1 - fresnel) * specular);
 
