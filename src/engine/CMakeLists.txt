@@ -13,6 +13,7 @@ add_library(engine
   STATIC
     Transform.hpp
     Camera.cpp
+    glWindow.cpp
 )
 
 add_subdirectory(math)

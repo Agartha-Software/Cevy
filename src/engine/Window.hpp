@@ -15,7 +15,6 @@
 namespace cevy::engine {
 class Window {
   public:
-
   struct generic_window {
     generic_window(){};
     virtual bool open() = 0;
@@ -26,12 +25,12 @@ class Window {
     virtual void setFullscreen(bool fullscreen) = 0;
     using Plugin = ecs::NullPlugin;
   };
-  template <template <typename...> typename Windower, typename ...Module>
+  template <template <typename...> typename Windower, typename... Module>
   Window(Windower<Module...> &&win) {
     this->window = std::make_shared<Windower<Module...>>(std::forward<Windower<Module...>>(win));
   }
 
-  template <template <typename...> typename Windower, typename ...Module,
+  template <template <typename...> typename Windower, typename... Module,
             std::enable_if_t<std::is_base_of_v<generic_window, Windower<Module...>>>>
   Window(int width, int height) {
     this->window = std::make_shared<Windower<Module...>>(width, height);

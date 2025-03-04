@@ -53,7 +53,7 @@
 //   return color;
 // }
 
-void cevy::engine::DeferredRenderer::init(glWindow&) {
+void cevy::engine::DeferredRenderer::init(glWindow &) {
   this->alive = "DeferredRenderer is initialized";
   // std::cerr << " <<<< DeferredRenderer::init() <<<<" << std::endl;
 
@@ -136,8 +136,7 @@ void cevy::engine::DeferredRenderer::init(glWindow&) {
   // this->primitives.flat = TextureBuilder::from(glm::vec4(0.5, 0.5, 0.5, 1), 2, 2);
 }
 
-void cevy::engine::DeferredRenderer::deinit(glWindow&) {
-}
+void cevy::engine::DeferredRenderer::deinit(glWindow &) {}
 
 void cevy::engine::DeferredRenderer::render_system(
     Resource<Window> win, Query<Camera> cams,

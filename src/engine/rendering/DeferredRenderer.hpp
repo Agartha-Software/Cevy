@@ -76,7 +76,6 @@ class cevy::engine::DeferredRenderer : public glWindow::Module {
   using Resource = ecs::Resource<T>;
 
   public:
-
   template <typename Windower>
   DeferredRenderer(const Windower &win)
       : width(win.size().x), height(win.size().y), gbuffer(width, height) {
@@ -104,12 +103,12 @@ class cevy::engine::DeferredRenderer : public glWindow::Module {
     std::cout << " <<<< ~DeferredRenderer @" << this << "<<<<" << std::endl;
   }
 
-  void build(ecs::App& app) override {
+  void build(ecs::App &app) override {
     app.add_systems<RenderStage>(DeferredRenderer::render_system);
   }
 
-  void init(glWindow&) override;
-  void deinit(glWindow&) override;
+  void init(glWindow &) override;
+  void deinit(glWindow &) override;
   static void render_system(
       Resource<Window> win, Query<Camera> cams,
       Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
