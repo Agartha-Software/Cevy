@@ -44,6 +44,7 @@ class glWindow : public cevy::engine::Window::generic_window {
   struct Builder ;
 
   struct Module {
+    //virtual Module(glWindow&) = 0;
     virtual void init(glWindow&) = 0;
     virtual void deinit(glWindow&) = 0;
     virtual void build(cevy::ecs::App &app) = 0;
@@ -138,9 +139,6 @@ class glWindow : public cevy::engine::Window::generic_window {
 
 
     if (this->glfWindow) {
-      // ImGui_ImplOpenGL3_Shutdown();
-      // ImGui_ImplGlfw_Shutdown();
-      // ImGui::DestroyContext();
       /*importantly, since children depend on the gl context for destruction,
        we only destroy the gl context after destroying its dependants */
       std::cerr << " <<<< TERMINATING GL WINDOW <<<<" << std::endl;
@@ -200,16 +198,6 @@ class glWindow : public cevy::engine::Window::generic_window {
   }
 
   void post_render(EventWriter<cevy::ecs::AppExit> close, cevy::ecs::World &world) {
-    // ImGui_ImplOpenGL3_NewFrame();
-    // ImGui_ImplGlfw_NewFrame();
-    // ImGui::NewFrame();
-    // ImGui::ShowDemoWindow(); // Show demo window! :)
-
-    // (world.run_system_with(Mod::render_system, *this->renderer), ...);
-
-    // ImGui::Render();
-    // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
     glfwSwapBuffers(this->glfWindow);
 
     this->keyboardInputWriter->clear();
@@ -366,19 +354,6 @@ class glWindow : public cevy::engine::Window::generic_window {
     printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION),
            glGetString(GL_SHADING_LANGUAGE_VERSION));
     glfwSwapInterval(1); // enable vsync
-
-    // Setup Dear ImGui context
-    // IMGUI_CHECKVERSION();
-    // ImGui::CreateContext();
-    // ImGuiIO& io = ImGui::GetIO();
-    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    // //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-    // //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
-
-    // ImGui::StyleColorsDark();
-    // // Setup Platform/Renderer backends
-    // ImGui_ImplGlfw_InitForOpenGL(this->glfWindow, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
-    // ImGui_ImplOpenGL3_Init();
     return 0;
   }
 
@@ -391,13 +366,18 @@ class glWindow : public cevy::engine::Window::generic_window {
     return static_cast<glWindow *>(glfwGetWindowUserPointer(glfWindow));
   }
 
+  public:
+  GLFWwindow *getGLFWwindow() {
+    return glfWindow;
+  }
+
+  protected:
   int width;
   int height;
   GLFWwindow *glfWindow;
   PbrMaterial defaultMaterial;
   std::vector<std::unique_ptr<Module>> modules;
   std::unordered_map<std::type_index, size_t> module_keys;
-  // std::unique_ptr<Renderer> renderer;
 };
 
 template<typename... Mod>
