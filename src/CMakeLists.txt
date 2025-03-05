@@ -13,7 +13,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3 -ggdb")
 
 
 add_subdirectory(ecs)
-add_subdirectory(network)
+# add_subdirectory(network)
 add_subdirectory(engine)
 
 ## IN DEVELOPPEMENT:

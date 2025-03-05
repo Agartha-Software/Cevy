@@ -8,9 +8,6 @@
 add_library(assets
   STATIC
   AssetManager.cpp
-  Asset.hpp
-  Handle.hpp
-  AssetManager.hpp
   Model.cpp
   primitives.cpp
   PbrMaterial.cpp
