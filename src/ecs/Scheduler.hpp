@@ -106,12 +106,12 @@ class Scheduler {
       std::cerr << "WARNING/Cevy: Stage not yet added to ecs pipeline" << std::endl;
     }
 
-    system_function sys = [&func](World &reg) mutable { func(reg.get_super<Args>(0)...); };
+    system_function sys = [id = this->last_id, &func](World &reg) mutable { func(reg.get_super<Args>(id)...); };
     _systems.push_back(std::make_tuple(sys, std::type_index(typeid(S))));
   }
 
   template <class R, class... Args>
-  void add_system(R (&&func)(Args...)) {
+  void add_system(R (func)(Args...)) {
     add_system<core_stage::Update>(func);
   }
 
@@ -123,12 +123,13 @@ class Scheduler {
     if (!schedule_defined<S>()) {
       std::cerr << "WARNING/Cevy: Stage not yet added to ecs pipeline" << std::endl;
     }
-    system_function sys = [&func](World &reg) mutable { func(reg.get_super<Args>(0)...); };
+    system_function sys = [id = this->last_id, &func](World &reg) { func(reg.get_super<Args>(last_id)...); };
+    this->last_id += 1;
     _systems.push_back(std::make_tuple(sys, std::type_index(typeid(S))));
   }
 
   template <class S, class R, class... Args>
-  void add_system(R (&&func)(Args...)) {
+  void add_system(R (func)(Args...)) {
     static_assert(
         all(Or<is_query<Args>, is_world<Args>, is_resource<Args>, is_commands<Args>,
                is_event_reader<Args>, is_event_writer<Args>>()...),
@@ -139,7 +140,7 @@ class Scheduler {
     }
 #endif
 
-    system_function sys = [id = last_id, &func](World &reg) mutable {
+    system_function sys = [id = this->last_id, func](World &reg) {
       func(reg.get_super<Args>(id)...);
     };
     last_id += 1;

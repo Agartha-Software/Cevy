@@ -117,7 +117,7 @@ class cevy::ecs::App : public cevy::ecs::World {
    */
   template <class... System>
   void add_systems(System &&...system) {
-    (_scheduler.add_system(system), ...);
+    (_scheduler.add_system(std::forward<System>(system)), ...);
   }
 
   /**
@@ -128,7 +128,7 @@ class cevy::ecs::App : public cevy::ecs::World {
    */
   template <class Stage, class... System>
   void add_systems(System &&...system) {
-    (_scheduler.add_system<Stage>(system), ...);
+    (_scheduler.add_system<Stage>(std::forward<System>(system)), ...);
   }
 
   template <class F, class S, class... Args>
