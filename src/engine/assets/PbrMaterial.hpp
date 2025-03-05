@@ -20,11 +20,11 @@ namespace cevy::engine {
 class Texture {
   bool initted = false;
   std::string file_name;
-  uint32_t gl_handle;
+  GLuint gl_handle;
   friend struct TextureBuilder;
 
   protected:
-  Texture(uint gl_texture, std::string file_name) {
+  Texture(GLuint gl_texture, std::string file_name) {
     this->gl_handle = gl_texture;
     this->initted = true;
     this->file_name = file_name;
@@ -53,7 +53,7 @@ class Texture {
     return *this;
   }
 
-  uint texture_handle() const { return this->gl_handle; };
+  GLuint texture_handle() const { return this->gl_handle; };
 
   void init();
 

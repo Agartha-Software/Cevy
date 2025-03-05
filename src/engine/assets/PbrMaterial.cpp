@@ -285,7 +285,7 @@ std::optional<Texture> TextureBuilder::build() {
   }
 
   if (this->data) {
-    uint texture;
+    uint32_t texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -331,7 +331,7 @@ std::optional<Handle<Texture>> TextureBuilder::build(AssetManager &manager) {
   }
 
   if (this->data) {
-    uint texture;
+    uint32_t texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 

@@ -38,8 +38,8 @@ class Billboard {
       {{+1.0f, -1.0f, 0}, {1.0f, 0.0f}},
   }};
 
-  uint quadVAO = 0;
-  uint quadVBO = 0;
+  uint32_t quadVAO = 0;
+  uint32_t quadVBO = 0;
 
   /// opengl context it operates in
   intptr_t glContext;

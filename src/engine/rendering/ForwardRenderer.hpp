@@ -59,7 +59,7 @@ class cevy::engine::ForwardRenderer {
 
   protected:
   GLFWwindow *glfWindow;
-  uint uboLights = 0;
+  uint32_t uboLights = 0;
   ShaderProgram *shaderProgram;
 
   PbrMaterial defaultMaterial;
