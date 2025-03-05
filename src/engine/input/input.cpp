@@ -10,7 +10,6 @@
 #include "Resource.hpp"
 #include "state.hpp"
 #include <glm/fwd.hpp>
-#include <glm/gtx/string_cast.hpp>
 #include <optional>
 
 void update_mouse_button_input(
