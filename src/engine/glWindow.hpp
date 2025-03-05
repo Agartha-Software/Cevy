@@ -16,12 +16,7 @@
 #include "Window.hpp"
 #include <optional>
 #include <stdexcept>
-#if (_WIN32)
-#include <GL/gl3w.h>
-#endif
-#if (__linux__)
-#include <GL/glew.h>
-#endif
+#include "glx.hpp"
 
 #include "Camera.hpp"
 #include "Color.hpp"

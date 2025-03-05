@@ -10,12 +10,7 @@
 
 #include <array>
 #include <sys/types.h>
-#if (_WIN32)
-#include <GL/gl3w.h>
-#endif
-#if (__linux__)
-#include <GL/glew.h>
-#endif
+#include "glx.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
