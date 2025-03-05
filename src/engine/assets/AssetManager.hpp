@@ -83,3 +83,21 @@ class AssetManagerPlugin : public ecs::Plugin {
   void build(ecs::App &app);
 };
 } // namespace cevy::engine
+
+template <>
+cevy::engine::Handle<cevy::engine::PbrMaterial> cevy::engine::AssetManager::load<cevy::engine::PbrMaterial>(cevy::engine::PbrMaterial &&material,
+                                                    const std::string name);
+template <>
+cevy::engine::Handle<cevy::engine::Model> cevy::engine::AssetManager::load(cevy::engine::Model &&model, std::string name);
+
+template <>
+cevy::engine::Handle<cevy::engine::Texture> cevy::engine::AssetManager::load(cevy::engine::Texture &&texture, std::string name);
+
+template <>
+std::optional<cevy::engine::Handle<cevy::engine::PbrMaterial>> cevy::engine::AssetManager::get<cevy::engine::PbrMaterial>(const std::string name);
+
+template<>
+std::optional<cevy::engine::Handle<cevy::engine::Model>> cevy::engine::AssetManager::get<cevy::engine::Model>(std::string name);
+
+template <>
+std::optional<cevy::engine::Handle<cevy::engine::Texture>> cevy::engine::AssetManager::get<cevy::engine::Texture>(std::string name);
