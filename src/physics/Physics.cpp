@@ -11,7 +11,7 @@
 #include "collision/Collider.hpp"
 #include "ecs.hpp"
 
-void checkCollision(cevy::ecs::World &world) {
+void check_collision(cevy::ecs::World &world) {
   cevy::physics::Grid grid;
   grid.setGrid(world);
 
@@ -31,5 +31,5 @@ void checkCollision(cevy::ecs::World &world) {
 void cevy::physics::PhysicsPlugin::build(cevy::ecs::App &app) {
   app.add_plugins(cevy::ecs::DefaultPlugin());
   app.init_component<cevy::physics::Collider>();
-  app.add_system<cevy::ecs::Schedule::Update>(checkCollision);
+  app.add_system<cevy::ecs::Schedule::Update>(check_collision);
 }

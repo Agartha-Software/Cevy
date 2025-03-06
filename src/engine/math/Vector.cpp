@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2023
 ** raytracer
 ** File description:
-** Vector
+** vector
 */
 
 #include "Vector.hpp"
@@ -17,7 +17,7 @@ using namespace cevy::engine;
 #include <immintrin.h>
 
 
-float Vector::eval() const {
+float vector::eval() const {
   __m128 v = _mm_load_ps(&x);
   v = _mm_mul_ps(v, v);
   v = _mm_hadd_ps(v, v);
@@ -25,7 +25,7 @@ float Vector::eval() const {
   return _mm_cvtss_f32(v);
 }
 
-Vector &Vector::operator+=(const Vector &rhs) {
+vector &vector::operator+=(const vector &rhs) {
   __m128 xmm0 = _mm_load_ps(&x);
   __m128 xmm1 = _mm_load_ps(&rhs.x);
   xmm0 = _mm_add_ps(xmm0, xmm1);
@@ -33,7 +33,7 @@ Vector &Vector::operator+=(const Vector &rhs) {
   return *this;
 }
 
-Vector &Vector::operator-=(const Vector &rhs) {
+vector &vector::operator-=(const vector &rhs) {
   __m128 xmm0 = _mm_load_ps(&x);
   __m128 xmm1 = _mm_load_ps(&rhs.x);
   xmm0 = _mm_sub_ps(xmm0, xmm1);
@@ -41,7 +41,7 @@ Vector &Vector::operator-=(const Vector &rhs) {
   return *this;
 }
 
-Vector &Vector::operator*=(float k) {
+vector &vector::operator*=(float k) {
   __m128 k_v = _mm_set1_ps(k);
   __m128 this_v = _mm_load_ps(&x);
   this_v = _mm_mul_ps(this_v, k_v);
@@ -49,7 +49,7 @@ Vector &Vector::operator*=(float k) {
   return *this;
 }
 
-Vector &Vector::operator/=(float k) {
+vector &vector::operator/=(float k) {
   __m128 k_v = _mm_set1_ps(1 / k);
   __m128 this_v = _mm_load_ps(&x);
   this_v = _mm_mul_ps(this_v, k_v);
@@ -57,7 +57,7 @@ Vector &Vector::operator/=(float k) {
   return *this;
 }
 
-float Vector::operator*(const Vector &rhs) const {
+float vector::operator*(const vector &rhs) const {
   __m128 xmm0 = _mm_load_ps(&x);
   __m128 xmm1 = _mm_load_ps(&rhs.x);
   xmm0 = _mm_mul_ps(xmm0, xmm1);
@@ -66,8 +66,8 @@ float Vector::operator*(const Vector &rhs) const {
   return _mm_cvtss_f32(xmm0);
 }
 
-Vector Vector::scale(const Vector &rhs) const {
-  Vector v;
+vector vector::scale(const vector &rhs) const {
+  vector v;
   __m128 xmm0 = _mm_load_ps(&x);
   __m128 xmm1 = _mm_load_ps(&rhs.x);
   xmm0 = _mm_mul_ps(xmm0, xmm1);
@@ -77,126 +77,126 @@ Vector Vector::scale(const Vector &rhs) const {
 
 #else
 
-std::ostream &cevy::engine::operator<<(std::ostream &cout, const Vector &vec) {
+std::ostream &cevy::engine::operator<<(std::ostream &cout, const vector &vec) {
   cout << "{ " << vec.x << ", " << vec.y << ", " << vec.z << " }";
 
   return cout;
 }
 
-float Vector::eval() const { return (x * x + y * y + z * z); }
+float vector::eval() const { return (x * x + y * y + z * z); }
 
-Vector &Vector::operator+=(const Vector &rhs) {
+vector &vector::operator+=(const vector &rhs) {
   x += rhs.x;
   y += rhs.y;
   z += rhs.z;
   return *this;
 }
 
-Vector &Vector::operator-=(const Vector &rhs) {
+vector &vector::operator-=(const vector &rhs) {
   x -= rhs.x;
   y -= rhs.y;
   z -= rhs.z;
   return *this;
 }
 
-Vector &Vector::operator*=(float k) {
+vector &vector::operator*=(float k) {
   x *= k;
   y *= k;
   z *= k;
   return *this;
 }
 
-Vector &Vector::operator/=(float k) {
+vector &vector::operator/=(float k) {
   x /= k;
   y /= k;
   z /= k;
   return *this;
 }
 
-float Vector::operator*(const Vector &rhs) const { return x * rhs.x + y * rhs.y + z * rhs.z; }
+float vector::operator*(const vector &rhs) const { return x * rhs.x + y * rhs.y + z * rhs.z; }
 
-Vector Vector::scale(const Vector &rhs) const { return Vector(x * rhs.x, y * rhs.y, z * rhs.z); }
+vector vector::scale(const vector &rhs) const { return vector(x * rhs.x, y * rhs.y, z * rhs.z); }
 
 #endif
 
-Vector::Vector() : x(0), y(0), z(0){};
+vector::vector() : x(0), y(0), z(0){};
 
-Vector::Vector(float x, float y, float z) : x(x), y(y), z(z){};
+vector::vector(float x, float y, float z) : x(x), y(y), z(z){};
 
-Vector &Vector::operator=(const Vector &rhs) {
+vector &vector::operator=(const vector &rhs) {
   x = rhs.x;
   y = rhs.y;
   z = rhs.z;
   return *this;
 }
 
-bool Vector::operator==(const Vector &rhs) const { return x == rhs.x && y == rhs.y && z == rhs.z; }
+bool vector::operator==(const vector &rhs) const { return x == rhs.x && y == rhs.y && z == rhs.z; }
 
 #if __cplusplus >= 202300
-auto Vector::operator<=>(const Vector &rhs) const { return eval() - rhs.eval(); }
+auto vector::operator<=>(const vector &rhs) const { return eval() - rhs.eval(); }
 #endif
 
-bool Vector::operator<(const Vector &rhs) const { return eval() < rhs.eval(); }
+bool vector::operator<(const vector &rhs) const { return eval() < rhs.eval(); }
 
-Vector Vector::operator+(const Vector &rhs) const {
-  Vector v = *this;
+vector vector::operator+(const vector &rhs) const {
+  vector v = *this;
   v += rhs;
   return v;
 }
 
-Vector Vector::operator-(const Vector &rhs) const {
-  Vector v = *this;
+vector vector::operator-(const vector &rhs) const {
+  vector v = *this;
   v -= rhs;
   return v;
 }
 
-float Vector::magnitude() const { return std::sqrt(eval()); }
+float vector::magnitude() const { return std::sqrt(eval()); }
 
-Vector Vector::normalize() const {
+vector vector::normalize() const {
   if (eval() < 0.0001)
     return *this;
   return *this / magnitude();
 }
 
-Vector Vector::saturate() const { return this->clamp(0, 1); }
+vector vector::saturate() const { return this->clamp(0, 1); }
 
-Vector Vector::clamp(float min, float max) const {
-  return Vector(std::clamp(x, min, max), std::clamp(y, min, max), std::clamp(z, min, max));
+vector vector::clamp(float min, float max) const {
+  return vector(std::clamp(x, min, max), std::clamp(y, min, max), std::clamp(z, min, max));
 }
 
-Vector Vector::operator*(float k) const {
-  Vector v = *this;
+vector vector::operator*(float k) const {
+  vector v = *this;
   v *= k;
   return v;
 }
 
-Vector Vector::operator/(float k) const {
-  Vector v = *this;
+vector vector::operator/(float k) const {
+  vector v = *this;
   v /= k;
   return v;
 }
 
-Vector Vector::operator/(const Vector &rhs) const {
-  Vector v = Vector(x / rhs.x, y / rhs.y, z / rhs.z);
+vector vector::operator/(const vector &rhs) const {
+  vector v = vector(x / rhs.x, y / rhs.y, z / rhs.z);
   return v;
 }
 
-Vector Vector::cross(const Vector &rhs) const {
-  Vector p;
+vector vector::cross(const vector &rhs) const {
+  vector p;
   p.x = (y * rhs.z) - (z * rhs.y);
   p.y = -((x * rhs.z) - (z * rhs.x));
   p.z = (x * rhs.y) - (y * rhs.x);
   return p;
 }
 
-void Vector::rotate(const Quaternion &rot) {
+void vector::rotate(const Quaternion &rot) {
   Vector3 rotated = Vector3RotateByQuaternion(*this, rot);
   this->x = rotated.x;
   this->y = rotated.y;
   this->z = rotated.z;
 }
 
-void Vector::rotate(const Vector &rot) {
+void vector::rotate(const vector &rot) {
   float tmp = y;
 
   y = std::cos(rot.x) * y - std::sin(rot.x) * z;
@@ -211,7 +211,7 @@ void Vector::rotate(const Vector &rot) {
   y = std::sin(rot.z) * tmp + std::cos(rot.z) * y;
 }
 
-void Vector::rotateR(const Vector &rot) {
+void vector::rotateR(const vector &rot) {
 
   float tmp;
 
@@ -228,9 +228,9 @@ void Vector::rotateR(const Vector &rot) {
   z = std::sin(-rot.x) * tmp + std::cos(-rot.x) * z;
 }
 
-Vector Vector::reflect(const Vector &normal) const { return *this - normal * 2 * (*this * normal); }
+vector vector::reflect(const vector &normal) const { return *this - normal * 2 * (*this * normal); }
 
-Vector Vector::refract(const Vector &normal, float ior1, float ior2) const {
+vector vector::refract(const vector &normal, float ior1, float ior2) const {
   // return (normal * (*this * (normal)) * (ior2) + *this + normal);
   float r = (ior1 / ior2);
   float c = -(*this * normal);
@@ -240,8 +240,8 @@ Vector Vector::refract(const Vector &normal, float ior1, float ior2) const {
 
 #if __cplusplus >= 202300
 
-Vector Vector::random(float degree, const Vector &source) {
-  Vector ret = source;
+vector vector::random(float degree, const vector &source) {
+  vector ret = source;
 
   if (degree < 0.001)
     return source;

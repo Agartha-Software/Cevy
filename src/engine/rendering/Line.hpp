@@ -16,6 +16,6 @@ class Line {
   Vector end;
 
   Line(Vector start, Vector end) : start(start), end(end) {}
-  operator Ray() { return Ray{.position = start, .direction = end}; }
+  operator ray() { return ray{.position = start, .direction = end}; }
 };
 } // namespace cevy::engine

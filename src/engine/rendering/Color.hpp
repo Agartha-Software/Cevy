@@ -2,7 +2,7 @@
 ** Agartha-Software, 2023
 ** C++evy
 ** File description:
-** Color
+** color
 */
 
 #pragma once
@@ -10,15 +10,15 @@
 #include "raylib.hpp"
 
 namespace cevy::engine {
-class Color {
+class color {
   public:
-  unsigned char r; // Color red value
-  unsigned char g; // Color green value
-  unsigned char b; // Color blue value
-  unsigned char a; // Color alpha value
+  unsigned char r; // color red value
+  unsigned char g; // color green value
+  unsigned char b; // color blue value
+  unsigned char a; // color alpha value
 
-  Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255);
-  operator ::Color();
-  operator const ::Color() const;
+  color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255);
+  operator ::color();
+  operator const ::color() const;
 };
 } // namespace cevy::engine

@@ -81,7 +81,7 @@ class cevy::CevyNetwork : public cevy::NetworkBase {
 
   //----------------------------------- State -----------------------------------
 
-  void sendState(uint16_t id, const std::vector<uint8_t> &block) {
+  void send_state(uint16_t id, const std::vector<uint8_t> &block) {
     std::vector<uint8_t> fullblock = {uint8_t(Communication::State), byte(id, 0), byte(id, 1)};
     fullblock.insert(fullblock.end(), block.begin(), block.end());
     _states_send[id] = fullblock;
@@ -101,7 +101,7 @@ class cevy::CevyNetwork : public cevy::NetworkBase {
 
   //----------------------------------- State -----------------------------------
 
-  void sendEvent(uint16_t id, const std::vector<uint8_t> &block) {
+  void send_event(uint16_t id, const std::vector<uint8_t> &block) {
     std::vector<uint8_t> fullblock = {uint8_t(Communication::Event), byte(id, 0), byte(id, 1)};
     fullblock.insert(fullblock.end(), block.begin(), block.end());
     auto it = _events_send.emplace(_events_send.begin(), fullblock);
@@ -124,14 +124,14 @@ class cevy::CevyNetwork : public cevy::NetworkBase {
 
   //----------------------------------- Action -----------------------------------
 
-  void sendAction(uint16_t id, const std::vector<uint8_t> &block) {
+  void send_action(uint16_t id, const std::vector<uint8_t> &block) {
     std::vector<uint8_t> fullblock = {uint8_t(Communication::Action), byte(id, 0), byte(id, 1)};
     fullblock.insert(fullblock.end(), block.begin(), block.end());
     auto it = _events_send.emplace(_actions_send.begin(), fullblock);
     writeUDP(*it, [this, it] { _actions_send.erase(it); });
   }
 
-  void sendActionSuccess(uint16_t id, const std::vector<uint8_t> &block) {
+  void send_action_success(uint16_t id, const std::vector<uint8_t> &block) {
     std::vector<uint8_t> fullblock = {uint8_t(Communication::ActionSuccess), byte(id, 0),
                                       byte(id, 1)};
     fullblock.insert(fullblock.end(), block.begin(), block.end());
@@ -139,7 +139,7 @@ class cevy::CevyNetwork : public cevy::NetworkBase {
     writeUDP(*it, [this, it] { _actions_send.erase(it); });
   }
 
-  void sendActionFailure(uint16_t id, ActionFailureMode::EActionFailureMode mode) {
+  void send_action_failure(uint16_t id, ActionFailureMode::EActionFailureMode mode) {
     std::vector<uint8_t> fullblock = {uint8_t(Communication::ActionFailure), byte(id, 0),
                                       byte(id, 1)};
     fullblock.push_back(mode);
@@ -162,11 +162,11 @@ class cevy::CevyNetwork : public cevy::NetworkBase {
 
   //----------------------------------- Summon -----------------------------------
 
-  void sendSummon(uint16_t id, uint8_t archetype) {
+  void send_summon(uint16_t id, uint8_t archetype) {
     std::vector<uint8_t> fullblock;
     serialize(fullblock, id);
     serialize(fullblock, archetype);
-    sendEvent(Event::Summon, fullblock);
+    send_event(Event::Summon, fullblock);
   }
 
   std::optional<std::pair<uint16_t, uint8_t>> recvSummon() {
@@ -178,10 +178,10 @@ class cevy::CevyNetwork : public cevy::NetworkBase {
     return std::make_pair(id, type);
   }
 
-  void sendDismiss(uint16_t id) {
+  void send_dismiss(uint16_t id) {
     std::vector<uint8_t> fullblock;
     serialize(fullblock, id);
-    sendEvent(Event::Dismiss, fullblock);
+    send_event(Event::Dismiss, fullblock);
   }
 
   std::optional<uint16_t> recvDismiss() {
@@ -279,11 +279,11 @@ class cevy::CevyNetwork : public cevy::NetworkBase {
 //   // uint16_t session_id;
 
 //   public:
-//   void handleHandShake(size_t bytes, std::array<uint8_t, 512> &buffer) {
+//   void handle_hand_shake(size_t bytes, std::array<uint8_t, 512> &buffer) {
 //     // std::cout << "handshake received" << std::endl;
 //   }
 
-//   // void sendHandShake(uint16_t id, uint8_t archetype) {
+//   // void send_hand_shake(uint16_t id, uint8_t archetype) {
 //   //     half h = {.h = id};
 //   //     std::vector<uint8_t> fullblock = { Communication::HandShake, archetype};
 //   //     writeUDP(_summon_send[id], [](){});
@@ -291,7 +291,7 @@ class cevy::CevyNetwork : public cevy::NetworkBase {
 
 //   void tcp_receive(asio::error_code error, size_t bytes, TcpConnexion &co) override {
 //     if (co.buffer[0] == (uint8_t)Communication::HandShake) {
-//       handleHandShake(bytes, co.buffer);
+//       handle_hand_shake(bytes, co.buffer);
 //     } else {
 //       cevy::CevyNetwork::udp_receive(error, bytes, buffer, udp_endpoint); /// TODO: FIX
 //     }

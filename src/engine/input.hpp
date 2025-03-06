@@ -7,8 +7,8 @@ class Keyboard {
   private:
   /* data */
   public:
-  static bool keyPressed(int key) { return (IsKeyPressed(key)); };
-  static bool keyReleased(int key) { return (IsKeyReleased(key)); };
-  static bool keyDown(int key) { return (IsKeyDown(key)); };
+  static bool key_pressed(int key) { return (IsKeyPressed(key)); };
+  static bool key_released(int key) { return (IsKeyReleased(key)); };
+  static bool key_down(int key) { return (IsKeyDown(key)); };
 };
 } // namespace cevy

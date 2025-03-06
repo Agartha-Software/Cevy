@@ -53,8 +53,8 @@ class Grid {
   ~Grid(){};
 
   SparseVector<SparseVector<SparseVector<std::vector<entity>>>> getCells() const { return _cells; };
-  void addEntity(const size_t x, const size_t y, const size_t z, const entity &value);
-  void setGrid(cevy::ecs::World &world);
-  void collisionWithNeighboringEntities(const entity &entity1);
+  void add_entity(const size_t x, const size_t y, const size_t z, const entity &value);
+  void set_grid(cevy::ecs::World &world);
+  void collision_with_neighboring_entities(const entity &entity1);
 };
 } // namespace cevy::physics

@@ -31,8 +31,8 @@ class Vector {
   Vector(float x, float y, float z);
   Vector(const Vector &) = default;
 
-  Vector(const Vector3 &v) : x(v.x), y(v.y), z(v.z){};
-  operator Vector3() const { return ((Vector3){(float)x, (float)y, (float)z}); }
+  Vector(const vector3 &v) : x(v.x), y(v.y), z(v.z){};
+  operator vector3() const { return ((vector3){(float)x, (float)y, (float)z}); }
 
   Vector &operator=(const Vector &);
 
@@ -109,7 +109,7 @@ class Vector {
 
   void rotate(const Vector &rot);
   void rotate(const Quaternion &rot);
-  void rotateR(const Vector &rot);
+  void rotate_r(const Vector &rot);
 
   Vector reflect(const Vector &normal) const;
 

@@ -16,10 +16,10 @@
 namespace cevy::engine {
 class Camera {
   public:
-  Camera3D camera;
-  operator Camera3D &();
-  operator Camera3D *();
-  operator Camera3D() const;
+  camera3_d camera;
+  operator camera3_d &();
+  operator camera3_d *();
+  operator camera3_d() const;
   Camera();
   ~Camera();
 };

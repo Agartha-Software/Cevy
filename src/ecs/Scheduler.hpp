@@ -150,9 +150,9 @@ class Scheduler {
   mutable bool _stop = false;
   std::list<std::type_index>::iterator _stage;
 
-  void runStartStages(World &world);
-  void runStages(World &world);
-  void runStage(World &world);
+  void run_start_stages(World &world);
+  void run_stages(World &world);
+  void run_stage(World &world);
 
   private:
   /* Bevy-compliant */
