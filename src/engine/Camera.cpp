@@ -23,11 +23,11 @@ cevy::engine::Camera::Camera() {
 
 cevy::engine::Camera::~Camera() {}
 
-cevy::engine::Camera::operator Camera3D &() { return this->camera; }
+cevy::engine::Camera::operator camera3_d &() { return this->camera; }
 
-cevy::engine::Camera::operator Camera3D *() { return &this->camera; }
+cevy::engine::Camera::operator camera3_d *() { return &this->camera; }
 
-cevy::engine::Camera::operator Camera3D() const { return this->camera; }
+cevy::engine::Camera::operator camera3_d() const { return this->camera; }
 
 void update_camera(cevy::ecs::Query<cevy::engine::Camera, option<cevy::engine::Target>,
                                     option<cevy::engine::Transform>>

@@ -19,12 +19,12 @@ class cevy::ecs::Factory : virtual public Plugin {
   Factory(){};
   ~Factory(){};
   template <typename... Arg>
-  void registerCommand(T t, void func(Query<T>, Commands)) {
+  void register_command(T t, void func(Query<T>, Commands)) {
     _commands[t] = func;
   }
 
   template <typename... Arg>
-  void registerBundle(T t, Arg... arg) {
+  void register_bundle(T t, Arg... arg) {
     _commands[t] = [arg...](Query<T> q, Commands cmd) {
       for (auto &e : q) {
         cmd.entity(e).insert(remove_indirect<Arg>(arg)...);

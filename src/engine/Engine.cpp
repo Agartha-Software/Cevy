@@ -29,11 +29,11 @@
 
 void init_window() {
 #ifdef DEBUG
-  SetTraceLogLevel(LOG_ALL);
+  set_trace_log_level(LOG_ALL);
 #else
-  SetTraceLogLevel(LOG_ERROR);
+  set_trace_log_level(LOG_ERROR);
 #endif
-  SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+  set_config_flags(FLAG_WINDOW_RESIZABLE);
   InitWindow(800, 450, "raylib [core] example - basic window");
   SetTargetFPS(60);
   rlImGuiSetup(true);
@@ -56,7 +56,7 @@ void update_window(cevy::ecs::Query<cevy::engine::Camera> cams, cevy::ecs::World
     render_lines(w);
     EndMode3D();
 #ifdef DEBUG
-    rlImGuiBegin();
+    rl_im_gui_begin();
     if (!ImGui::Begin("Debug Informations", &(debug.get().open))) {
       ImGui::End();
     } else {

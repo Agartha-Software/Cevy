@@ -313,25 +313,25 @@ class cevy::ecs::World {
   template <typename R, typename std::enable_if_t<is_event_reader<R>::value, bool> = true>
   R get_super(size_t) {
     if (!contains_resource<Event<typename R::value_type>>())
-      throw(std::runtime_error("Cevy/Ecs: Try to use EventReader on an unregisted event!"));
+      throw(std::runtime_error("Cevy/Ecs: Try to use event_reader on an unregisted event!"));
 
-    return EventReader(resource<Event<typename R::value_type>>());
+    return event_reader(resource<Event<typename R::value_type>>());
   }
 
   template <typename W, typename std::enable_if_t<is_event_writer<W>::value, bool> = true>
   W get_super(size_t system_id) {
     if (!contains_resource<Event<typename W::value_type>>())
-      throw(std::runtime_error("Cevy/Ecs: Try to use EventWriter on an unregisted event!"));
+      throw(std::runtime_error("Cevy/Ecs: Try to use event_writer on an unregisted event!"));
 
     auto &res = resource<Event<typename W::value_type>>();
 
     if (res.event_queue.empty())
-      return EventWriter(res, system_id);
+      return event_writer(res, system_id);
 
     for (int i = res.event_queue.size() - 1; i >= 0; i--)
       if (std::get<1>(res.event_queue.at(i)) == system_id)
         res.event_queue.erase(res.event_queue.begin() + i);
-    return EventWriter(res, system_id);
+    return event_writer(res, system_id);
   }
 
   template <typename R, typename std::enable_if_t<is_resource<R>::value, bool> = true>

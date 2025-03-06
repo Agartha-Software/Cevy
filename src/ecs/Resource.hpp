@@ -17,18 +17,18 @@ namespace cevy::ecs {
 class ResourceManager;
 }
 
-template <typename Content>
+template <typename content>
 class cevy::ecs::Resource {
   private:
-  Content &_content;
+  content &_content;
   friend class cevy::ecs::ResourceManager;
-  Resource(Content &content) : _content(content){};
+  Resource(content &content) : _content(content){};
 
   public:
-  using value = Content;
-  operator Content() const { return _content; };
-  operator Content &() { return _content; };
-  Content &get() { return _content; };
+  using value = content;
+  operator content() const { return _content; };
+  operator content &() { return _content; };
+  content &get() { return _content; };
 };
 
 template <class T>
@@ -47,54 +47,54 @@ class ResourceManager {
   public:
   void clear_resources() { _resources_map.clear(); }
 
-  template <typename Content>
-  void insert_resource(const Content &value) {
-    auto a = std::make_any<Content>(value);
+  template <typename content>
+  void insert_resource(const content &value) {
+    auto a = std::make_any<content>(value);
 
-    _resources_map[std::type_index(typeid(Content))] = a;
+    _resources_map[std::type_index(typeid(content))] = a;
   }
 
-  template <typename Content>
-  std::optional<Content> remove_resource() {
-    auto it = _resources_map.find(std::type_index(typeid(Content)));
+  template <typename content>
+  std::optional<content> remove_resource() {
+    auto it = _resources_map.find(std::type_index(typeid(content)));
 
     if (it != _resources_map.end()) {
-      Content val = std::any_cast<Content>(_resources_map[std::type_index(typeid(Content))]);
+      content val = std::any_cast<content>(_resources_map[std::type_index(typeid(content))]);
 
       _resources_map.erase(it);
-      return std::optional<Content>(val);
+      return std::optional<content>(val);
     }
     return std::nullopt;
   }
 
-  template <typename Content>
-  Content &resource() {
-    return std::any_cast<Content &>(_resources_map[std::type_index(typeid(Content))]);
+  template <typename content>
+  content &resource() {
+    return std::any_cast<content &>(_resources_map[std::type_index(typeid(content))]);
   }
 
-  template <typename Content>
-  const Content &resource() const {
-    return std::any_cast<const Content &>(_resources_map.at(std::type_index(typeid(Content))));
+  template <typename content>
+  const content &resource() const {
+    return std::any_cast<const content &>(_resources_map.at(std::type_index(typeid(content))));
   }
 
-  template <typename Content>
-  std::optional<std::reference_wrapper<Content>> get_resource() {
-    auto it = _resources_map.find(std::type_index(typeid(Content)));
+  template <typename content>
+  std::optional<std::reference_wrapper<content>> get_resource() {
+    auto it = _resources_map.find(std::type_index(typeid(content)));
 
     if (it != _resources_map.end())
-      return std::any_cast<Content &>(_resources_map[std::type_index(typeid(Content))]);
+      return std::any_cast<content &>(_resources_map[std::type_index(typeid(content))]);
     return std::nullopt;
   }
 
-  template <typename Content>
-  cevy::ecs::Resource<Content> get() {
+  template <typename content>
+  cevy::ecs::Resource<content> get() {
     return cevy::ecs::Resource(
-        std::any_cast<Content &>(_resources_map[std::type_index(typeid(Content))]));
+        std::any_cast<content &>(_resources_map[std::type_index(typeid(content))]));
   }
 
-  template <typename Content>
+  template <typename content>
   bool contains_resource() {
-    return _resources_map.find(std::type_index(typeid(Content))) != _resources_map.end();
+    return _resources_map.find(std::type_index(typeid(content))) != _resources_map.end();
   }
 };
 } // namespace cevy::ecs

@@ -33,7 +33,7 @@
  * Controlled through \link cevy::NetworkCommands NetworkCommands \endlink
  *
  */
-class cevy::NetworkActions : public ecs::Plugin {
+class cevy::network_actions : public ecs::Plugin {
   public:
   /**
    * Whether it acts on behalf of a server or client
@@ -44,14 +44,14 @@ class cevy::NetworkActions : public ecs::Plugin {
   };
 
   /// Contructor
-  NetworkActions(CevyNetwork &net) : _net(net){};
+  network_actions(CevyNetwork &net) : _net(net){};
 
   /// deleted copy-constructor
-  NetworkActions(const NetworkActions &) = delete;
+  network_actions(const network_actions &) = delete;
 
-  NetworkActions &operator=(const NetworkActions &) = delete;
-  NetworkActions &operator=(NetworkActions &&) = delete;
-  ~NetworkActions(){};
+  network_actions &operator=(const network_actions &) = delete;
+  network_actions &operator=(network_actions &&) = delete;
+  ~network_actions(){};
 
   using ActionFailureMode = CevyNetwork::ActionFailureMode;
   using EActionFailureMode = ActionFailureMode::EActionFailureMode;

@@ -17,18 +17,18 @@
 /**
  * @brief A container of app logic and data.
  *
- * Bundles together the necessary elements like data management with World (derived from) and
- * processes management with Scheduler (contained) to create an ECS-based application.
+ * Bundles together the necessary elements like data management with world (derived from) and
+ * processes management with scheduler (contained) to create an ECS-based application.
  *
  */
-class cevy::ecs::App : public cevy::ecs::World {
+class cevy::ecs::App : public cevy::ecs::world {
   private:
   /**
-   * @brief Scheduler represent the manager of Systems and \link cevy::ecs::Stage
+   * @brief scheduler represent the manager of Systems and \link cevy::ecs::Stage
    * Stages\endlink.
    *
    */
-  Scheduler _scheduler;
+  scheduler _scheduler;
   /**
    * @brief Store plugins
    *
@@ -94,7 +94,7 @@ class cevy::ecs::App : public cevy::ecs::World {
 
   /**
    * @brief Add a stage to the pile of \link cevy::ecs::Stage Stages\endlink.
-   * Each systems are assigned to a specific stage (\link cevy::ecs::Scheduler::Update
+   * Each systems are assigned to a specific stage (\link cevy::ecs::scheduler::Update
    * Update\endlink by Default) and are run in the stage order Look at \link cevy::ecs::Stage Stage
    * \endlink to understand how to insert a stages in a given order
    *
@@ -107,8 +107,8 @@ class cevy::ecs::App : public cevy::ecs::World {
   }
 
   /**
-   * @brief Move one or multiple systems in this app’s \link cevy::ecs::Scheduler::Update
-   * Update\endlink Scheduler.
+   * @brief Move one or multiple systems in this app’s \link cevy::ecs::scheduler::Update
+   * Update\endlink scheduler.
    *
    * @warning If the Update Stage haven't been instancited, by hand or with DefaultPlugin
    * this command will raise a warning and won't do anything until Update is instanciated
@@ -122,7 +122,7 @@ class cevy::ecs::App : public cevy::ecs::World {
 
   /**
    * @brief Move one or multiple systems to the given schedule in this app’s \link
-   * cevy::ecs::Scheduler Schedules\endlink.
+   * cevy::ecs::scheduler Schedules\endlink.
    *
    * @tparam System Could be any thing that have the Operator `()` implemented
    */

@@ -2,7 +2,7 @@
 ** Agartha-Software, 2023
 ** C++evy
 ** File description:
-** Entity
+** entity
 */
 
 #pragma once
@@ -11,10 +11,10 @@
 
 #include <cstddef>
 
-class cevy::ecs::Entity {
+class cevy::ecs::entity {
   private:
   std::size_t _id;
-  explicit Entity(std::size_t new_id);
+  explicit entity(std::size_t new_id);
 
   public:
   friend class ecs::World;
