@@ -84,7 +84,7 @@ void main() {
     // vec3 diffuse_final = fresnel * color * diffuse_const;
 
     // gAlbedo = vec4(diffuse_final , flags);
-    gAlbedo = vec4(diffuse_sample.rgb , flags);
+    gAlbedo = vec4(diffuse_final, flags);
 
     vec4 specular_sample = texture(specular_texture, texCoord);
     vec3 specular_final = (1 - fresnel) * specular_const * specular_sample.rgb;

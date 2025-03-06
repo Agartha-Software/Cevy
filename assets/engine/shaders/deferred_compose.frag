@@ -62,13 +62,13 @@ void main() {
 
     fragColor = vec4(surface, 1.0);
     // fragColor = vec4(albedo, 1.0);
-    vec4 nm = vec4(normal, 0);
-    nm = invView * nm;
-    nm = nm * vec4(1, 1, -1, 1);
-    nm = nm * 0.5 + 0.5;
+    // vec4 nm = vec4(normal, 0);
+    // nm = invView * nm;
+    // nm = nm * vec4(1, 1, -1, 1);
+    // nm = nm * 0.5 + 0.5;
 
     // fragColor = vec4(nm.xyz, 1.0);
-    fragColor = vec4(nm.xyz, 1.0);
+    // fragColor = vec4(nm.xyz, 1.0);
     // fragColor = vec4(roughness, roughness, roughness, 1.0);
     // fragColor = vec4(specular * (1 + 1 / roughness), 1.0);
 }
