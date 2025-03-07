@@ -13,8 +13,7 @@ add_library(input
   )
 
 target_include_directories(input PUBLIC
-  ..
+  .
 )
 
 target_link_libraries(input PUBLIC engine ecs)
-
