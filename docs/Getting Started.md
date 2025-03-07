@@ -22,7 +22,11 @@ cd Cevy
 
 ``` Actually is not possible, we just have one version```
 
-4. Try the exemple in the [R-Type project][2]
+4. Try one of the examples in the examples folder
+```bash
+cd examples/bunny
+make run
+```
 
 ## Add Cevy as a Dependency
 
