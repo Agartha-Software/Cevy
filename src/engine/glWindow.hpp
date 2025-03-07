@@ -54,7 +54,7 @@ class glWindow : public cevy::engine::Window::generic_window {
   class Plugin : public cevy::ecs::Plugin {
     public:
     void build(cevy::ecs::App &app) override {
-      app.add_systems<cevy::ecs::core_stage::Startup>(glWindow<Renderer>::init_system);
+      // app.add_systems<cevy::ecs::core_stage::Startup>(glWindow<Renderer>::init_system);
       app.add_systems<cevy::engine::RenderStage>(glWindow<Renderer>::render_system);
     }
   };
@@ -121,8 +121,8 @@ class glWindow : public cevy::engine::Window::generic_window {
   render(
          cevy::ecs::EventWriter<cevy::ecs::AppExit> close,
          cevy::ecs::World &world) {
-    this->keyReleasedWriter->clear();
-    this->keyPressedWriter->clear();
+    // this->keyReleasedWriter->clear();
+    // this->keyPressedWriter->clear();
 
 
     glfwPollEvents();
@@ -172,15 +172,15 @@ class glWindow : public cevy::engine::Window::generic_window {
   }
 
   void keyInput(int key, int /* scancode */, int action, int /* mods */) {
-    if (!this->keyPressedWriter.has_value() || !this->keyReleasedWriter.has_value()) {
-      throw std::runtime_error("callback access outside of poll");
-    }
+    // if (!this->keyPressedWriter.has_value() || !this->keyReleasedWriter.has_value()) {
+    //   throw std::runtime_error("callback access outside of poll");
+    // }
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
       glfwSetWindowShouldClose(glfWindow, GLFW_TRUE);
-    if (action == GLFW_PRESS)
-      this->keyPressedWriter.value().send(cevy::input::keyPressed { static_cast<cevy::input::KeyCode>(key) });
-    if (action == GLFW_RELEASE)
-      this->keyReleasedWriter.value().send(cevy::input::keyReleased { static_cast<cevy::input::KeyCode>(key) });
+    // if (action == GLFW_PRESS)
+    //   this->keyPressedWriter.value().send(cevy::input::keyPressed { static_cast<cevy::input::KeyCode>(key) });
+    // if (action == GLFW_RELEASE)
+    //   this->keyReleasedWriter.value().send(cevy::input::keyReleased { static_cast<cevy::input::KeyCode>(key) });
   }
 
   void cursor(double /* xpos */, double /* ypos */) {}

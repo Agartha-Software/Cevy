@@ -17,7 +17,7 @@ add_library(engine
 
 add_subdirectory(math)
 add_subdirectory(assets)
-add_subdirectory(input)
+# add_subdirectory(input)
 add_subdirectory(rendering)
 
 target_link_libraries(engine PUBLIC ecs math assets input rendering)
