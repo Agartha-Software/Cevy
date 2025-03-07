@@ -9,19 +9,33 @@
 
 #include <GLFW/glfw3.h>
 #include <cstdint>
+#include <glm/fwd.hpp>
+#include <glm/glm.hpp>
+#include <optional>
 #include <unordered_set>
 
 namespace cevy {
 namespace input {
 
-enum class KeyCode: unsigned int {
+enum class MouseButton : unsigned int {
+  Left = GLFW_MOUSE_BUTTON_LEFT,
+  Right = GLFW_MOUSE_BUTTON_RIGHT,
+  Middle = GLFW_MOUSE_BUTTON_MIDDLE,
+  Button_1 = GLFW_MOUSE_BUTTON_4,
+  Button_2 = GLFW_MOUSE_BUTTON_5,
+  Button_3 = GLFW_MOUSE_BUTTON_6,
+  Button_4 = GLFW_MOUSE_BUTTON_7,
+  Button_5 = GLFW_MOUSE_BUTTON_8
+};
+
+enum class KeyCode : unsigned int {
   Space = GLFW_KEY_SPACE,
   Apostriophe = GLFW_KEY_APOSTROPHE,
-  Comma = GLFW_KEY_COMMA, /* , */
-  Minus = GLFW_KEY_MINUS, /* - */
+  Comma = GLFW_KEY_COMMA,   /* , */
+  Minus = GLFW_KEY_MINUS,   /* - */
   Period = GLFW_KEY_PERIOD, /* . */
-  Dot = GLFW_KEY_PERIOD, /* . */
-  Slash = GLFW_KEY_SLASH, /* / */
+  Dot = GLFW_KEY_PERIOD,    /* . */
+  Slash = GLFW_KEY_SLASH,   /* / */
   K0 = GLFW_KEY_0,
   K1 = GLFW_KEY_1,
   K2 = GLFW_KEY_2,
@@ -33,7 +47,7 @@ enum class KeyCode: unsigned int {
   K8 = GLFW_KEY_8,
   K9 = GLFW_KEY_9,
   Semicolon = GLFW_KEY_SEMICOLON, /* ; */
-  Equal = GLFW_KEY_EQUAL, /* = */
+  Equal = GLFW_KEY_EQUAL,         /* = */
   A = GLFW_KEY_A,
   B = GLFW_KEY_B,
   C = GLFW_KEY_C,
@@ -60,12 +74,12 @@ enum class KeyCode: unsigned int {
   X = GLFW_KEY_X,
   Y = GLFW_KEY_Y,
   Z = GLFW_KEY_Z,
-  LeftBracket = GLFW_KEY_LEFT_BRACKET, /* [ */
-  BackSlash = GLFW_KEY_BACKSLASH, /* \ */
+  LeftBracket = GLFW_KEY_LEFT_BRACKET,   /* [ */
+  BackSlash = GLFW_KEY_BACKSLASH,        /* \ */
   RightBracket = GLFW_KEY_RIGHT_BRACKET, /* ] */
-  GraveAccent = GLFW_KEY_GRAVE_ACCENT, /* ` */
-  NonUS1 = GLFW_KEY_WORLD_1, /* non-US #1 */
-  NonUS2 = GLFW_KEY_WORLD_1, /* non-US #2 */
+  GraveAccent = GLFW_KEY_GRAVE_ACCENT,   /* ` */
+  NonUS1 = GLFW_KEY_WORLD_1,             /* non-US #1 */
+  NonUS2 = GLFW_KEY_WORLD_1,             /* non-US #2 */
   Escape = GLFW_KEY_ESCAPE,
   Enter = GLFW_KEY_ENTER,
   Tab = GLFW_KEY_TAB,
@@ -157,15 +171,60 @@ enum class ButtonState : uint8_t {
   JustReleasedAndPressed = 0b111,
 };
 
-struct keyPressed {
-  KeyCode keycode;
+/// An event that indicates a window has received or lost focus.
+/// Multiples windows are not supported yet
+struct windowFocused {
+  // Entity window;
+  bool focused;
 };
 
-struct keyReleased {
-  KeyCode keycode;
+/// A resource that indicates a window has received or lost focus.
+/// Multiples windows are not supported yet
+struct windowFocus {
+  // Entity window;
+  bool focused;
 };
 
-template <typename InputType, std::size_t N = 0, typename std::enable_if<std::is_enum<InputType>::value>::type* = nullptr>
+/// A resource that indicates if the cursor is inside or outside the window
+struct cursorInWindow {
+  bool inside;
+};
+
+/// A event specifing if the cursor is entering the window
+struct cursorEntered {};
+
+/// A event specifing if the cursor is leaving the window
+struct cursorLeft {};
+
+struct keyboardInput {
+  KeyCode keycode;
+  bool pressed;
+};
+
+struct mouseInput {
+  MouseButton button;
+  bool pressed;
+};
+
+/// An event reporting the change in position of the cursor.
+struct mouseMotion {
+  glm::vec<2, int> pos;
+  std::optional<glm::vec<2, int>> delta;
+};
+
+/// An event reporting that the mouse cursor has moved inside a window.
+
+struct cursorMoved {
+  glm::vec<2, int> pos;
+};
+
+struct cursorPosition {
+  glm::vec<2, int> pos;
+  std::optional<glm::vec<2, int>> delta;
+};
+
+template <typename InputType, std::size_t N = 0,
+          typename std::enable_if<std::is_enum<InputType>::value>::type * = nullptr>
 class ButtonInput {
   public:
   void press(InputType button) {
@@ -178,21 +237,13 @@ class ButtonInput {
     this->just_released.insert(button);
   }
 
-  bool is_pressed(InputType button) {
-    return this->pressed.count(button);
-  }
+  bool is_pressed(InputType button) { return this->pressed.count(button); }
 
-  bool is_released(InputType button) {
-    return !this->pressed.count(button);
-  }
+  bool is_released(InputType button) { return !this->pressed.count(button); }
 
-  bool is_just_pressed(InputType button) {
-    return this->just_pressed.count(button);
-  }
+  bool is_just_pressed(InputType button) { return this->just_pressed.count(button); }
 
-  bool is_just_released(InputType button) {
-    return this->just_released.count(button);
-  }
+  bool is_just_released(InputType button) { return this->just_released.count(button); }
 
   void clear() {
     just_pressed.clear();
@@ -209,4 +260,5 @@ class ButtonInput {
 };
 
 // Not Pressed, Just Pressed Pressed, Just Released
-}};
+} // namespace input
+}; // namespace cevy

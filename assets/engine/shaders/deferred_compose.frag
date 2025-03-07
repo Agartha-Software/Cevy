@@ -1,5 +1,6 @@
 #version 450
 
+uniform mat4 view;
 uniform mat4 invView;
 
 uniform vec3 ambientColor;
@@ -56,6 +57,7 @@ void main() {
 
     surface += ambientColor * (albedo * fresnel + (1 - fresnel) * specular);
 
+    // vec3 bg = (view * vec4(0, 0, 1, 0)).xyz;
     surface = mix(surface, fog, clamp(pow(position.w / fog_far, 0.5), 0.8, 1));
 
     surface = filmicToneMapping(surface);
