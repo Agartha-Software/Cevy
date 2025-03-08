@@ -146,7 +146,7 @@ void cevy::engine::ForwardRenderer::render_system(
                  glm::value_ptr(material.diffuse * color.xyz()));
     glUniform3fv(self.shaderProgram->uniform("specular_tint"), 1,
                  glm::value_ptr(material.specular_tint));
-    glUniform1f(self.shaderProgram->uniform("phong_exponent"), material.phong_exponent);
+    glUniform1f(self.shaderProgram->uniform("phong_exponent"), 1 + 1 / material.roughness);
     glUniform1i(self.shaderProgram->uniform("halflambert"), true);
     glUniformMatrix4fv(self.shaderProgram->uniform("model"), 1, GL_FALSE,
                        glm::value_ptr(tm * model->modelMatrix()));

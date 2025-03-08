@@ -126,14 +126,15 @@ void cevy::engine::DeferredRenderer::init() {
   this->gBuffer_shader->addUniform("roughness_const");
   this->gBuffer_shader->addUniform("emit_const");
   this->gBuffer_shader->addUniform("halflambert");
+  this->gBuffer_shader->addUniform("normal_mode");
 
   this->gbuffer.init_default();
   this->billboard.init();
 
   this->primitives.sphere = primitives::sphere(1, 10, 6);
-  this->primitives.blank = TextureBuilder::from(glm::vec4u8(1, 1, 1, 1), 2, 2);
+  this->primitives.blank = TextureBuilder::from(glm::vec4u8(255, 255, 255, 127), 2, 2);
   // this->primitives.black = TextureBuilder::from(glm::vec4u8(0, 0, 0, 1), 2, 2);
-  // this->primitives.flat = TextureBuilder::from(glm::vec4(0.5, 0.5, 0.5, 1), 2, 2);
+  this->primitives.flat = TextureBuilder::from(glm::vec4(0.5, 0.5, 1, 1), 2, 2);
 }
 
 void cevy::engine::DeferredRenderer::render_system(
@@ -189,7 +190,8 @@ void cevy::engine::DeferredRenderer::render_system(
                  glm::value_ptr(material.diffuse * color.xyz()));
     glUniform3fv(self.gBuffer_shader->uniform("specular_const"), 1,
                  glm::value_ptr(material.specular_tint));
-    glUniform1f(self.gBuffer_shader->uniform("roughness_const"), 1 / material.phong_exponent);
+    glUniform1f(self.gBuffer_shader->uniform("roughness_const"), material.roughness);
+    glUniform1i(self.gBuffer_shader->uniform("normal_mode"), int(pipeline::uniforms::NormalMode::Tangeant) * model->hasTangeants());
     glUniform1i(self.gBuffer_shader->uniform("halflambert"), material.halflambert);
     glUniformMatrix4fv(self.gBuffer_shader->uniform("model"), 1, GL_FALSE,
                        glm::value_ptr(tm * model->modelMatrix()));
@@ -209,7 +211,12 @@ void cevy::engine::DeferredRenderer::render_system(
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, material.emission_texture.has_value()
                                      ? material.emission_texture.value()->texture_handle()
-                                     : self.primitives.blank.texture_handle());
+                                     : self.primitives.black.texture_handle());
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, material.normal_texture.has_value()
+                                     ? material.normal_texture.value()->texture_handle()
+                                     : self.primitives.flat.texture_handle());
+
     model->draw();
   };
 

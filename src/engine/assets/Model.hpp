@@ -12,6 +12,7 @@
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/quaternion_geometric.hpp>
 #include <limits>
+#include <string>
 #include <vector>
 
 typedef uint32_t index_t;
@@ -21,12 +22,14 @@ class Model {
   public:
   Model();
   Model(Model&& other);
-  Model(Model& other);
+  Model(const Model& other);
 
   ~Model();
 
   Model& operator=(Model&& other);
-  Model& operator=(Model& other);
+  Model& operator=(const Model& other);
+
+  static Model load(const std::string& filename);
 
   void load(const std::vector<glm::vec3> &vertices, const std::vector<glm::vec3> &normals,
             const std::vector<uint32_t> &indices);
@@ -70,6 +73,9 @@ class Model {
   std::vector<glm::vec2> tex_coordinates;
   std::vector<index_t> indices;
 
+  bool hasTangeants() const { return this->has_tangeants; }
+  // bool hasTangeants() const { return true; }
+
   protected:
   glm::mat4 modelMatrix_;
   glm::mat3 t_normalMatrix;
@@ -84,6 +90,7 @@ class Model {
   uint elements;
 
   bool initialized;
+  bool has_tangeants;
 };
 
 template <typename... T>

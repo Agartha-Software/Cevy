@@ -6,6 +6,7 @@
 */
 
 #include "Model.hpp"
+#include "cevy.hpp"
 #include <glm/gtc/constants.hpp>
 #include <random>
 #include <vector>
@@ -91,11 +92,12 @@ Model plane(float size, uint subu, uint subv) {
   // const auto normals = Model::generate_normals(vertices, indices);
 
   Model model;
-  model.indices = indices;
-  model.vertices = vertices;
-  model.normals = normals;
+  model.tex_coordinates = cevy::map(vertices, [](const glm::vec3& v) { return glm::vec2{v.x, v.y};});
+  model.indices = std::move(indices);
+  model.vertices = std::move(vertices);
+  model.normals = std::move(normals);
   // model.load(vertices, normals, indices);
-  model.colors = colors;
+  model.colors = std::move(colors);
   model.gl_init();
 
   return model;

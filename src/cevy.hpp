@@ -12,6 +12,7 @@
 #include <functional>
 #include <glm/detail/qualifier.hpp>
 #include <optional>
+#include <utility>
 
 template <typename T>
 using ref = std::reference_wrapper<T>;
@@ -32,6 +33,9 @@ struct eval_cond<true, Z, X, Else> {
 
 template <bool test, template <class...> class Z, class X, class Else>
 using eval_cond_t = typename eval_cond<test, Z, X, Else>::type;
+
+template<typename T, typename Find, typename Replace>
+using replace = std::conditional<std::is_same_v<T, Find>, Replace, T>;
 
 /// @brief True if all parameter pack is true
 template <typename... Args>
@@ -58,13 +62,32 @@ constexpr std::function<R(Args...)> make_function(R (&&func)(Args...)) {
 /// @brief contains all of the engine bits
 namespace cevy {
 
-template <template <typename> typename M, typename T, typename R, typename F>
+template <typename M_t, typename T, typename F,
+          typename M_r>
 class Map {
-  static inline constexpr M<R> map(M<T> &&mappable, F &&func);
+  public:
+
+  static inline constexpr M_r map(M_t &&mappable, F &&func) {
+    M_r ret;
+    auto inserter = std::back_inserter(ret);
+    for (auto x : mappable) {
+      inserter = func(std::forward<T>(x));
+    }
+    return std::forward<M_r>(ret);
+  }
+
+  static inline constexpr M_r map(const M_t &mappable, F &&func) {
+    M_r ret;
+    auto inserter = std::back_inserter(ret);
+    for (auto x : mappable) {
+      inserter = func(std::forward<T>(x));
+    }
+    return std::forward<M_r>(ret);
+  }
 };
 
-template <typename T, typename R, typename F>
-class Map<std::optional, T, R, F> {
+template <typename F, typename T, typename R>
+class Map<std::optional<T>, T, F, std::optional<R>> {
   public:
   static inline constexpr std::optional<R> map(std::optional<T> &&opt, F &&func) {
     if (opt) {
@@ -77,10 +100,16 @@ class Map<std::optional, T, R, F> {
   }
 };
 
-template <template <typename> typename M, typename T, typename F,
-          typename R = typename std::invoke_result<F, T &&>::type>
-inline constexpr M<R> map(M<T> &&mappable, F &&func) {
-  return Map<M, T, R, F>::map(std::forward<M<T>>(mappable), std::forward<F>(func));
+template <template <typename...> typename M, typename ...M_as, typename T = typename M<M_as...>::value_type, typename F,
+          typename R = typename std::invoke_result<F, T &&>::type, typename M_r = /* M<replace<M_as, T, R>...>> */ M<R>>
+inline constexpr M<R> map(M<M_as...> &&mappable, F &&func) {
+  return Map<M<M_as...>, T, F, M_r>::map(std::forward<M<T>>(mappable), std::forward<F>(func));
+}
+
+template <template <typename...> typename M, typename ...M_as, typename T = typename M<M_as...>::value_type, typename F,
+          typename R = typename std::invoke_result<F, T &&>::type, typename M_r = /* M<replace<M_as, T, R>...>> */ M<R>>
+inline constexpr M<R> map(const M<M_as...> &mappable, F &&func) {
+  return Map<M<M_as...>, T, F, M_r>::map(mappable, std::forward<F>(func));
 }
 
 /// @brief holds the entity components system
