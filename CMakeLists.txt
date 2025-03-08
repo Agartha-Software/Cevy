@@ -7,7 +7,7 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 project(Cevy LANGUAGES CXX VERSION 0.1)
 set(Cevy_VERSION 0.1)
@@ -24,15 +24,16 @@ if (WIN32)
   find_package(gl3w CONFIG REQUIRED)
 endif()
 if (UNIX)
-find_package(GLEW REQUIRED)
-set(OpenGL_GL_PREFERENCE "GLVND")
-find_package(OpenGL REQUIRED)
+    find_package(GLEW REQUIRED)
+    set(OpenGL_GL_PREFERENCE "GLVND")
+    find_package(OpenGL REQUIRED)
 endif()
 
 find_package(glfw3 CONFIG REQUIRED)
 
-
+if (UNIX)
 add_compile_options(-Wall -Wextra)
+endif()
 
 option(DEBUG_MODE "Set DEBUG Mode" ON)
 

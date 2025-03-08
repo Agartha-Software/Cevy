@@ -119,7 +119,7 @@ class cevy::Synchroniser : virtual public cevy::ecs::Plugin {
       if (!x)
         break;
       auto target = x.value();
-      std::function<void(ecs::Query< ecs::Entity, SyncId>)> deletor =
+      std::function<void(ecs::Query<ecs::Entity, SyncId>)> deletor =
           [target, command](ecs::Query<ecs::Entity, SyncId> q) mutable {
             for (auto [e, id] : q) {
               if (id.id == target) {

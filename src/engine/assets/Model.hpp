@@ -20,13 +20,13 @@ namespace cevy::engine {
 class Model {
   public:
   Model();
-  Model(Model&& other);
-  Model(Model& other);
+  Model(Model &&other);
+  Model(Model &other);
 
   ~Model();
 
-  Model& operator=(Model&& other);
-  Model& operator=(Model& other);
+  Model &operator=(Model &&other);
+  Model &operator=(Model &other);
 
   void load(const std::vector<glm::vec3> &vertices, const std::vector<glm::vec3> &normals,
             const std::vector<uint32_t> &indices);
@@ -74,14 +74,14 @@ class Model {
   glm::mat4 modelMatrix_;
   glm::mat3 t_normalMatrix;
 
-  uint vaoHandle = 0;
-  uint vbo_normals = 0;
-  uint vbo_positions = 0;
-  uint vbo_colors = 0;
-  uint vbo_tex_coordinates = 0;
-  uint ibo = 0;
+  uint32_t vaoHandle = 0;
+  uint32_t vbo_normals = 0;
+  uint32_t vbo_positions = 0;
+  uint32_t vbo_colors = 0;
+  uint32_t vbo_tex_coordinates = 0;
+  uint32_t ibo = 0;
 
-  uint elements;
+  uint32_t elements;
 
   bool initialized;
 };
@@ -163,7 +163,7 @@ void Model::merge_by_distance(std::vector<glm::vec3> &vertices, std::vector<uint
 namespace primitives {
 Model cube(float size);
 // inline Model cube(float size) { return cube({size, size, size}); };
-Model plane(float size, uint subu, uint subv);
-Model sphere(float size, uint slices, uint stacks);
+Model plane(float size, uint32_t subu, uint32_t subv);
+Model sphere(float size, uint32_t slices, uint32_t stacks);
 } // namespace primitives
 } // namespace cevy::engine

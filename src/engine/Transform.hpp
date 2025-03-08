@@ -283,7 +283,7 @@ class Transform {
   }
 
   protected:
-  template<template<typename T> typename Windower, typename Renderer>
+  template <template <typename T> typename Windower, typename Renderer>
   friend class Engine;
 
   Transform &parent(const Transform &parent) {
@@ -312,9 +312,10 @@ class Transform {
   glm::quat world_rotation;
   glm::vec3 world_scale;
 
-  static void parent_callback(std::map<size_t, std::tuple<Transform*, size_t>> storage, Transform& self, size_t parent) {
+  static void parent_callback(std::map<size_t, std::tuple<Transform *, size_t>> storage,
+                              Transform &self, size_t parent) {
     if (storage.find(parent) != storage.end()) {
-      auto& [p_tm, p_p] = storage.at(parent);
+      auto &[p_tm, p_p] = storage.at(parent);
       // std::get<1>(storage.at(parent)) = size_t(-1);
       p_p = size_t(-1);
       parent_callback(storage, *p_tm, p_p);
@@ -322,8 +323,9 @@ class Transform {
     }
   };
 
-  static int children_system(ecs::Query<cevy::ecs::Entity, Parent, Transform> children, ecs::Query<ecs::Entity, Transform> all) {
-    std::map<size_t, std::tuple<Transform*, size_t>> storage;
+  static int children_system(ecs::Query<cevy::ecs::Entity, Parent, Transform> children,
+                             ecs::Query<ecs::Entity, Transform> all) {
+    std::map<size_t, std::tuple<Transform *, size_t>> storage;
     for (auto [c_en, parent, c_tm] : children) {
       c_tm.reset_world();
       storage[c_en] = std::make_tuple(&c_tm, size_t(parent.entity));
@@ -336,7 +338,7 @@ class Transform {
         }
       }
     }
-    for (auto [en, s]: storage) {
+    for (auto [en, s] : storage) {
       auto [tm, p] = s;
       parent_callback(storage, *tm, p);
     }

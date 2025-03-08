@@ -17,3 +17,5 @@ target_include_directories(input PUBLIC
 )
 
 target_link_libraries(input PUBLIC engine ecs)
+
+target_link_libraries(input PRIVATE glfw)

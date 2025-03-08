@@ -25,10 +25,9 @@ class Velocity : public glm::vec3 {
   private:
 };
 
-inline static glm::vec3 lerp( const glm::vec3& A, const glm::vec3& B, float t ){
-  return A*t + B*(1.f-t) ;
+inline static glm::vec3 lerp(const glm::vec3 &A, const glm::vec3 &B, float t) {
+  return A * t + B * (1.f - t);
 }
-
 
 class TransformVelocity : public engine::Transform {
   public:
@@ -54,7 +53,7 @@ class TransformVelocity : public engine::Transform {
   }
 
   protected:
-  template<template<typename> typename Windower, typename Renderer>
+  template <template <typename> typename Windower, typename Renderer>
   friend class Engine;
   static void
   system(ecs::Query<engine::Transform, TransformVelocity, option<cevy::engine::PhysicsProps>> q,
