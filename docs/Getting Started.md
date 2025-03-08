@@ -24,7 +24,7 @@ cd Cevy
 
 4. Try one of the examples in the examples folder
 ```bash
-cd examples/bunny
+cd examples/basic
 make run
 ```
 
