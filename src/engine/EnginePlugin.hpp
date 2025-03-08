@@ -25,7 +25,7 @@
 #include "ecs.hpp"
 #include "engine.hpp"
 #include "glWindow.hpp"
-#include "input/input.hpp"
+#include "input.hpp"
 
 namespace cevy::engine {
 template <template <typename T> typename Windower = glWindow, typename Renderer = ForwardRenderer>
