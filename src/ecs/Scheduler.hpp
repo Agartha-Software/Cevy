@@ -123,7 +123,7 @@ class Scheduler {
     if (!schedule_defined<S>()) {
       std::cerr << "WARNING/Cevy: Stage not yet added to ecs pipeline" << std::endl;
     }
-    system_function sys = [id = this->last_id, &func](World &reg) { func(reg.get_super<Args>(last_id)...); };
+    system_function sys = [id = this->last_id, &func](World &reg) { func(reg.get_super<Args>(id)...); };
     this->last_id += 1;
     _systems.push_back(std::make_tuple(sys, std::type_index(typeid(S))));
   }
