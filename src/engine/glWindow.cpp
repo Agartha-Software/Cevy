@@ -28,7 +28,7 @@
 #include "glWindow.hpp"
 
 // glWindow::glWindow(int width, int height) : window_size(width, height), render_size(width, height) {
-glWindow::glWindow(int width, int height) : window_size(width, height), render_size(width * 2 / 3, height * 2 / 3) {
+glWindow::glWindow(int width, int height) : window_size(width, height), render_size(width * 2 / 3, height * 2 / 3), target_size(width, height) {
   open();
   // this->renderer = std::make_unique<Renderer>(*this);
 }
@@ -40,6 +40,7 @@ glWindow::glWindow(glWindow &&rhs) noexcept {
   rhs.module_keys.clear();
   this->window_size = rhs.window_size;
   this->render_size = rhs.render_size;
+  this->target_size = rhs.target_size;
   this->glfWindow = rhs.glfWindow;
   this->framebuffer = rhs.framebuffer;
   rhs.framebuffer = 0;
@@ -75,6 +76,7 @@ glWindow::~glWindow() {
 
 glm::vec<2, int> glWindow::windowSize() const { return window_size; }
 glm::vec<2, int> glWindow::renderSize() const { return render_size; }
+glm::vec<2, int> glWindow::targetSize() const { return target_size; }
 
 void glWindow::setFullscreen(bool /* fullscreen */) {}
 
@@ -126,6 +128,7 @@ void glWindow::post_render() {
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
   glBindFramebuffer(GL_READ_FRAMEBUFFER, this->framebuffer);
 
+  // std::cout << this->final_size.x << "  " << this->final_size.y << std::endl;
   glBlitFramebuffer(0, 0, this->window_size.x, this->window_size.y, 0, 0, this->window_size.x, this->window_size.y,
                   GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
@@ -148,7 +151,14 @@ void glWindow::pollEvents() {
 void glWindow::setWindowSize(int width, int height) {
   this->window_size = { width, height };
   glBindTexture(GL_TEXTURE_2D, this->render_target);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, std::max(this->target_size.x, width), std::max(this->target_size.y, height), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void glWindow::setTargetSize(int width, int height) {
+  this->target_size = { width, height };
+  glBindTexture(GL_TEXTURE_2D, this->render_target);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, std::max(this->window_size.x, width), std::max(this->window_size.y, height), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 

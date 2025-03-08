@@ -118,6 +118,7 @@ class glWindow : public cevy::engine::Window::generic_window {
 
   glm::vec<2, int> windowSize() const override;
   glm::vec<2, int> renderSize() const override;
+  glm::vec<2, int> targetSize() const;
 
   void setFullscreen(bool /* fullscreen */) override;
 
@@ -154,6 +155,7 @@ class glWindow : public cevy::engine::Window::generic_window {
 
   void setWindowSize(int width, int height) override;
   void setRenderSize(int width, int height) override;
+  void setTargetSize(int width, int height);
   protected:
   void keyInput(int key, int /*scancode*/, int action, int /* mods */);
 
@@ -184,6 +186,7 @@ class glWindow : public cevy::engine::Window::generic_window {
   protected:
   glm::vec<2, int>  window_size;
   glm::vec<2, int>  render_size;
+  glm::vec<2, int>  target_size;
   GLFWwindow *glfWindow;
   GLuint framebuffer;
   GLuint render_target;

@@ -35,7 +35,7 @@ void cevy::editor::Editor::init(glWindow &glwindow) {
   glGenFramebuffers(1, &this->framebuffer);
   glGenTextures(1, &this->texture);
   glBindTexture(GL_TEXTURE_2D, this->texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, glwindow.renderSize().x, glwindow.renderSize().y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, glwindow.windowSize().x, glwindow.windowSize().y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -74,13 +74,10 @@ void cevy::editor::Editor::pre_render(cevy::ecs::Resource<cevy::engine::Window> 
     ImGui::BeginChild("GameRender");
     // Get the size of the child (i.e. the whole draw size of the windows).
     ImVec2 wsize = ImGui::GetWindowSize();
-    if (wsize.x != glwindow.renderSize().x || wsize.y != glwindow.renderSize().y) {
-      glwindow.setRenderSize(wsize.x, wsize.y);
-      // glBindTexture(GL_TEXTURE_2D, self.texture);
-      // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, glwindow.windowSize().x, glwindow.windowSize().y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-
-      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if (wsize.x != glwindow.targetSize().x || wsize.y != glwindow.targetSize().y) {
+      glwindow.setTargetSize(wsize.x, wsize.y);
+      glBindTexture(GL_TEXTURE_2D, self.texture);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wsize.x, wsize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     }
     // Because I use the texture from OpenGL, I need to invert the V from the UV.
     ImGui::Image((ImTextureID)self.texture, wsize, ImVec2(0, 1), ImVec2(1, 0));
@@ -97,11 +94,9 @@ void cevy::editor::Editor::render(cevy::ecs::Resource<cevy::engine::Window> wind
   glBindFramebuffer(GL_READ_FRAMEBUFFER, glwindow.getCurrentFrameBuffer());
   glNamedFramebufferReadBuffer(glwindow.getCurrentFrameBuffer(), GL_BACK_LEFT);
 
-
-
   glViewport(0, 0, INT_MAX, INT_MAX);
   glBindTexture(GL_TEXTURE_2D, self.texture);
-  glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, glwindow.renderSize().x, glwindow.renderSize().y, 0);
+  glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, glwindow.targetSize().x, glwindow.targetSize().y, 0);
 
   glClearColor(255, 0, 0, 1);
   glClear(GL_COLOR_BUFFER_BIT);
