@@ -5,22 +5,14 @@
 ** Screen space quad rendering
 */
 
-#include <array>
-#include <sys/types.h>
-#include <type_traits>
-#include <vector>
-#if (_WIN32)
-#include <GL/gl3w.h>
-#endif
-#if (__linux__)
-#include <GL/glew.h>
-#endif
-
 #define GLM_ENABLE_EXPERIMENTAL
 #define GLM_FORCE_SWIZZLE
 
+#include <array>
+#include <sys/types.h>
+#include "glx.hpp"
+
 #include <glm/glm.hpp>
-#include <iostream>
 #include <glm/gtx/string_cast.hpp>
 
 /**
@@ -41,8 +33,8 @@ class Billboard {
       {{+1.0f, -1.0f, 0}, {1.0f, 0.0f}},
   }};
 
-  uint quadVAO = 0;
-  uint quadVBO = 0;
+  uint32_t quadVAO = 0;
+  uint32_t quadVBO = 0;
 
   /// opengl context it operates in
   intptr_t glContext;
@@ -50,7 +42,7 @@ class Billboard {
   bool initted = false;
 
   public:
-  Billboard() {};
+  Billboard(){};
   /**
    * @brief initialize openGl data;
    *
@@ -65,15 +57,17 @@ class Billboard {
     glBufferData(GL_ARRAY_BUFFER, sizeof(decltype(this->verts)::value_type) * this->verts.size(),
                  &this->verts, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, decltype(coord_pair::position)::length(), GL_FLOAT, GL_FALSE, sizeof(decltype(this->verts)::value_type),
-                          nullptr);
+    glVertexAttribPointer(0, decltype(coord_pair::position)::length(), GL_FLOAT, GL_FALSE,
+                          sizeof(decltype(this->verts)::value_type), nullptr);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, decltype(coord_pair::coord)::length(), GL_FLOAT, GL_FALSE, sizeof(decltype(this->verts)::value_type),
-                          &((coord_pair*)(nullptr))->coord);
+    glVertexAttribPointer(1, decltype(coord_pair::coord)::length(), GL_FLOAT, GL_FALSE,
+                          sizeof(decltype(this->verts)::value_type),
+                          &((coord_pair *)(nullptr))->coord);
     initted = true;
   };
 
-  void worldspace(const glm::mat4& view, const glm::mat4 projection, const glm::vec3 &center, const glm::vec2 size) {
+  void worldspace(const glm::mat4 &view, const glm::mat4 projection, const glm::vec3 &center,
+                  const glm::vec2 size) {
     glm::vec4 view_center = projection * view * glm::vec4(center, 1);
     view_center.x /= view_center.w;
     view_center.y /= view_center.w;
@@ -110,6 +104,5 @@ class Billboard {
     glBufferData(GL_ARRAY_BUFFER, sizeof(decltype(verts)::value_type) * verts.size(), &verts,
                  GL_DYNAMIC_DRAW);
     // glBindBuffer(GL_ARRAY_BUFFER, 0);
-
   }
 };

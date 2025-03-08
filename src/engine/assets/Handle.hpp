@@ -20,10 +20,10 @@ class Handle {
   public:
   Handle(Type &&ref) : _ref(std::make_shared<Type>(std::forward<Type>(ref))){};
 
-  const Type* operator->() const { return _ref.get(); }
-  Type* operator->() { return _ref.get(); }
-  Type& get() { return *_ref.get(); }
-  const Type& get() const { return *_ref.get(); }
+  const Type *operator->() const { return _ref.get(); }
+  Type *operator->() { return _ref.get(); }
+  Type &get() { return *_ref.get(); }
+  const Type &get() const { return *_ref.get(); }
 };
 
 } // namespace cevy::engine

@@ -27,32 +27,32 @@ class cevy::engine::DeferredRenderer {
     struct gBuffers {
       /// light accumulation
       struct gRender {
-        static constexpr uint attachment = GL_COLOR_ATTACHMENT0;
+        static constexpr uint32_t attachment = GL_COLOR_ATTACHMENT0;
         using Type = glm::vec4;
         glm::vec3 color;
         float alpha; // ?
       };
       struct gPostition {
-        static constexpr uint attachment = GL_COLOR_ATTACHMENT1;
+        static constexpr uint32_t attachment = GL_COLOR_ATTACHMENT1;
         using Type = glm::vec4;
         glm::vec3 position;
         float distance;
       };
       struct gNormal {
-        static constexpr uint attachment = GL_COLOR_ATTACHMENT2;
+        static constexpr uint32_t attachment = GL_COLOR_ATTACHMENT2;
         using Type = glm::vec4;
         glm::vec3 normal;
         float unspecified; // metalness ?
       };
       struct gAlbedo {
-        static constexpr uint attachment = GL_COLOR_ATTACHMENT3;
+        static constexpr uint32_t attachment = GL_COLOR_ATTACHMENT3;
         using Type = glm::vec<4, unorm8>;
         glm::vec<3, unorm8> color;
         unorm8 unspecified;
         // unorm8 roughness; /// inverse of exponent - 1
       };
       struct gSpecular {
-        static constexpr uint attachment = GL_COLOR_ATTACHMENT4;
+        static constexpr uint32_t attachment = GL_COLOR_ATTACHMENT4;
         using Type = glm::vec<4, unorm8>;
         glm::vec<3, unorm8> color;
         unorm8 roughness; /// inverse of exponent - 1
@@ -101,10 +101,10 @@ class cevy::engine::DeferredRenderer {
   }
 
   void init();
-  static void
-  render_system(DeferredRenderer &self, Query<Camera> cams,
-         Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-         Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world);
+  static void render_system(
+      DeferredRenderer &self, Query<Camera> cams,
+      Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+      Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world);
 
   protected:
   GLFWwindow *glfWindow;

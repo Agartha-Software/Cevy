@@ -7,12 +7,8 @@
 
 #define GLM_FORCE_SWIZZLE
 
-#if (_WIN32)
-#include <GL/gl3w.h>
-#endif
-#if (__linux__)
-#include <GL/glew.h>
-#endif
+#include "glx.hpp"
+
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Atmosphere.hpp"

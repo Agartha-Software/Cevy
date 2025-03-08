@@ -16,7 +16,7 @@ namespace cevy::engine {
 class Window {
   public:
   struct generic_window {
-    generic_window() {};
+    generic_window(){};
     virtual bool open() = 0;
     virtual void pollEvents() = 0;
 

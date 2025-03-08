@@ -24,9 +24,7 @@ class cevy::ecs::Entity {
   template <typename... T>
   friend class ecs::iterator;
 
-  bool operator==(const Entity& other) {
-    return this->_id == other._id;
-  }
+  bool operator==(const Entity &other) { return this->_id == other._id; }
   operator std::size_t &();
   operator std::size_t() const;
 };

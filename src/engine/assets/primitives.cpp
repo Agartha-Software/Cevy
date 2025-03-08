@@ -34,7 +34,7 @@ Model cube(float size) {
   return model;
 }
 
-Model plane(float size, uint subu, uint subv) {
+Model plane(float size, uint32_t subu, uint32_t subv) {
   std::vector<glm::vec4> vertices;
   std::vector<glm::vec3> colors;
   std::vector<glm::vec3> normals;
@@ -48,9 +48,9 @@ Model plane(float size, uint subu, uint subv) {
   std::mt19937 gen{rdev()};
   auto d = std::normal_distribution<float>{-1.0, 1.0};
 
-  for (uint u = 0; u < subu; u++) {
+  for (uint32_t u = 0; u < subu; u++) {
     colorMode = u % 2;
-    for (uint v = 0; v < subv; v++) {
+    for (uint32_t v = 0; v < subv; v++) {
       vertices.push_back(
           {-size / 2 + float(u - 0) / subu * size, -size / 2 + float(v - 0) / subv * size, 0, 1.0});
       vertices.push_back(
@@ -101,24 +101,24 @@ Model plane(float size, uint subu, uint subv) {
   return model;
 }
 
-Model sphere(float size, uint slices, uint stacks) {
-  uint nVerts = (slices + 1) * (stacks + 1);
-  uint nIndices = (slices * 2 * (stacks - 1)) * 3;
+Model sphere(float size, uint32_t slices, uint32_t stacks) {
+  uint32_t nVerts = (slices + 1) * (stacks + 1);
+  uint32_t nIndices = (slices * 2 * (stacks - 1)) * 3;
 
   std::vector<float> vertices(3 * nVerts);
   std::vector<float> normals(3 * nVerts);
   std::vector<float> uvs(2 * nVerts);
-  std::vector<uint> indices(nIndices);
+  std::vector<uint32_t> indices(nIndices);
 
   float theta, phi;
   float thetaFac = glm::two_pi<float>() / slices;
   float phiFac = glm::pi<float>() / stacks;
   float nx, ny, nz, s, t;
-  uint idx = 0, tIdx = 0;
-  for (uint i = 0; i <= slices; i++) {
+  uint32_t idx = 0, tIdx = 0;
+  for (uint32_t i = 0; i <= slices; i++) {
     theta = i * thetaFac;
     s = (float)i / slices;
-    for (uint j = 0; j <= stacks; j++) {
+    for (uint32_t j = 0; j <= stacks; j++) {
       phi = j * phiFac;
       t = (float)j / stacks;
       nx = sinf(phi) * cosf(theta);
@@ -140,10 +140,10 @@ Model sphere(float size, uint slices, uint stacks) {
 
   // Generate the element list
   idx = 0;
-  for (uint i = 0; i < slices; i++) {
-    uint stackStart = i * (stacks + 1);
-    uint nextStackStart = (i + 1) * (stacks + 1);
-    for (uint j = 0; j < stacks; j++) {
+  for (uint32_t i = 0; i < slices; i++) {
+    uint32_t stackStart = i * (stacks + 1);
+    uint32_t nextStackStart = (i + 1) * (stacks + 1);
+    for (uint32_t j = 0; j < stacks; j++) {
       if (j == 0) {
         indices[idx] = stackStart;
         indices[idx + 1] = stackStart + 1;

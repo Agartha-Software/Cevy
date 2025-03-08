@@ -18,7 +18,7 @@ class Asset {
   AssetManager &manager;
 
   public:
-  Asset(AssetManager &manager) : manager(manager) {};
+  Asset(AssetManager &manager) : manager(manager){};
 
   Handle<Type> load(Type &&asset, const std::string name = "") {
     return this->manager.load(std::forward<Type>(asset), name);
