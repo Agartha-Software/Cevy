@@ -21,7 +21,6 @@ using cevy::engine::Texture;
 using cevy::engine::TextureBuilder;
 
 void init_asset_manager(cevy::ecs::World &w) {
-  w.init_resource(AssetManager());
   auto asset_manager = w.get_resource<AssetManager>();
   if (asset_manager) {
     w.insert_resource(Asset<Model>(asset_manager->get()));
@@ -30,6 +29,7 @@ void init_asset_manager(cevy::ecs::World &w) {
 }
 
 void AssetManagerPlugin::build(ecs::App &app) {
+  app.init_resource(AssetManager());
   app.add_systems<PostStartupRenderStage>(init_asset_manager);
   app.init_component<Handle<Model>>();
   app.init_component<Handle<PbrMaterial>>();
@@ -83,7 +83,7 @@ Handle<Texture> AssetManager::load(Texture &&texture, std::string name) {
 }
 
 template <>
-std::optional<Handle<PbrMaterial>> AssetManager::get<PbrMaterial>(const std::string name) {
+std::optional<Handle<PbrMaterial>> AssetManager::lookup<PbrMaterial>(const std::string name) {
   auto found = this->material_keys.find(name);
   if (found != this->material_keys.end()) {
     return this->materials.at(found->second);
@@ -93,7 +93,7 @@ std::optional<Handle<PbrMaterial>> AssetManager::get<PbrMaterial>(const std::str
 }
 
 template <>
-std::optional<Handle<Model>> AssetManager::get<Model>(std::string name) {
+std::optional<Handle<Model>> AssetManager::lookup<Model>(std::string name) {
   auto found = this->mesh_keys.find(name);
   if (found != this->mesh_keys.end()) {
     return this->meshes.at(found->second);
@@ -103,7 +103,7 @@ std::optional<Handle<Model>> AssetManager::get<Model>(std::string name) {
 }
 
 template <>
-std::optional<Handle<Texture>> AssetManager::get<Texture>(std::string name) {
+std::optional<Handle<Texture>> AssetManager::lookup<Texture>(std::string name) {
   auto found = this->texture_keys.find(name);
   if (found != this->texture_keys.end()) {
     return this->textures.at(found->second);

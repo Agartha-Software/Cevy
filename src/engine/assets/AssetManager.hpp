@@ -11,10 +11,13 @@
 #include "App.hpp"
 #include "Model.hpp"
 #include "Plugin.hpp"
+#include "cevy.hpp"
 #include "ecs.hpp"
 
+#include <functional>
 #include <optional>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 void init_asset_manager(cevy::ecs::World &w);
@@ -25,6 +28,14 @@ class AssetManager {
 
   template<typename Type>
   std::optional<Handle<Type>> get(const std::string name = "") {
+    auto in = this->lookup<Type>(name);
+    if (in)
+      return in;
+    return this->factory<Type>(name);
+  }
+
+  template<typename Type>
+  std::optional<Handle<Type>> lookup(const std::string name = "") {
     auto anys_found = this->anys.find(std::type_index(typeid(Type)));
     if (anys_found == this->anys.end()) {
       return std::nullopt;
@@ -43,10 +54,7 @@ class AssetManager {
 
   template<typename Type>
   Handle<Type> load(Type &&asset, const std::string name = "") {
-    auto anys_found = this->anys.find(std::type_index(typeid(Type)));
-    if (anys_found == this->anys.end()) {
-      anys_found->second = cevy::make_any<std::vector<Handle<Type>>>();
-    }
+    auto [anys_found, is_new] = this->anys.try_emplace(std::type_index(typeid(Type)), std::vector<Handle<Type>>());
 
     std::vector<Handle<Type>>& handles = std::any_cast<std::vector<Handle<Type>>&>(anys_found->second);
     size_t idx = handles.size();
@@ -60,10 +68,33 @@ class AssetManager {
       }
     }
 
-    return handles.emplace_back(std::forward<Handle<Type>>(Handle<Type>(std::forward<Type>(asset))));
+    auto em = handles.emplace_back(std::forward<Handle<Type>>(Handle<Type>(std::forward<Type>(asset))));
+    return em;
   }
 
   protected:
+  template<template<typename T> typename Windower, typename Renderer>
+  friend class Engine;
+
+  template<typename T>
+  void add_factory(const std::string& key, std::function<T()>&& func) {
+    using Func = std::function<T()>;
+    this->factories.emplace(std::make_pair(key, std::move(cevy::make_any<Func>(std::forward<Func>(func)))));
+  }
+
+
+  template<typename T>
+  std::optional<Handle<T>> factory(const std::string& key) {
+    using Func = std::function<T()>;
+    auto found = this->factories.find(key); {
+      if (found != this->factories.end()) {
+        auto &func = std::any_cast<Func&>(found->second);
+        return this->load(std::forward<T>(func()), key);
+      }
+    }
+    return std::nullopt;
+  }
+
   std::unordered_map<std::type_index, std::unordered_map<std::string, size_t>> any_keys;
   std::unordered_map<std::type_index, cevy::any> anys; // any = std::vector<Asset>
 
@@ -74,6 +105,7 @@ class AssetManager {
   std::unordered_map<std::string, size_t> material_keys;
   std::vector<Handle<cevy::engine::PbrMaterial>> materials;
 
+  std::unordered_map<std::string, cevy::any> factories;
   // std::vector<ShaderProgram> _shaders;
 };
 

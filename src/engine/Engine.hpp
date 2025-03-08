@@ -57,6 +57,17 @@ class Engine : public cevy::ecs::Plugin {
     app.init_component<cevy::engine::Color>();
     // app.init_component<cevy::engine::Atmosphere>();
     app.add_plugins(cevy::engine::AssetManagerPlugin());
+
+    app.resource<AssetManager>().add_factory<Shader>("gbuffer_generic", std::function([]() {
+      return ShaderBuilder<typename Windower<Renderer>::pipeline>::build_from_files("assets/engine/shaders/simple.vert",
+                           "assets/engine/shaders/gbuffer_generic.frag");
+    }));
+
+    app.resource<AssetManager>().add_factory<Shader>("gbuffer_pbr", std::function([]() {
+      return ShaderBuilder<typename Windower<Renderer>::pipeline>::build_from_files("assets/engine/shaders/simple.vert",
+                           "assets/engine/shaders/gbuffer_pbr.frag");
+    }));
+
     app.add_systems<cevy::engine::PreRenderStage>(update_camera);
     app.add_systems<cevy::engine::RenderStage>(Windower<Renderer>::render_system);
     app.add_systems<ecs::core_stage::PostUpdate>(TransformVelocity::system);

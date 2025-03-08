@@ -8,6 +8,7 @@
 add_library(rendering
   STATIC
   Color.cpp
+  pipeline.cpp
   ForwardRenderer.cpp
   DeferredRenderer.cpp
   Atmosphere.cpp

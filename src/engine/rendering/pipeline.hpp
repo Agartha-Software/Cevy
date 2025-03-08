@@ -8,12 +8,12 @@
 #pragma once
 
 #include "PointLight.hpp"
+#include "ShaderProgram.hpp"
 #include <glm/glm.hpp>
+#include <string>
 
 namespace cevy::engine {
 struct pipeline {
-  template <typename T>
-  struct texture;
   struct Light;
   /// represents glsl sampler2D
   struct sampler2D {};
@@ -64,7 +64,7 @@ struct pipeline {
         inline static constexpr auto name = "exposure";
       };
     }; // struct lighting
-    struct PbrMaterial {
+    struct pbrMaterial {
       // diffuse constant
       struct diffuse {
         using Type = glm::vec3;
@@ -102,21 +102,46 @@ struct pipeline {
       };
       struct diffuse_texture {
         using Type = sampler2D;
+        glm::vec3 color;
+        float alpha;
         inline static constexpr auto name = "diffuse_texture";
         inline static constexpr auto binding = 0;
       };
-      struct specular_texture {
-        using Type = sampler2D;
-        inline static constexpr auto name = "specular_texture";
-        inline static constexpr auto binding = 1;
-      };
       struct emission_texture {
         using Type = sampler2D;
+        glm::vec3 color;
+        float unspecified;
         inline static constexpr auto name = "emission_texture";
         inline static constexpr auto binding = 2;
       };
+      struct shader_generic {
+        // use metallic
+        struct metallic {
+          using Type = bool;
+          inline static constexpr auto name = "metallic";
+        };
+        struct specular_texture {
+          using Type = sampler2D;
+          glm::vec3 color;
+          float roughness;
+          inline static constexpr auto name = "specular_texture";
+          inline static constexpr auto binding = 1;
+        };
+      };
+      struct shader_pbr {
+        struct shading_texture {
+          using Type = sampler2D;
+          float metallness;
+          float ior;
+          float anisitropy;
+          float roughness;
+          inline static constexpr auto name = "specular_texture";
+          inline static constexpr auto binding = 1;
+        };
+      };
     }; // struct PbrMaterial
   }; // struct uniforms
+
   struct layout {
     /// vertex position
     struct vertexPosition {
@@ -168,4 +193,33 @@ struct pipeline {
     float radius; /// 0 for directionnal, non-0 for point;
   };
 };
+template<typename Pipeline = pipeline>
+class ShaderBuilder {
+  public:
+  static ShaderProgram build_from_files(const std::string& vertex, const std::string& fragment);
+  static ShaderProgram build_from_source(const std::string& vertex, const std::string& fragment);
+  protected:
+  static void build(ShaderProgram& shader);
+};
+
+
+template<typename pipeline>
+ShaderProgram ShaderBuilder<pipeline>::build_from_files(const std::string &vertex, const std::string &fragment) {
+  ShaderProgram shader;
+  shader.initFromFiles(vertex, fragment);
+
+  ShaderBuilder<pipeline>::build(shader);
+
+  return shader;
+}
+
+template<typename pipeline>
+ShaderProgram ShaderBuilder<pipeline>::build_from_source(const std::string &vertex, const std::string &fragment) {
+  ShaderProgram shader;
+  shader.initFromStrings(vertex, fragment);
+
+  ShaderBuilder<pipeline>::build(shader);
+
+  return shader;
+}
 }; // namespace cevy::engine
