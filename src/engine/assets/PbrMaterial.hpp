@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ShaderProgram.hpp"
 #if (_WIN32)
 #include <GL/gl3w.h>
 #endif
@@ -25,6 +26,7 @@
 
 
 namespace cevy::engine {
+using Shader = ShaderProgram;
 class Texture {
   bool initted = false;
   std::string file_name;
@@ -138,6 +140,7 @@ public:
     // additionnal
     data_tex roughness;
     data_tex alpha;
+    data_tex metallic;
   };
 
   public:
@@ -164,6 +167,8 @@ public:
     this->roughness = other.roughness;
     this->diffuse = other.diffuse;
 
+    this->shader = std::move(other.shader);
+
     this->diffuse_texture = std::move(other.diffuse_texture);
     this->specular_texture = std::move(other.specular_texture);
     this->emission_texture = std::move(other.emission_texture);
@@ -176,13 +181,16 @@ public:
 
   glm::vec3 emit = {0, 0, 0};
   glm::vec3 ambient = {0, 0, 0};
-  glm::vec3 diffuse = {0.8, 0.8, 0.8};
+  glm::vec3 diffuse = {1, 1, 1};
   glm::vec3 specular_tint = {1, 1, 1};
   float roughness = 1;
   bool halflambert: 1;
 
+  std::optional<Handle<Shader>> shader = std::nullopt;
+
   std::optional<Handle<Texture>> diffuse_texture = std::nullopt;
   std::optional<Handle<Texture>> specular_texture = std::nullopt;
+  std::optional<Handle<Texture>> metallic_texture = std::nullopt;
   std::optional<Handle<Texture>> emission_texture = std::nullopt;
   std::optional<Handle<Texture>> normal_texture = std::nullopt;
 };

@@ -108,25 +108,27 @@ void cevy::engine::DeferredRenderer::init() {
 
   std::cout << "loading gBuffer_shader" << std::endl;
 
-  this->gBuffer_shader = std::make_unique<ShaderProgram>();
+
+  this->defaultMaterial.shader.emplace(Handle<ShaderProgram>(ShaderProgram()));
+  auto& gBuffer_shader = this->defaultMaterial.shader.value();
 
   std::cout << "allocated gBuffer_shader" << std::endl;
 
-  this->gBuffer_shader->initFromFiles("assets/engine/shaders/simple.vert",
-                                      "assets/engine/shaders/gbuffer.frag");
+  gBuffer_shader->initFromFiles("assets/engine/shaders/simple.vert",
+                                      "assets/engine/shaders/gbuffer_generic.frag");
   std::cout << "inited gBuffer_shader" << std::endl;
 
-  this->gBuffer_shader->addUniform("model");
-  this->gBuffer_shader->addUniform("model_normal");
-  this->gBuffer_shader->addUniform("view");
-  this->gBuffer_shader->addUniform("invView");
-  this->gBuffer_shader->addUniform("custom_ambient");
-  this->gBuffer_shader->addUniform("diffuse_const");
-  this->gBuffer_shader->addUniform("specular_const");
-  this->gBuffer_shader->addUniform("roughness_const");
-  this->gBuffer_shader->addUniform("emit_const");
-  this->gBuffer_shader->addUniform("halflambert");
-  this->gBuffer_shader->addUniform("normal_mode");
+  gBuffer_shader->addUniform("model");
+  gBuffer_shader->addUniform("model_normal");
+  gBuffer_shader->addUniform("view");
+  gBuffer_shader->addUniform("invView");
+  gBuffer_shader->addUniform("custom_ambient");
+  gBuffer_shader->addUniform("diffuse_const");
+  gBuffer_shader->addUniform("specular_const");
+  gBuffer_shader->addUniform("roughness_const");
+  gBuffer_shader->addUniform("emit_const");
+  gBuffer_shader->addUniform("halflambert");
+  gBuffer_shader->addUniform("normal_mode");
 
   this->gbuffer.init_default();
   this->billboard.init();
@@ -165,7 +167,7 @@ void cevy::engine::DeferredRenderer::render_system(
   glm::vec4 far_pos = {0, 0, 0, camera.far};
   glClearBufferfv(GL_COLOR, 1, glm::value_ptr(far_pos));
 
-  self.gBuffer_shader->use();
+  // self.gBuffer_shader->use();
 
   auto view = glm::scale(camera.projection, glm::vec3(1, camera.aspect, 1)) * camera.view;
   view = view / view[3][3];
@@ -173,28 +175,35 @@ void cevy::engine::DeferredRenderer::render_system(
   auto invView = glm::inverse(camera.view);
   // invView = invView / invView[3][3];
 
-  glUniformMatrix4fv(self.gBuffer_shader->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
-  glUniformMatrix4fv(self.gBuffer_shader->uniform("invView"), 1, GL_FALSE, glm::value_ptr(invView));
 
   for (auto [o_tm, model, o_material, o_color] : models) {
     auto tm = o_tm ? o_tm->get_world().mat4() : glm::mat4(1);
     glm::vec4 white = glm::vec4(1, 1, 1, 1);
     auto &color = o_color ? o_color.value().as_vec() : white;
     PbrMaterial &material = o_material ? o_material->get() : self.defaultMaterial;
+    auto &shader = material.shader ? material.shader->get() : self.defaultMaterial.shader->get();
 
-    glUniform3fv(self.gBuffer_shader->uniform("custom_ambient"), 1,
+    // if (!material.shader)
+    //   continue;
+    shader.use();
+
+
+    glUniformMatrix4fv(shader.uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(shader.uniform("invView"), 1, GL_FALSE, glm::value_ptr(invView));
+
+    glUniform3fv(shader.uniform("custom_ambient"), 1,
                  glm::value_ptr(material.ambient));
-    glUniform3fv(self.gBuffer_shader->uniform("emit_const"), 1, glm::value_ptr(material.emit));
-    glUniform3fv(self.gBuffer_shader->uniform("diffuse_const"), 1,
+    glUniform3fv(shader.uniform("emit_const"), 1, glm::value_ptr(material.emit));
+    glUniform3fv(shader.uniform("diffuse_const"), 1,
                  glm::value_ptr(material.diffuse * color.xyz()));
-    glUniform3fv(self.gBuffer_shader->uniform("specular_const"), 1,
+    glUniform3fv(shader.uniform("specular_const"), 1,
                  glm::value_ptr(material.specular_tint));
-    glUniform1f(self.gBuffer_shader->uniform("roughness_const"), material.roughness);
-    glUniform1i(self.gBuffer_shader->uniform("normal_mode"), int(pipeline::uniforms::NormalMode::Tangeant) * model->hasTangeants());
-    glUniform1i(self.gBuffer_shader->uniform("halflambert"), material.halflambert);
-    glUniformMatrix4fv(self.gBuffer_shader->uniform("model"), 1, GL_FALSE,
+    glUniform1f(shader.uniform("roughness_const"), material.roughness);
+    glUniform1i(shader.uniform("normal_mode"), int(pipeline::uniforms::NormalMode::Tangeant) * model->hasTangeants());
+    glUniform1i(shader.uniform("halflambert"), material.halflambert);
+    glUniformMatrix4fv(shader.uniform("model"), 1, GL_FALSE,
                        glm::value_ptr(tm * model->modelMatrix()));
-    glUniformMatrix3fv(self.gBuffer_shader->uniform("model_normal"), 1, GL_TRUE,
+    glUniformMatrix3fv(shader.uniform("model_normal"), 1, GL_TRUE,
                        glm::value_ptr(model->tNormalMatrix() * glm::inverse(glm::mat3(tm))));
 
     glActiveTexture(GL_TEXTURE0);

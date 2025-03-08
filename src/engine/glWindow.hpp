@@ -43,6 +43,8 @@ class glWindow : public cevy::engine::Window::generic_window {
   using glLight = cevy::engine::pipeline::Light;
 
   public:
+  using pipeline = cevy::engine::pipeline;
+
   glWindow(int width, int height) : width(width), height(height) {
     // std::cout << " <<<< glWindow(width, height) @" << this << "  <<<<" << std::endl;
     this->renderer = std::make_unique<Renderer>(*this);

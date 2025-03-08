@@ -25,6 +25,8 @@ class cevy::engine::DeferredRenderer {
     using unorm8 = uint8_t; /// unsigned normalized: 1.0 is mapped to 255 etc
                             /// https://www.khronos.org/opengl/wiki/Normalized_Integer
     struct gBuffers {
+      // !todo: document that even though these structs are not zero-size,
+      // they only serve as user guidance and are definition-structs
       /// light accumulation
       struct gRender {
         static constexpr uint attachment = GL_COLOR_ATTACHMENT0;
@@ -86,7 +88,7 @@ class cevy::engine::DeferredRenderer {
     this->height = rhs.height;
     this->defaultMaterial = std::move(rhs.defaultMaterial);
     this->null_shader.swap(rhs.null_shader);
-    this->gBuffer_shader.swap(rhs.gBuffer_shader);
+    // this->gBuffer_shader.swap(rhs.gBuffer_shader);
     this->compose_shader.swap(rhs.compose_shader);
     this->accumulate_shader.swap(rhs.accumulate_shader);
     // this->principled_shader.swap(rhs.principled_shader);
@@ -109,7 +111,7 @@ class cevy::engine::DeferredRenderer {
   protected:
   GLFWwindow *glfWindow;
   std::unique_ptr<ShaderProgram> null_shader = nullptr;
-  std::unique_ptr<ShaderProgram> gBuffer_shader = nullptr;
+  // std::unique_ptr<ShaderProgram> gBuffer_shader = nullptr;
   // std::unique_ptr<ShaderProgram> principled_shader = nullptr;
   std::unique_ptr<ShaderProgram> accumulate_shader = nullptr;
   std::unique_ptr<ShaderProgram> compose_shader = nullptr;

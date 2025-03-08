@@ -68,6 +68,7 @@ std::optional<Texture> Texture::from_tinyobj(const std::string &file_name,
 PbrMaterial::PbrMaterial(AssetManager &mngr, const definition &def) : PbrMaterial() {
   TextureBuilder diffuse_builder;
   TextureBuilder specular_builder;
+  TextureBuilder metallic_builder;
   TextureBuilder emit_builder;
   TextureBuilder normal_builder;
 
@@ -88,8 +89,18 @@ PbrMaterial::PbrMaterial(AssetManager &mngr, const definition &def) : PbrMateria
     diffuse_builder.alpha_file_name = def.alpha.b.value();
   }
 
+  if (def.metallic.b) {
+    metallic_builder.rgb_file_name = def.metallic.b.value();
+  }
+
   if (def.roughness.b) {
-    specular_builder.alpha_file_name = def.roughness.b.value();
+    if (def.specular.b) {
+      specular_builder.alpha_file_name = def.roughness.b.value();
+    } else if (def.metallic.b) {
+      metallic_builder.alpha_file_name = def.roughness.b.value();
+    } else {
+      specular_builder.alpha_file_name = def.roughness.b.value();
+    }
   }
 
   if (def.normal != "") {
@@ -98,8 +109,17 @@ PbrMaterial::PbrMaterial(AssetManager &mngr, const definition &def) : PbrMateria
 
   this->diffuse_texture = diffuse_builder.build(mngr);
   this->specular_texture = specular_builder.build(mngr);
+  this->metallic_texture = metallic_builder.build(mngr);
+  this->specular_texture = this->specular_texture ? this->specular_texture : this->metallic_texture;
+
   this->emission_texture = emit_builder.build(mngr);
   this->normal_texture = normal_builder.build(mngr);
+
+  if (def.metallic.b != "") {
+    this->shader = mngr.get<Shader>("gbuffer_pbr");
+  } else {
+    this->shader = mngr.get<Shader>("gbuffer_generic");
+  }
 
   std::cout << "genereated material:" << std::endl;
   std::cout << "diffuse:" << this->diffuse_texture.has_value() << std::endl;
@@ -326,7 +346,7 @@ std::optional<Handle<Texture>> TextureBuilder::build(AssetManager &manager) {
     name_full += "_" + this->alpha_file_name;
   }
 
-  auto o_tex = manager.get<Texture>();
+  auto o_tex = manager.get<Texture>(name_full);
 
   if (o_tex) {
     return o_tex;
