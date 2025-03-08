@@ -11,7 +11,7 @@
 #include "AssetManager.hpp"
 #include "Color.hpp"
 #include "DeferredRenderer.hpp"
-#include "Engine.hpp"
+#include "EnginePlugin.hpp"
 #include "Model.hpp"
 #include "PbrMaterial.hpp"
 #include "Transform.hpp"
