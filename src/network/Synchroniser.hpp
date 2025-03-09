@@ -17,14 +17,14 @@
 
 #include "App.hpp"
 #include "CevyNetwork.hpp"
+#include "Commands.hpp"
 #include "Entity.hpp"
+#include "EntityCommands.hpp"
 #include "Indirect.hpp"
 #include "Plugin.hpp"
 #include "Query.hpp"
 #include "Scheduler.hpp"
 #include "cevy.hpp"
-#include "Commands.hpp"
-#include "EntityCommands.hpp"
 #include "ecs.hpp"
 #include "network.hpp"
 

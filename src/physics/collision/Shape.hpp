@@ -6,7 +6,6 @@
 */
 
 #include "Vector.hpp"
-#include "Vector.hpp"
 
 namespace cevy::physics {
 class Shape {
