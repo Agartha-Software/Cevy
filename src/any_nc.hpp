@@ -118,6 +118,9 @@ namespace std {
     template<typename T>
     struct is_in_place_type<in_place_type_t<T>>: std::true_type {};
 
+    template<typename _Tp>
+    using remove_cvref_t = typename remove_cv<typename remove_reference<_Tp>::type>::type;
+
     // Holds either pointer to a heap object or the contained object itself.
     union _Storage {
       constexpr _Storage() : _M_ptr{nullptr} {}
@@ -441,7 +444,7 @@ namespace std {
    */
   template <typename _ValueType>
   inline _ValueType any_cast(const any_nc &__any) {
-    using _Up = remove_cvref_t<_ValueType>;
+    using _Up = std::remove_cv_t<std::remove_reference_t<_ValueType>>;
     static_assert(any_nc::__is_valid_cast<_ValueType>(),
                   "Template argument must be a reference or CopyConstructible type");
     static_assert(is_constructible_v<_ValueType, const _Up &>,
@@ -466,7 +469,7 @@ namespace std {
    */
   template <typename _ValueType>
   inline _ValueType any_cast(any_nc & __any) {
-    using _Up = remove_cvref_t<_ValueType>;
+    using _Up = std::remove_cv_t<std::remove_reference_t<_ValueType>>;
     static_assert(any_nc::__is_valid_cast<_ValueType>(),
                   "Template argument must be a reference or CopyConstructible type");
     //   static_assert(is_constructible_v<_ValueType, _Up&>,
@@ -479,7 +482,7 @@ namespace std {
 
   template <typename _ValueType>
   inline _ValueType any_cast(any_nc && __any) {
-    using _Up = remove_cvref_t<_ValueType>;
+    using _Up = std::remove_cv_t<std::remove_reference_t<_ValueType>>;
     static_assert(any_nc::__is_valid_cast<_ValueType>(),
                   "Template argument must be a reference or CopyConstructible type");
     static_assert(is_constructible_v<_ValueType, _Up>,
