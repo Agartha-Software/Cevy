@@ -9,11 +9,10 @@
 
 #include <memory>
 
+#include "App.hpp"
 #include "NetworkCommands.hpp"
 #include "Plugin.hpp"
 #include "Synchroniser.hpp"
-#include "App.hpp"
-#include "network.hpp"
 #include "network.hpp"
 
 template <typename S, typename A, typename N = cevy::CevyNetwork>

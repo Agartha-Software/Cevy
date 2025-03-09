@@ -8,9 +8,9 @@
 #pragma once
 
 #include "App.hpp"
+#include "EntityCommands.hpp"
 #include "Indirect.hpp"
 #include "Plugin.hpp"
-#include "EntityCommands.hpp"
 #include "ecs.hpp"
 
 template <typename T>
