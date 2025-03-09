@@ -8,12 +8,14 @@
 #include "Editor.hpp"
 
 #include "Event.hpp"
+#include "Resource.hpp"
 #include "Window.hpp"
+#include "engine.hpp"
 #include "glWindow.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "input/state.hpp"
+#include "state.hpp"
 
 #include <GL/gl.h>
 
@@ -26,7 +28,6 @@ void cevy::editor::Editor::init(glWindow &glwindow) {
   io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-  // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
 
   ImGui::StyleColorsDark();
 
@@ -54,44 +55,66 @@ void cevy::editor::Editor::deinit(glWindow &) {
   glDeleteFramebuffers(1, &this->framebuffer);
 }
 
-void cevy::editor::Editor::build(cevy::ecs::App &app) {
-  app.add_stage<EditorPreRender>();
-  app.add_stage<EditorRender>();
-  app.add_stage<EditorInput>();
-  app.add_systems<EditorPreRender>(Editor::pre_render);
-  app.add_systems<EditorRender>(Editor::render);
-  app.add_systems<EditorInput>(Editor::intercept_inputs);
+void intercept_default_cursor_placement(cevy::ecs::Resource<cevy::input::cursorInWindow> inWindow) {
+  inWindow->inside = false;
 }
 
-void cevy::editor::Editor::intercept_inputs(cevy::ecs::World &world,
-  cevy::ecs::EventWriter<cevy::input::cursorMoved> cursorMoved,
-  cevy::ecs::Resource<cevy::engine::Window> windower) {
-  auto &glwindow = windower->get_handler<glWindow>();
-  auto &self = glwindow.get_module<Editor>();
-  auto o_cursor_moved = world.get_resource<ecs::Event<cevy::input::cursorMoved>>();
+void clean_gl_window_inputs(cevy::ecs::World &world) {
+  auto o_cursor_moved = world.get_resource<cevy::ecs::Event<cevy::input::cursorMoved>>();
+  auto o_cursor_entered = world.get_resource<cevy::ecs::Event<cevy::input::cursorEntered>>();
+  auto o_cursor_left = world.get_resource<cevy::ecs::Event<cevy::input::cursorLeft>>();
 
   if (o_cursor_moved.has_value()) {
     o_cursor_moved->get().event_queue.clear();
   }
-
-  if (self.viewport_pos.has_value() && self.viewport_size.has_value()) {
-    auto io = ImGui::GetIO();
-    ImVec2 screen_pos = io.MousePos;
-    int x_pos = screen_pos.x - self.viewport_pos->x;
-    int y_pos = screen_pos.y - self.viewport_pos->y;
-    if (x_pos < 0 || x_pos > self.viewport_size->x || y_pos < 0 || y_pos > self.viewport_size->y) {
-      return;
-    }
-    cursorMoved.send(cevy::input::cursorMoved { { screen_pos.x - self.viewport_pos->x, screen_pos.y - self.viewport_pos->y } });
+  if (o_cursor_entered.has_value()) {
+    o_cursor_entered->get().event_queue.clear();
+  }
+  if (o_cursor_left.has_value()) {
+    o_cursor_left->get().event_queue.clear();
   }
 }
 
-void cevy::editor::Editor::pre_render(cevy::ecs::Resource<cevy::engine::Window> windower) {
+void intercept_inputs(
+  cevy::ecs::EventWriter<cevy::input::cursorMoved> cursor_moved,
+  cevy::ecs::EventWriter<cevy::input::cursorEntered> cursor_entered_writer,
+  cevy::ecs::EventWriter<cevy::input::cursorLeft> cursor_left_writer,
+  cevy::ecs::Resource<cevy::engine::Window> windower) {
+  auto &glwindow = windower->get_handler<glWindow>();
+  auto &self = glwindow.get_module<cevy::editor::Editor>();
+
+  if (!self.viewportPos.has_value() || !self.viewportSize.has_value()) {
+    return;
+  }
+
+  ImVec2 screen_pos = ImGui::GetIO().MousePos;
+  int x_pos = screen_pos.x - self.viewportPos->x;
+  int y_pos = screen_pos.y - self.viewportPos->y;
+
+  if (x_pos < 0 || x_pos > self.viewportSize->x || y_pos < 0 || y_pos > self.viewportSize->y) {
+    if (self.cursorInViewport.has_value() && self.cursorInViewport.value()) {
+      cursor_left_writer.send(cevy::input::cursorLeft {});
+    }
+
+    self.cursorInViewport = false;
+  } else {
+    cursor_moved.send(cevy::input::cursorMoved { { screen_pos.x - self.viewportPos->x, screen_pos.y - self.viewportPos->y } });
+
+    // || !self.cursorInViewport.has_value() Is there to set the cursorInWindow to true as soon as possible if the cursor start in the viewport
+    if ((self.cursorInViewport.has_value() && !self.cursorInViewport.value()) || !self.cursorInViewport.has_value()) {
+      cursor_entered_writer.send(cevy::input::cursorEntered {});
+    }
+
+    self.cursorInViewport = true;
+  }
+}
+
+void pre_render(cevy::ecs::Resource<cevy::engine::Window> windower) {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
   auto &glwindow = windower->get_handler<glWindow>();
-  auto &self = glwindow.get_module<Editor>();
+  auto &self = glwindow.get_module<cevy::editor::Editor>();
   ImGui::ShowDemoWindow(); // Show demo window! :)
   auto io = ImGui::GetIO();
   //ImGui:: SetNextWindowSize(io.DisplaySize);
@@ -102,8 +125,8 @@ void cevy::editor::Editor::pre_render(cevy::ecs::Resource<cevy::engine::Window> 
     // It also alows customization
     ImGui::BeginChild("GameRender");
     // Get the size of the child (i.e. the whole draw size of the windows).
-    self.viewport_pos = ImGui::GetWindowPos();
-    self.viewport_size = ImGui::GetWindowSize();
+    self.viewportPos = ImGui::GetWindowPos();
+    self.viewportSize = ImGui::GetWindowSize();
     ImVec2 wsize = ImGui::GetWindowSize();
     if (wsize.x != glwindow.targetSize().x || wsize.y != glwindow.targetSize().y) {
       glwindow.setTargetSize(wsize.x, wsize.y);
@@ -117,10 +140,10 @@ void cevy::editor::Editor::pre_render(cevy::ecs::Resource<cevy::engine::Window> 
   ImGui::End();
 }
 
-void cevy::editor::Editor::render(cevy::ecs::Resource<cevy::engine::Window> windower) {
+void render(cevy::ecs::Resource<cevy::engine::Window> windower) {
   auto &glwindow = windower->get_handler<glWindow>();
 
-  auto &self = glwindow.get_module<Editor>();
+  auto &self = glwindow.get_module<cevy::editor::Editor>();
 
   glBindFramebuffer(GL_READ_FRAMEBUFFER, glwindow.getCurrentFrameBuffer());
   glNamedFramebufferReadBuffer(glwindow.getCurrentFrameBuffer(), GL_BACK_LEFT);
@@ -141,4 +164,15 @@ void cevy::editor::Editor::render(cevy::ecs::Resource<cevy::engine::Window> wind
       ImGui::RenderPlatformWindowsDefault();
       glfwMakeContextCurrent(backup_current_context);
   }
+}
+
+void cevy::editor::Editor::build(cevy::ecs::App &app) {
+  app.add_stage<EditorPreRender>();
+  app.add_stage<EditorRender>();
+  app.add_stage<EditorInput>();
+  app.add_systems<engine::StartupRenderStage>(intercept_default_cursor_placement);
+  app.add_systems<EditorPreRender>(pre_render);
+  app.add_systems<EditorRender>(render);
+  app.add_systems<EditorInput>(clean_gl_window_inputs);
+  app.add_systems<EditorInput>(intercept_inputs);
 }

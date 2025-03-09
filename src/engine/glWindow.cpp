@@ -84,8 +84,8 @@ void glWindow::init_system(Resource<cevy::engine::Window> win,
                         EventWriter<cevy::input::mouseInput> mouseInputWriter,
                         EventWriter<cevy::input::cursorMoved> cursorMovedWriter,
                         EventWriter<cevy::input::windowFocused> windowFocusedWriter,
-                        EventWriter<cevy::input::cursorEntered> cursorEnteredWriter,
-                        EventWriter<cevy::input::cursorLeft> cursorLeftWriter) {
+                        EventWriter<cevy::input::cursorEntered> cursor_entered_writer,
+                        EventWriter<cevy::input::cursorLeft> cursor_left_writer) {
   glWindow &self = win->get_handler<glWindow>();
 
   cursorInWindow->inside = glfwGetWindowAttrib(self.glfWindow, GLFW_HOVERED);
@@ -94,10 +94,10 @@ void glWindow::init_system(Resource<cevy::engine::Window> win,
   self.mouseInputWriter.emplace(mouseInputWriter);
   self.cursorMovedWriter.emplace(cursorMovedWriter);
   self.windowFocusedWriter.emplace(windowFocusedWriter);
-  self.cursorEnteredWriter.emplace(cursorEnteredWriter);
-  self.cursorLeftWriter.emplace(cursorLeftWriter);
+  self.cursor_entered_writer.emplace(cursor_entered_writer);
+  self.cursor_left_writer.emplace(cursor_left_writer);
   if (cursorInWindow->inside) {
-    cursorEnteredWriter.send(cevy::input::cursorEntered{});
+    cursor_entered_writer.send(cevy::input::cursorEntered{});
   }
 }
 
@@ -131,8 +131,8 @@ void glWindow::post_render() {
   this->mouseInputWriter->clear();
   this->cursorMovedWriter->clear();
   this->windowFocusedWriter->clear();
-  this->cursorEnteredWriter->clear();
-  this->cursorLeftWriter->clear();
+  this->cursor_entered_writer->clear();
+  this->cursor_left_writer->clear();
 
   glfwPollEvents();
 }
@@ -210,14 +210,14 @@ void glWindow::mouseInput(int button, int action, int /* mods */) {
 }
 
 void glWindow::cursorEnter(int entered) {
-  if (!this->cursorEnteredWriter.has_value() || !this->cursorLeftWriter.has_value()) {
+  if (!this->cursor_entered_writer.has_value() || !this->cursor_left_writer.has_value()) {
     throw std::runtime_error("callback access outside of poll");
   }
 
   if (entered) {
-    this->cursorEnteredWriter->send(cevy::input::cursorEntered{});
+    this->cursor_entered_writer->send(cevy::input::cursorEntered{});
   } else {
-    this->cursorLeftWriter->send(cevy::input::cursorLeft{});
+    this->cursor_left_writer->send(cevy::input::cursorLeft{});
   }
 }
 

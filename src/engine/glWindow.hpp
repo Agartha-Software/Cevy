@@ -64,7 +64,7 @@ class glWindow : public cevy::engine::Window::generic_window {
   class Plugin : public cevy::ecs::Plugin {
     public:
     void build(cevy::ecs::App &app) override {
-      app.add_systems<cevy::ecs::core_stage::Startup>(glWindow::init_system);
+      app.add_systems<cevy::engine::PreStartupRenderStage>(glWindow::init_system);
       app.add_systems<cevy::engine::PreRenderStage>(glWindow::pre_render_system);
       app.add_systems<cevy::engine::PostRenderStage>(glWindow::post_render_system);
     }
@@ -122,8 +122,8 @@ class glWindow : public cevy::engine::Window::generic_window {
                           EventWriter<cevy::input::mouseInput> mouseInputWriter,
                           EventWriter<cevy::input::cursorMoved> cursorMovedWriter,
                           EventWriter<cevy::input::windowFocused> windowFocusedWriter,
-                          EventWriter<cevy::input::cursorEntered> cursorEnteredWriter,
-                          EventWriter<cevy::input::cursorLeft> cursorLeftWriter);
+                          EventWriter<cevy::input::cursorEntered> cursor_entered_writer,
+                          EventWriter<cevy::input::cursorLeft> cursor_left_writer);
 
   static void pre_render_system(Resource<cevy::engine::Window> win,
                             EventWriter<cevy::ecs::AppExit> close);
@@ -140,8 +140,8 @@ class glWindow : public cevy::engine::Window::generic_window {
   std::optional<EventWriter<cevy::input::mouseInput>> mouseInputWriter;
 
   std::optional<EventWriter<cevy::input::cursorMoved>> cursorMovedWriter;
-  std::optional<EventWriter<cevy::input::cursorEntered>> cursorEnteredWriter;
-  std::optional<EventWriter<cevy::input::cursorLeft>> cursorLeftWriter;
+  std::optional<EventWriter<cevy::input::cursorEntered>> cursor_entered_writer;
+  std::optional<EventWriter<cevy::input::cursorLeft>> cursor_left_writer;
 
   std::optional<EventWriter<cevy::input::windowFocused>> windowFocusedWriter;
 

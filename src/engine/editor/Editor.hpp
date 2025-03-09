@@ -12,7 +12,7 @@
 #include "engine.hpp"
 #include "glWindow.hpp"
 #include "imgui.h"
-#include "input/input.hpp"
+#include "input.hpp"
 #include <optional>
 
 namespace cevy {
@@ -24,23 +24,17 @@ class EditorInput : public ecs::core_stage::before<input::InputStage> {};
 
 class Editor : public glWindow::Module {
   public:
-  Editor(glWindow &): viewport_pos(std::nullopt), viewport_size(std::nullopt) {}
+  Editor(glWindow &): cursorInViewport(std::nullopt), viewportPos(std::nullopt), viewportSize(std::nullopt) {}
 
   void init(glWindow &glwindow);
   void deinit(glWindow &);
   void build(cevy::ecs::App &app);
 
-  static void pre_render(cevy::ecs::Resource<cevy::engine::Window> windower);
-  static void render(cevy::ecs::Resource<cevy::engine::Window> windower);
-  static void intercept_inputs(cevy::ecs::World &world,
-    cevy::ecs::EventWriter<cevy::input::cursorMoved> cursorMoved,
-    cevy::ecs::Resource<cevy::engine::Window> windower
-  );
-
   GLuint texture;
   GLuint framebuffer;
-  std::optional<ImVec2> viewport_pos;
-  std::optional<ImVec2> viewport_size;
+  std::optional<bool> cursorInViewport;
+  std::optional<ImVec2> viewportPos;
+  std::optional<ImVec2> viewportSize;
 };
 
 } // namespace editor
