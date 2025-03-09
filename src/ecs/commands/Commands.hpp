@@ -23,7 +23,7 @@ class cevy::ecs::Commands {
   friend class cevy::ecs::World;
 
   cevy::ecs::World &_world_access;
-  Commands(cevy::ecs::World &world_access) : _world_access(world_access){};
+  Commands(cevy::ecs::World &world_access) : _world_access(world_access) {};
 
   public:
   template <typename GivenCommand,
@@ -91,6 +91,6 @@ class cevy::ecs::Commands {
 };
 
 template <typename C, typename std::enable_if_t<is_commands<C>::value, bool>>
-C cevy::ecs::World::get_super(size_t _last_id) {
+C cevy::ecs::World::get_super(size_t /* _last_id */) {
   return cevy::ecs::Commands(*this);
 }

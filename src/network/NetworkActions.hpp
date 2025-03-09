@@ -20,11 +20,11 @@
 #include <vector>
 
 #include "App.hpp"
+#include "CevyNetwork.hpp"
 #include "Commands.hpp"
 #include "Plugin.hpp"
 #include "Query.hpp"
-#include "network/CevyNetwork.hpp"
-#include "network/network.hpp"
+#include "network.hpp"
 
 /**
  * @brief A handler for network activity
@@ -44,14 +44,14 @@ class cevy::NetworkActions : public ecs::Plugin {
   };
 
   /// Contructor
-  NetworkActions(CevyNetwork &net) : _net(net){};
+  NetworkActions(CevyNetwork &net) : _net(net) {};
 
   /// deleted copy-constructor
   NetworkActions(const NetworkActions &) = delete;
 
   NetworkActions &operator=(const NetworkActions &) = delete;
   NetworkActions &operator=(NetworkActions &&) = delete;
-  ~NetworkActions(){};
+  ~NetworkActions() {};
 
   using ActionFailureMode = CevyNetwork::ActionFailureMode;
   using EActionFailureMode = ActionFailureMode::EActionFailureMode;

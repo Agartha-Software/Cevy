@@ -8,11 +8,5 @@
 add_library(math
   STATIC
   Vector.cpp
-  )
-
-target_include_directories(math PRIVATE ${RAYLIB_FOLDER})
-
-target_include_directories(math PUBLIC
-  .
-  ..
+  Vector.hpp
   )

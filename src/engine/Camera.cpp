@@ -8,41 +8,36 @@
 #include "Camera.hpp"
 #include "Target.hpp"
 #include "Transform.hpp"
+#include "Window.hpp"
 #include "cevy.hpp"
-#include "raymath.h"
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/quaternion_common.hpp>
+#include <glm/fwd.hpp>
 
 cevy::engine::Camera::Camera() {
-  this->camera = {
-      (Vector3){10.0f, 10.0f, 10.0f},
-      (Vector3){0.0f, 0.0f, 0.0f},
-      (Vector3){0.0f, 0.0f, 90.0f},
-      45.0f,
-      CAMERA_PERSPECTIVE,
-  };
+  this->fov = 70;
+  this->aspect = -1;
+  this->near = 0.01;
+  this->far = 500;
+  this->projection = glm::perspective(fov * glm::pi<float>() / 180.f, 1.f, near, far);
+  this->view = glm::mat4(1);
 }
 
 cevy::engine::Camera::~Camera() {}
 
-cevy::engine::Camera::operator Camera3D &() { return this->camera; }
-
-cevy::engine::Camera::operator Camera3D *() { return &this->camera; }
-
-cevy::engine::Camera::operator Camera3D() const { return this->camera; }
-
 void update_camera(cevy::ecs::Query<cevy::engine::Camera, option<cevy::engine::Target>,
                                     option<cevy::engine::Transform>>
-                       cams) {
+                       cams,
+                   cevy::ecs::Resource<cevy::engine::Window> window) {
   for (auto [cam, opt_target, opt_transform] : cams) {
     if (opt_transform) {
       auto &tm = opt_transform.value();
-      cam.camera.up = Vector3RotateByQuaternion(Vector3{0, 1, 0}, tm.rotation);
-      if (opt_target) {
-        cam.camera.target = opt_target.value();
-      } else {
-        Vector3 vc = Vector3RotateByQuaternion(Vector3{0, 0, 1}, tm.rotation);
-        cam.camera.target = Vector3Add(tm.position, vc);
-      }
-      cam.camera.position = tm.position;
+      cam.view = glm::mat4(tm);
+      // cam.view = glm::inverse(glm::mat4(tm));
+    }
+    if (cam.aspect < 0) {
+      auto size = window.get().size();
+      cam.aspect = float(size.x) / size.y;
     }
   }
 }

@@ -7,17 +7,19 @@
 
 add_library(rendering
   STATIC
-  rendering.cpp
   Color.cpp
-  ClearColor.cpp
+  ForwardRenderer.cpp
+  DeferredRenderer.cpp
+  Atmosphere.cpp
   )
 
-target_include_directories(rendering PRIVATE ${RAYLIB_FOLDER})
+target_link_libraries(rendering PUBLIC ecs engine math assets)
 
-target_include_directories(rendering PUBLIC
-  ../../ecs
-  ../assets
-  ../math
-  .
-  ..
-  )
+target_include_directories(rendering PUBLIC .)
+
+if (WIN32)
+  target_link_libraries(rendering PRIVATE unofficial::gl3w::gl3w glfw glm::glm)
+endif()
+if (UNIX)
+target_link_libraries(rendering PRIVATE GLEW::glew glfw glm::glm OpenGL::GL)
+endif()

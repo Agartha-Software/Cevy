@@ -22,7 +22,11 @@ cd Cevy
 
 ``` Actually is not possible, we just have one version```
 
-4. Try the exemple in the [R-Type project][2]
+4. Try one of the examples in the examples folder
+```bash
+cd examples/basic
+make run
+```
 
 ## Add Cevy as a Dependency
 
@@ -32,10 +36,10 @@ You can add in your CMakefile or in a specific file a FetchModule included in yo
 include(FetchContent)
 FetchContent_Declare(
     cevy
-    GIT_REPOSITORY https://github.com/Arthur-Aillet/Cevy
+    GIT_REPOSITORY https://github.com/Agartha-Sofware/Cevy
     GIT_TAG main (or another the tag version)
 )
-FetchContent_Populate(cevy)
+FetchContent_MakeAvailable(cevy)
 ```
 
 
@@ -158,7 +162,7 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/Arthur-Aillet/Cevy
     GIT_TAG main (or another the tag version)
 )
-FetchContent_Populate(cevy)
+FetchContent_MakeAvailable(cevy)
 ```
 ## Build Cevy
 Now you can run your program with these line.

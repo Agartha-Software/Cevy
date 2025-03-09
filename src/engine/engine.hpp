@@ -2,16 +2,17 @@
 ** Agartha-Software, 2023
 ** C++evy
 ** File description:
-** GameEngine
+** Engine declarations
 */
 
 #pragma once
 
-#include "Plugin.hpp"
 #include "Stage.hpp"
-#include "ecs.hpp"
+#include <glm/detail/qualifier.hpp>
 
 namespace cevy::engine {
+
+class AssetManager;
 
 #ifdef DEBUG
 struct DebugWindow {
@@ -27,9 +28,8 @@ class PostStartupRenderStage : public cevy::ecs::core_stage::after<StartupRender
 class RenderStage : public cevy::ecs::core_stage::after<cevy::ecs::core_stage::PostUpdate> {};
 class PreRenderStage : public cevy::ecs::core_stage::before<RenderStage> {};
 class PostRenderStage : public cevy::ecs::core_stage::after<RenderStage> {};
-
-class Engine : public cevy::ecs::Plugin {
-  public:
-  void build(cevy::ecs::App &app);
-};
 } // namespace cevy::engine
+
+namespace glm {
+using vec4u8 = vec<4, uint8_t>;
+}

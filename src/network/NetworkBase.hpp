@@ -25,7 +25,6 @@
 #include <unistd.h>
 #include <vector>
 
-#include "../ecs/SparseVector.hpp"
 #include "asio/io_context.hpp"
 #include "asio/ip/address.hpp"
 #include "asio/ip/tcp.hpp"
@@ -63,9 +62,7 @@ class cevy::NetworkBase {
         _udp_socket(std::move(rhs._udp_socket)), _tcp_socket(std::move(rhs._tcp_socket)),
         _tcp_connexions(std::move(rhs._tcp_connexions)),
         _tcp_acceptor(std::move(rhs._tcp_acceptor)), _temp_tcp_co(std::move(rhs._temp_tcp_co)),
-        _udp_recv(std::move(rhs._udp_recv))
-
-            {};
+        _udp_recv(std::move(rhs._udp_recv)) {};
 
   public:
   union half {
@@ -95,13 +92,14 @@ class cevy::NetworkBase {
   void tcp_client_connect() {
     std::cout << "async tcp connect" << std::endl;
     _tcp_connexions.emplace(_tcp_connexions.end(), _io_context)
-        ->socket.async_connect(
-            tcp::endpoint(asio::ip::make_address(_dest_ip), _dest_tcp_port),
-            [this](asio::error_code error) {
-              std::cout << "triggered here, maybe with error : " << error.message() << std::endl;
-              on_client_tcp_connect();
-              read_one_TCP(_tcp_connexions.back());
-            });
+        ->socket.async_connect(tcp::endpoint(asio::ip::make_address(_dest_ip), _dest_tcp_port),
+                               [this](asio::error_code error) {
+                                 std::cout
+                                     << "triggered here, maybe with error : " << error.message()
+                                     << std::endl;
+                                 on_client_tcp_connect();
+                                 read_one_TCP(_tcp_connexions.back());
+                               });
     std::cout << "set async connect" << std::endl;
   }
 

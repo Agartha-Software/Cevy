@@ -7,8 +7,7 @@
 
 #pragma once
 
-#include "../network/network.hpp"
-#include "raylib.hpp"
+// #include "network.hpp"
 #include <ostream>
 
 namespace cevy::engine {
@@ -31,8 +30,8 @@ class Vector {
   Vector(float x, float y, float z);
   Vector(const Vector &) = default;
 
-  Vector(const Vector3 &v) : x(v.x), y(v.y), z(v.z){};
-  operator Vector3() const { return ((Vector3){(float)x, (float)y, (float)z}); }
+  Vector(const Vector3 &v) : x(v.x), y(v.y), z(v.z) {};
+  operator Vector3() const { return ((Vector3) {(float)x, (float)y, (float)z}); }
 
   Vector &operator=(const Vector &);
 

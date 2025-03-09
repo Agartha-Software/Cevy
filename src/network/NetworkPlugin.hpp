@@ -14,14 +14,13 @@
 #include "Plugin.hpp"
 #include "Synchroniser.hpp"
 #include "network.hpp"
-#include "network/network.hpp"
 
 template <typename S, typename A, typename N = cevy::CevyNetwork>
 class cevy::NetworkPlugin : ecs::Plugin {
   public:
-  ~NetworkPlugin(){};
+  ~NetworkPlugin() {};
 
-  NetworkPlugin(N &&net) : _net(std::move(net)), _sync(_net), _action(_net){};
+  NetworkPlugin(N &&net) : _net(std::move(net)), _sync(_net), _action(_net) {};
 
   // template<typename S, typename A>
   // NetworkPlugin(S&& s, A&& a) {
