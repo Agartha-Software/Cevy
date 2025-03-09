@@ -43,7 +43,7 @@ void update_mouse_motion_window_focus(
   for (const auto &cursorMoved : cursorMovedReader) {
     std::optional<glm::vec<2, int>> delta;
 
-    if (cursorPosition->delta.has_value()) {
+    if (cursorPosition->delta.has_value() && cursorInWindow->inside) {
       delta = cursorMoved.pos - cursorPosition->pos;
     } else {
       delta = {0, 0};
