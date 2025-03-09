@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "../cevy.hpp"
+#include "cevy.hpp"
 #include <bit>
 #include <cstdint>
 #include <exception>

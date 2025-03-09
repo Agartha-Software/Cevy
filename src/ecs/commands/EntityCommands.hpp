@@ -17,7 +17,7 @@ class cevy::ecs::EntityCommands {
 
   friend class cevy::ecs::Commands;
   EntityCommands(cevy::ecs::Commands &commands, cevy::ecs::Entity entity)
-      : _entity(entity), _commands(commands){};
+      : _entity(entity), _commands(commands) {};
 
   public:
   template <typename... Components>

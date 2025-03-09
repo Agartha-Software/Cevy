@@ -13,7 +13,7 @@ add_library(rendering
   Atmosphere.cpp
   )
 
-target_link_libraries(rendering PUBLIC ecs engine math)
+target_link_libraries(rendering PUBLIC ecs engine math assets)
 
 target_include_directories(rendering PUBLIC .)
 

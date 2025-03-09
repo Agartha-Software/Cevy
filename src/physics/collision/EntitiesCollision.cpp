@@ -10,7 +10,7 @@
 #include "Physics.hpp"
 #include "Position.hpp"
 #include "Query.hpp"
-#include "engine/math/Vector.hpp"
+#include "Vector.hpp"
 
 #include <cstddef>
 #include <optional>

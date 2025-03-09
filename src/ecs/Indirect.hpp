@@ -55,17 +55,17 @@ class Indirect {
     std::string msg;
 
     public:
-    exception(const std::string &str) : msg(str){};
+    exception(const std::string &str) : msg(str) {};
     const char *what() const noexcept override { return msg.c_str(); }
   };
 
   template <std::enable_if_t<std::is_move_constructible_v<T>, bool>>
-  Indirect(Indirect<T> &&i) : _obj(std::move(i._obj)), _gen(std::move(i._gen)){};
+  Indirect(Indirect<T> &&i) : _obj(std::move(i._obj)), _gen(std::move(i._gen)) {};
   template <std::enable_if_t<std::is_copy_constructible_v<T>, bool>>
-  Indirect(const Indirect<T> &i) : _obj(i._obj), _gen(i._gen){};
-  Indirect(T &&obj) : _obj(obj){};
-  Indirect(T (&&gen)()) : _gen(std::function<T()>(gen)){};
-  Indirect(const std::function<T()> &gen) : _gen(gen){};
+  Indirect(const Indirect<T> &i) : _obj(i._obj), _gen(i._gen) {};
+  Indirect(T &&obj) : _obj(obj) {};
+  Indirect(T (&&gen)()) : _gen(std::function<T()>(gen)) {};
+  Indirect(const std::function<T()> &gen) : _gen(gen) {};
 
   // template<std::enable_if_t<!std::is_copy_constructible_v<T>, bool>>
   // T& get() {

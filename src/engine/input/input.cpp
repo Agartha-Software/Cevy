@@ -49,7 +49,7 @@ void update_mouse_motion_window_focus(
       delta = {0, 0};
     }
 
-    mouseMotionWriter.send(cevy::input::mouseMotion{.pos = cursorPosition->pos, .delta = delta});
+    mouseMotionWriter.send(cevy::input::mouseMotion {.pos = cursorPosition->pos, .delta = delta});
     cursorPosition->pos = cursorMoved.pos;
     cursorPosition->delta = delta;
   }
@@ -84,9 +84,10 @@ void cevy::input::InputPlugin::build(cevy::ecs::App &app) {
   app.add_event<cursorLeft>();
   app.init_resource<ButtonInput<KeyCode>>(ButtonInput<KeyCode>());
   app.init_resource<ButtonInput<MouseButton>>(ButtonInput<MouseButton>());
-  app.init_resource<windowFocus>(windowFocus{true});
-  app.init_resource<cursorInWindow>(cursorInWindow{false});
-  app.init_resource<cevy::input::cursorPosition>(cevy::input::cursorPosition{{0, 0}, std::nullopt});
+  app.init_resource<windowFocus>(windowFocus {true});
+  app.init_resource<cursorInWindow>(cursorInWindow {false});
+  app.init_resource<cevy::input::cursorPosition>(
+      cevy::input::cursorPosition {{0, 0}, std::nullopt});
   app.add_systems<ecs::core_stage::PreUpdate>(update_mouse_motion_window_focus);
   app.add_systems<ecs::core_stage::PreUpdate>(update_keyboard_input);
   app.add_systems<ecs::core_stage::PreUpdate>(update_mouse_button_input);

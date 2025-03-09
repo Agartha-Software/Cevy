@@ -23,8 +23,8 @@
 class cevy::NetworkCommands : protected ecs::Commands {
   public:
   NetworkCommands(NetworkActions &actions, Synchroniser &sync, ecs::World &world)
-      : Commands(world), _actions(actions), _sync(sync){};
-  ~NetworkCommands(){};
+      : Commands(world), _actions(actions), _sync(sync) {};
+  ~NetworkCommands() {};
 
   /**
    * @brief Call an action

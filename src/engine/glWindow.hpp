@@ -7,27 +7,23 @@
 
 #pragma once
 
-// clang-format off
-#include "App.hpp"
-#include "Event.hpp"
-#include "Plugin.hpp"
-#include "ShaderProgram.hpp"
-// clang-format on
-#include "Window.hpp"
 #include <optional>
 #include <stdexcept>
-#include "glx.hpp"
 
+#include "App.hpp"
 #include "Camera.hpp"
 #include "Color.hpp"
-#include "GLFW/glfw3.h"
+#include "Event.hpp"
 #include "Handle.hpp"
 #include "Model.hpp"
 #include "PbrMaterial.hpp"
+#include "Plugin.hpp"
 #include "Query.hpp"
 #include "Scheduler.hpp"
-#include "input/state.hpp"
+#include "Window.hpp"
+#include "glx.hpp"
 #include "pipeline.hpp"
+#include "state.hpp"
 
 template <typename Renderer>
 class glWindow : public cevy::engine::Window::generic_window {
@@ -114,7 +110,7 @@ class glWindow : public cevy::engine::Window::generic_window {
     self.cursorEnteredWriter.emplace(cursorEnteredWriter);
     self.cursorLeftWriter.emplace(cursorLeftWriter);
     if (cursorInWindow->inside) {
-      cursorEnteredWriter.send(cevy::input::cursorEntered{});
+      cursorEnteredWriter.send(cevy::input::cursorEntered {});
     }
   }
 
@@ -171,12 +167,12 @@ class glWindow : public cevy::engine::Window::generic_window {
 
     if (action == GLFW_PRESS) {
       this->keyboardInputWriter->send(
-          cevy::input::keyboardInput{static_cast<cevy::input::KeyCode>(key), true});
+          cevy::input::keyboardInput {static_cast<cevy::input::KeyCode>(key), true});
     }
 
     if (action == GLFW_RELEASE) {
       this->keyboardInputWriter->send(
-          cevy::input::keyboardInput{static_cast<cevy::input::KeyCode>(key), false});
+          cevy::input::keyboardInput {static_cast<cevy::input::KeyCode>(key), false});
     }
   }
 
@@ -184,14 +180,14 @@ class glWindow : public cevy::engine::Window::generic_window {
     if (!this->cursorMovedWriter.has_value()) {
       throw std::runtime_error("callback access outside of poll");
     }
-    this->cursorMovedWriter->send(cevy::input::cursorMoved{{xpos, ypos}});
+    this->cursorMovedWriter->send(cevy::input::cursorMoved {{xpos, ypos}});
   }
 
   void windowFocused(int focused) {
     if (!this->windowFocusedWriter.has_value()) {
       throw std::runtime_error("callback access outside of poll");
     }
-    this->windowFocusedWriter->send(cevy::input::windowFocused{bool(focused)});
+    this->windowFocusedWriter->send(cevy::input::windowFocused {bool(focused)});
   }
 
   void mouseInput(int button, int action, int /* mods */) {
@@ -201,12 +197,12 @@ class glWindow : public cevy::engine::Window::generic_window {
 
     if (action == GLFW_PRESS) {
       this->mouseInputWriter->send(
-          cevy::input::mouseInput{static_cast<cevy::input::MouseButton>(button), true});
+          cevy::input::mouseInput {static_cast<cevy::input::MouseButton>(button), true});
     }
 
     if (action == GLFW_RELEASE) {
       this->mouseInputWriter->send(
-          cevy::input::mouseInput{static_cast<cevy::input::MouseButton>(button), false});
+          cevy::input::mouseInput {static_cast<cevy::input::MouseButton>(button), false});
     }
   }
 
@@ -216,9 +212,9 @@ class glWindow : public cevy::engine::Window::generic_window {
     }
 
     if (entered) {
-      this->cursorEnteredWriter->send(cevy::input::cursorEntered{});
+      this->cursorEnteredWriter->send(cevy::input::cursorEntered {});
     } else {
-      this->cursorLeftWriter->send(cevy::input::cursorLeft{});
+      this->cursorLeftWriter->send(cevy::input::cursorLeft {});
     }
   }
 

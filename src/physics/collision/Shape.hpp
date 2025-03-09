@@ -6,7 +6,7 @@
 */
 
 #include "Vector.hpp"
-#include "engine/math/Vector.hpp"
+#include "Vector.hpp"
 
 namespace cevy::physics {
 class Shape {
@@ -14,7 +14,7 @@ class Shape {
   cevy::engine::Vector _position;
 
   public:
-  virtual ~Shape(){};
+  virtual ~Shape() {};
   virtual void setPosition(const cevy::engine::Vector &position) = 0;
   virtual const cevy::engine::Vector &getPosition() = 0;
   virtual bool calculateCollision(Shape &other) = 0;
@@ -26,7 +26,7 @@ class Cuboid : public Shape {
 
   public:
   Cuboid(double weight, double depth, double height)
-      : _dimension(weight, depth, height), _position(0, 0, 0){};
+      : _dimension(weight, depth, height), _position(0, 0, 0) {};
 
   void setPosition(const cevy::engine::Vector &position) override { _position = position; }
 
