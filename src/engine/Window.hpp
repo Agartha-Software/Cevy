@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Plugin.hpp"
+#include "cursor.hpp"
 #include <glm/glm.hpp>
 #include <memory>
 #include <type_traits>
@@ -25,6 +26,8 @@ class Window {
     virtual void setWindowSize(int width, int height) = 0;
     virtual void setRenderSize(int width, int height) = 0;
     virtual void setFullscreen(bool fullscreen) = 0;
+    virtual bool isFullscreen() const = 0;
+    virtual void setCursorState(CursorState state) = 0;
     using Plugin = ecs::NullPlugin;
   };
   template <template <typename...> typename Windower, typename... Module>
@@ -57,6 +60,9 @@ class Window {
   void setWindowSize(int width, int height) { this->window->setWindowSize(width, height); }
   void setRenderSize(int width, int height) { this->window->setRenderSize(width, height); }
   void setFullscreen(bool fullscreen) { this->window->setFullscreen(fullscreen); }
+  bool isFullscreen() const { return this->window->isFullscreen(); }
+  void setCursorState(CursorState state) { return this->window->setCursorState(state); }
+
   generic_window *operator->() { return window.get(); }
 
   protected:

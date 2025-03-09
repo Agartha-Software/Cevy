@@ -16,17 +16,18 @@
 #include "cevy.hpp"
 #include <glm/fwd.hpp>
 #include <optional>
+#include "cursor.hpp"
 #include "glx.hpp"
 
 #include "Camera.hpp"
 #include "Color.hpp"
-#include "GLFW/glfw3.h"
+#include <GLFW/glfw3.h>
 #include "Handle.hpp"
 #include "Model.hpp"
 #include "PbrMaterial.hpp"
 #include "Query.hpp"
 #include "Scheduler.hpp"
-#include "input/state.hpp"
+#include "state.hpp"
 #include "pipeline.hpp"
 
 class glWindow : public cevy::engine::Window::generic_window {
@@ -112,7 +113,9 @@ class glWindow : public cevy::engine::Window::generic_window {
   glm::vec<2, int> renderSize() const override;
   glm::vec<2, int> targetSize() const;
 
-  void setFullscreen(bool /* fullscreen */) override;
+  bool isFullscreen() const override;
+  void setFullscreen(bool fullscreen) override;
+  void setCursorState(cevy::engine::CursorState state) override;
 
   bool open() override;
 
@@ -179,6 +182,7 @@ class glWindow : public cevy::engine::Window::generic_window {
   glm::vec<2, int>  window_size;
   glm::vec<2, int>  render_size;
   glm::vec<2, int>  target_size;
+  bool fullscreen;
   GLFWwindow *glfWindow;
   GLuint framebuffer;
   GLuint render_target;

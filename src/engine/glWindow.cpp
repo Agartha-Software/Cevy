@@ -14,14 +14,13 @@
 #include <stdexcept>
 #include <unordered_map>
 #include "glx.hpp"
-
-#include "GLFW/glfw3.h"
+#include "cursor.hpp"
 #include "Scheduler.hpp"
 #include "input/state.hpp"
 #include "glWindow.hpp"
 
 // glWindow::glWindow(int width, int height) : window_size(width, height), render_size(width, height) {
-glWindow::glWindow(int width, int height) : window_size(width, height), render_size(width * 2 / 3, height * 2 / 3), target_size(width, height) {
+glWindow::glWindow(int width, int height) : window_size(width, height), render_size(width * 2 / 3, height * 2 / 3), target_size(width, height), fullscreen(false) {
   open();
   // this->renderer = std::make_unique<Renderer>(*this);
 }
@@ -71,7 +70,28 @@ glm::vec<2, int> glWindow::windowSize() const { return window_size; }
 glm::vec<2, int> glWindow::renderSize() const { return render_size; }
 glm::vec<2, int> glWindow::targetSize() const { return target_size; }
 
-void glWindow::setFullscreen(bool /* fullscreen */) {}
+bool glWindow::isFullscreen() const {
+  return fullscreen;
+}
+
+void glWindow::setFullscreen(bool fullscreen) {
+  if (fullscreen && !this->fullscreen) {
+    auto monitor = glfwGetPrimaryMonitor();
+    auto mode = glfwGetVideoMode(monitor);
+
+    glfwSetWindowMonitor(glfWindow, monitor, 0, 0, mode->width, mode->height , 60);
+    this->target_size = { mode->width, mode->height };
+    this->window_size = { mode->width, mode->height };
+    this->fullscreen = true;
+  } else if (!fullscreen && this->fullscreen) {
+    glfwSetWindowMonitor(glfWindow, NULL, 0, 0, window_size.x, window_size.y, 60);
+    this->fullscreen = false;
+  }
+}
+
+void glWindow::setCursorState(cevy::engine::CursorState state) {
+  glfwSetInputMode(glfWindow, GLFW_CURSOR, state);
+}
 
 bool glWindow::open() {
   this->init_context();
@@ -162,10 +182,6 @@ void glWindow::setRenderSize(int width, int height) {
 void glWindow::keyInput(int key, int /*scancode*/, int action, int /* mods */) {
   if (!this->keyboardInputWriter.has_value()) {
     throw std::runtime_error("callback access outside of poll");
-  }
-
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-    glfwSetWindowShouldClose(glfWindow, GLFW_TRUE);
   }
 
   if (action == GLFW_PRESS) {
