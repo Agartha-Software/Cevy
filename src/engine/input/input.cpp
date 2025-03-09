@@ -76,6 +76,7 @@ void update_keyboard_input(
 }
 
 void cevy::input::InputPlugin::build(cevy::ecs::App &app) {
+  app.add_stage<InputStage>();
   app.add_event<keyboardInput>();
   app.add_event<mouseInput>();
   app.add_event<mouseMotion>();
@@ -88,7 +89,7 @@ void cevy::input::InputPlugin::build(cevy::ecs::App &app) {
   app.init_resource<windowFocus>(windowFocus{true});
   app.init_resource<cursorInWindow>(cursorInWindow{false});
   app.init_resource<cevy::input::cursorPosition>(cevy::input::cursorPosition{{0, 0}, std::nullopt});
-  app.add_systems<ecs::core_stage::PreUpdate>(update_mouse_motion_window_focus);
-  app.add_systems<ecs::core_stage::PreUpdate>(update_keyboard_input);
-  app.add_systems<ecs::core_stage::PreUpdate>(update_mouse_button_input);
+  app.add_systems<InputStage>(update_mouse_motion_window_focus);
+  app.add_systems<InputStage>(update_keyboard_input);
+  app.add_systems<InputStage>(update_mouse_button_input);
 }

@@ -7,11 +7,13 @@
 
 #include "Editor.hpp"
 
+#include "Event.hpp"
 #include "Window.hpp"
 #include "glWindow.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "input/state.hpp"
 
 #include <GL/gl.h>
 
@@ -55,8 +57,33 @@ void cevy::editor::Editor::deinit(glWindow &) {
 void cevy::editor::Editor::build(cevy::ecs::App &app) {
   app.add_stage<EditorPreRender>();
   app.add_stage<EditorRender>();
+  app.add_stage<EditorInput>();
   app.add_systems<EditorPreRender>(Editor::pre_render);
   app.add_systems<EditorRender>(Editor::render);
+  app.add_systems<EditorInput>(Editor::intercept_inputs);
+}
+
+void cevy::editor::Editor::intercept_inputs(cevy::ecs::World &world,
+  cevy::ecs::EventWriter<cevy::input::cursorMoved> cursorMoved,
+  cevy::ecs::Resource<cevy::engine::Window> windower) {
+  auto &glwindow = windower->get_handler<glWindow>();
+  auto &self = glwindow.get_module<Editor>();
+  auto o_cursor_moved = world.get_resource<ecs::Event<cevy::input::cursorMoved>>();
+
+  if (o_cursor_moved.has_value()) {
+    o_cursor_moved->get().event_queue.clear();
+  }
+
+  if (self.viewport_pos.has_value() && self.viewport_size.has_value()) {
+    auto io = ImGui::GetIO();
+    ImVec2 screen_pos = io.MousePos;
+    int x_pos = screen_pos.x - self.viewport_pos->x;
+    int y_pos = screen_pos.y - self.viewport_pos->y;
+    if (x_pos < 0 || x_pos > self.viewport_size->x || y_pos < 0 || y_pos > self.viewport_size->y) {
+      return;
+    }
+    cursorMoved.send(cevy::input::cursorMoved { { screen_pos.x - self.viewport_pos->x, screen_pos.y - self.viewport_pos->y } });
+  }
 }
 
 void cevy::editor::Editor::pre_render(cevy::ecs::Resource<cevy::engine::Window> windower) {
@@ -75,6 +102,8 @@ void cevy::editor::Editor::pre_render(cevy::ecs::Resource<cevy::engine::Window> 
     // It also alows customization
     ImGui::BeginChild("GameRender");
     // Get the size of the child (i.e. the whole draw size of the windows).
+    self.viewport_pos = ImGui::GetWindowPos();
+    self.viewport_size = ImGui::GetWindowSize();
     ImVec2 wsize = ImGui::GetWindowSize();
     if (wsize.x != glwindow.targetSize().x || wsize.y != glwindow.targetSize().y) {
       glwindow.setTargetSize(wsize.x, wsize.y);
