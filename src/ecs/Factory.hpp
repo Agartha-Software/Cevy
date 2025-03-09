@@ -10,14 +10,14 @@
 #include "App.hpp"
 #include "Indirect.hpp"
 #include "Plugin.hpp"
-#include "commands/EntityCommands.hpp"
+#include "EntityCommands.hpp"
 #include "ecs.hpp"
 
 template <typename T>
 class cevy::ecs::Factory : virtual public Plugin {
   public:
-  Factory(){};
-  ~Factory(){};
+  Factory() {};
+  ~Factory() {};
   template <typename... Arg>
   void registerCommand(T t, void func(Query<T>, Commands)) {
     _commands[t] = func;

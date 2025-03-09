@@ -509,7 +509,7 @@ cevy::ecs::iterator<cevy::ecs::Entity, T...>::end(World &w, size_t size) {
 template <typename... T>
 cevy::ecs::Query<T...>::Query(cevy::ecs::World &w)
     : _size(iterator_t::_compute_size(w, w.entities().size())), _begin(iterator_t::begin(w, _size)),
-      _end(iterator_t::end(w, _size)){};
+      _end(iterator_t::end(w, _size)) {};
 
 template <typename... T>
 size_t cevy::ecs::iterator<T...>::_compute_size(World &w, size_t nb_e) {

@@ -8,9 +8,9 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #define GLM_FORCE_SWIZZLE
 
+#include "glx.hpp"
 #include <array>
 #include <sys/types.h>
-#include "glx.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
@@ -42,7 +42,7 @@ class Billboard {
   bool initted = false;
 
   public:
-  Billboard(){};
+  Billboard() {};
   /**
    * @brief initialize openGl data;
    *

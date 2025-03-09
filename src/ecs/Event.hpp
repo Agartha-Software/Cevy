@@ -24,7 +24,7 @@ class Event {
   using EventWriterId = size_t;
   using data_iterator_type = typename std::vector<std::tuple<T, EventWriterId>>::iterator;
 
-  std::vector<std::tuple<T, EventWriterId>> event_queue{};
+  std::vector<std::tuple<T, EventWriterId>> event_queue {};
 };
 
 template <typename T>

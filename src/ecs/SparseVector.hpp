@@ -25,10 +25,11 @@ class SparseVector {
   container_t _data;
 
   public:
-  SparseVector() : _data(container_t()){};
-  ~SparseVector(){};
-  SparseVector(SparseVector const &other) : _data(other._data){};                // copy constructor
-  SparseVector(SparseVector &&other) noexcept : _data(std::move(other._data)){}; // move constructor
+  SparseVector() : _data(container_t()) {};
+  ~SparseVector() {};
+  SparseVector(SparseVector const &other) : _data(other._data) {}; // copy constructor
+  SparseVector(SparseVector &&other) noexcept
+      : _data(std::move(other._data)) {}; // move constructor
 
   SparseVector &operator=(SparseVector const &other) { // copy assignment operator
     _data = other._data;

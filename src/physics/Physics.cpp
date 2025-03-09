@@ -8,7 +8,7 @@
 #include "Physics.hpp"
 #include "App.hpp"
 #include "DefaultPlugin.hpp"
-#include "collision/Collider.hpp"
+#include "Collider.hpp"
 #include "ecs.hpp"
 
 void checkCollision(cevy::ecs::World &world) {

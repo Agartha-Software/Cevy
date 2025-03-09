@@ -91,7 +91,7 @@ class iterator {
 
   static size_t _compute_size(World &w, size_t nb_e);
 
-  iterator(iterator const &z) : current(z.current), _max(z._max), _idx(z._idx), _entity(_idx){};
+  iterator(iterator const &z) : current(z.current), _max(z._max), _idx(z._idx), _entity(_idx) {};
 
   iterator operator++() {
     incr_all();
@@ -160,7 +160,7 @@ class iterator {
     }
   }
 
-  const value_type to_value() { return value_type{a_value<T>()...}; }
+  const value_type to_value() { return value_type {a_value<T>()...}; }
 
   protected:
   iterator_tuple current;
@@ -182,9 +182,9 @@ class iterator<Entity, T...> : public iterator<T...> {
   using iterator_tuple = std::tuple<iterator_t<SparseVector<remove_optional<T>>>...>;
 
   iterator(iterator_tuple const &it_tuple, size_t max, size_t idx = 0)
-      : iterator<T...>(it_tuple, max, idx){};
+      : iterator<T...>(it_tuple, max, idx) {};
   const value_type to_value() {
-    return value_type{Entity(iterator<T...>::_idx), iterator::template a_value<T>()...};
+    return value_type {Entity(iterator<T...>::_idx), iterator::template a_value<T>()...};
   }
 
   static iterator begin(World &w, size_t size);
@@ -263,7 +263,7 @@ class Query {
   public:
   template <size_t N, typename Indicies = std::make_index_sequence<N>>
   std::array<typename iterator_t::value_type, N> multiple() {
-    return multiple_impl<N>(Indicies{});
+    return multiple_impl<N>(Indicies {});
   }
 
   template <size_t N>

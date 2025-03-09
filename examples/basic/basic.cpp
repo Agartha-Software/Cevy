@@ -16,7 +16,7 @@
 #include "PbrMaterial.hpp"
 #include "Transform.hpp"
 #include "Velocity.hpp"
-#include "commands/EntityCommands.hpp"
+#include "EntityCommands.hpp"
 #include "glWindow.hpp"
 
 using namespace cevy;

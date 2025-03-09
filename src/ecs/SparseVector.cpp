@@ -5,4 +5,4 @@
 ** SparseVector
 */
 
-#include "./SparseVector.hpp"
+#include "SparseVector.hpp"

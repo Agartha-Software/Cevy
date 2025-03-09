@@ -23,8 +23,8 @@
 #include "Query.hpp"
 #include "Scheduler.hpp"
 #include "cevy.hpp"
-#include "commands/Commands.hpp"
-#include "commands/EntityCommands.hpp"
+#include "Commands.hpp"
+#include "EntityCommands.hpp"
 #include "ecs.hpp"
 #include "network.hpp"
 
@@ -53,13 +53,13 @@ class cevy::Synchroniser : virtual public cevy::ecs::Plugin {
 
   virtual void build_custom(cevy::ecs::App &app) = 0;
 
-  Synchroniser(CevyNetwork &net) : _net(net){};
+  Synchroniser(CevyNetwork &net) : _net(net) {};
 
   Synchroniser(Synchroniser &&rhs) : Plugin(rhs), _net(rhs._net) {}
 
   // Synchroniser(Mode mode, const std::string &host = std::string(""))
   //     : mode(mode), _net(host, 4995){};
-  ~Synchroniser(){};
+  ~Synchroniser() {};
 
   template <typename Block, typename... Component>
   void add_sync(cevy::ecs::App &app) {
@@ -111,7 +111,7 @@ class cevy::Synchroniser : virtual public cevy::ecs::Plugin {
       auto pair = x.value();
       auto e = command.spawn_empty();
       _spawnCommands[pair.second](e);
-      e.insert(SyncId{pair.first, pair.second});
+      e.insert(SyncId {pair.first, pair.second});
       _occupancy[pair.first] = true;
     };
     while (true) {
@@ -166,7 +166,7 @@ template <typename Block, typename... Component>
 class cevy::Synchroniser::SyncBlock {
   public:
   SyncBlock(Synchroniser::Mode mode, Synchroniser &sync, CevyNetwork &net)
-      : mode(mode), _sync(sync), _net(sync._net){};
+      : mode(mode), _sync(sync), _net(sync._net) {};
 
   private:
   Synchroniser &_sync;

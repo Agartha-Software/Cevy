@@ -5,8 +5,8 @@
 ** materials implementation
 */
 
-#include <functional>
 #include "glx.hpp"
+#include <functional>
 
 #include "AssetManager.hpp"
 #include "PbrMaterial.hpp"
