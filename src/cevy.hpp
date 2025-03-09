@@ -8,9 +8,7 @@
 #pragma once
 
 #include "any_nc.hpp"
-#include <cstdint>
 #include <functional>
-#include <glm/detail/qualifier.hpp>
 #include <optional>
 
 template <typename T>
@@ -99,10 +97,6 @@ auto make_any(Args &&...args) -> decltype(std::make_any_nc<T>(std::forward<Args>
 }
 
 } // namespace cevy
-
-namespace glm {
-using vec4u8 = vec<4, uint8_t>;
-}
 
 // note: here name-spaces are being forward declared;
 // they will be expanded by their relevant files;

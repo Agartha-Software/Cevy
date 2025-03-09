@@ -11,7 +11,7 @@ add_library(editor
   )
 
 target_include_directories(editor PUBLIC
-  ..
+  .
 )
 
 target_link_libraries(editor PUBLIC engine ecs input)

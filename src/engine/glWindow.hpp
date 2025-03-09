@@ -16,15 +16,7 @@
 #include "cevy.hpp"
 #include <glm/fwd.hpp>
 #include <optional>
-
-#include <type_traits>
-#include <unordered_map>
-#if (_WIN32)
-#include <GL/gl3w.h>
-#endif
-#if (__linux__)
-#include <GL/glew.h>
-#endif
+#include "glx.hpp"
 
 #include "Camera.hpp"
 #include "Color.hpp"

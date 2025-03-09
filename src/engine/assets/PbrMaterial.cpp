@@ -6,15 +6,9 @@
 */
 
 #include <functional>
-#if (_WIN32)
-#include <GL/gl3w.h>
-#endif
-#if (__linux__)
-#include <GL/glew.h>
-#endif
+#include "glx.hpp"
 
 #include "AssetManager.hpp"
-#include "GL/gl.h"
 #include "PbrMaterial.hpp"
 #include "cevy.hpp"
 #include "stb_image.h"
@@ -285,7 +279,7 @@ std::optional<Texture> TextureBuilder::build() {
   }
 
   if (this->data) {
-    uint texture;
+    uint32_t texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -331,7 +325,7 @@ std::optional<Handle<Texture>> TextureBuilder::build(AssetManager &manager) {
   }
 
   if (this->data) {
-    uint texture;
+    uint32_t texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 

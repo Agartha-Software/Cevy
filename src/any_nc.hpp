@@ -70,14 +70,13 @@
 
 #ifdef __cpp_lib_any // C++ >= 17
 
-#include <bits/utility.h> // in_place_type_t
+#include <utility> // in_place_type_t
 #include <initializer_list>
 #include <new>
 #include <type_traits>
 #include <typeinfo>
 
-namespace std _GLIBCXX_VISIBILITY(default) {
-  _GLIBCXX_BEGIN_NAMESPACE_VERSION
+namespace std {
 
   /**
    *  @addtogroup utilities
@@ -113,6 +112,12 @@ namespace std _GLIBCXX_VISIBILITY(default) {
    */
   using namespace std;
   class any_nc {
+    template<typename T>
+    struct is_in_place_type : false_type {}; /// not provided by standard
+
+    template<typename T>
+    struct is_in_place_type<in_place_type_t<T>>: std::true_type {};
+
     // Holds either pointer to a heap object or the contained object itself.
     union _Storage {
       constexpr _Storage() : _M_ptr{nullptr} {}
@@ -137,7 +142,7 @@ namespace std _GLIBCXX_VISIBILITY(default) {
 
     template <typename _Tp>
     using _Manager =
-        __conditional_t<_Internal<_Tp>::value, _Manager_internal<_Tp>, _Manager_external<_Tp>>;
+        conditional_t<_Internal<_Tp>::value, _Manager_internal<_Tp>, _Manager_external<_Tp>>;
 
     template <typename _Tp, typename _VTp = decay_t<_Tp>>
     using _Decay_if_not_any = enable_if_t<!is_same_v<_VTp, any_nc>, _VTp>;
@@ -161,7 +166,7 @@ namespace std _GLIBCXX_VISIBILITY(default) {
 
     template <typename _Res, typename _Tp, typename... _Args>
     using __any_constructible =
-        enable_if<__and_<is_move_constructible<_Tp>, is_constructible<_Tp, _Args...>>::value, _Res>;
+        enable_if<conjunction<is_move_constructible<_Tp>, is_constructible<_Tp, _Args...>>::value, _Res>;
 
     template <typename _Tp, typename... _Args>
     using __any_constructible_t = typename __any_constructible<bool, _Tp, _Args...>::type;
@@ -207,7 +212,7 @@ namespace std _GLIBCXX_VISIBILITY(default) {
     /// Construct with a copy of @p __value as the contained object.
     template <
         typename _Tp, typename _VTp = _Decay_if_not_any<_Tp>, typename _Mgr = _Manager<_VTp>,
-        enable_if_t<is_copy_constructible_v<_VTp> && !__is_in_place_type_v<_VTp>, bool> = true>
+        enable_if_t<is_copy_constructible_v<_VTp> && !is_in_place_type<_VTp>::value, bool> = true>
     any_nc(_Tp &&__value) : _M_manager(&_Mgr::_S_manage) {
       _Mgr::_S_create(_M_storage, std::forward<_Tp>(__value));
     }
@@ -341,7 +346,7 @@ namespace std _GLIBCXX_VISIBILITY(default) {
     /// @cond undocumented
     template <typename _Tp>
     static constexpr bool __is_valid_cast() {
-      return __or_<is_reference<_Tp>, is_copy_constructible<_Tp>>::value;
+      return disjunction<is_reference<_Tp>, is_copy_constructible<_Tp>>::value;
     }
     /// @endcond
 
@@ -436,7 +441,7 @@ namespace std _GLIBCXX_VISIBILITY(default) {
    */
   template <typename _ValueType>
   inline _ValueType any_cast(const any_nc &__any) {
-    using _Up = __remove_cvref_t<_ValueType>;
+    using _Up = remove_cvref_t<_ValueType>;
     static_assert(any_nc::__is_valid_cast<_ValueType>(),
                   "Template argument must be a reference or CopyConstructible type");
     static_assert(is_constructible_v<_ValueType, const _Up &>,
@@ -444,7 +449,7 @@ namespace std _GLIBCXX_VISIBILITY(default) {
     auto __p = any_cast<_Up>(&__any);
     if (__p)
       return static_cast<_ValueType>(*__p);
-    __throw_bad_any_cast();
+    throw std::bad_any_cast();
   }
 
   /**
@@ -461,7 +466,7 @@ namespace std _GLIBCXX_VISIBILITY(default) {
    */
   template <typename _ValueType>
   inline _ValueType any_cast(any_nc & __any) {
-    using _Up = __remove_cvref_t<_ValueType>;
+    using _Up = remove_cvref_t<_ValueType>;
     static_assert(any_nc::__is_valid_cast<_ValueType>(),
                   "Template argument must be a reference or CopyConstructible type");
     //   static_assert(is_constructible_v<_ValueType, _Up&>,
@@ -469,12 +474,12 @@ namespace std _GLIBCXX_VISIBILITY(default) {
     auto __p = any_cast<_Up>(&__any);
     if (__p)
       return static_cast<_ValueType>(*__p);
-    __throw_bad_any_cast();
+    throw std::bad_any_cast();
   }
 
   template <typename _ValueType>
   inline _ValueType any_cast(any_nc && __any) {
-    using _Up = __remove_cvref_t<_ValueType>;
+    using _Up = remove_cvref_t<_ValueType>;
     static_assert(any_nc::__is_valid_cast<_ValueType>(),
                   "Template argument must be a reference or CopyConstructible type");
     static_assert(is_constructible_v<_ValueType, _Up>,
@@ -482,7 +487,7 @@ namespace std _GLIBCXX_VISIBILITY(default) {
     auto __p = any_cast<_Up>(&__any);
     if (__p)
       return static_cast<_ValueType>(std::move(*__p));
-    __throw_bad_any_cast();
+    throw std::bad_any_cast();
   }
   /// @}
 
@@ -616,7 +621,6 @@ namespace std _GLIBCXX_VISIBILITY(default) {
   struct _Never_valueless_alt<std::any_nc> : std::true_type {};
   } // namespace __detail::__variant
 
-  _GLIBCXX_END_NAMESPACE_VERSION
 } // namespace )
 
 #endif // __cpp_lib_any

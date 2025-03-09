@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Stage.hpp"
+#include <glm/detail/qualifier.hpp>
 
 namespace cevy::engine {
 
@@ -31,3 +32,7 @@ class RenderStage : public cevy::ecs::core_stage::after<cevy::ecs::core_stage::P
 class PreRenderStage : public cevy::ecs::core_stage::before<RenderStage> {};
 class PostRenderStage : public cevy::ecs::core_stage::after<RenderStage> {};
 } // namespace cevy::engine
+
+namespace glm {
+using vec4u8 = vec<4, uint8_t>;
+}

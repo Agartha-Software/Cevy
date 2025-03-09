@@ -12,6 +12,7 @@ add_library(network
 
 set(ASIO_FOLDER ${CMAKE_BINARY_DIR}/_deps/asio)
 
-target_link_libraries(network PUBLIC asio SparseVector ecs commands cevy_headers)
+target_link_libraries(network PUBLIC SparseVector ecs commands cevy_headers)
+target_link_libraries(network PRIVATE asio)
 
 target_include_directories(network PUBLIC ./ )

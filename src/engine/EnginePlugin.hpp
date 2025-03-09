@@ -13,10 +13,10 @@
 #include "Camera.hpp"
 #include "Color.hpp"
 #include "DefaultPlugin.hpp"
-#include "ForwardRenderer.hpp"
 #include "Line.hpp"
 #include "PhysicsProps.hpp"
 #include "Plugin.hpp"
+#include "PointLight.hpp"
 #include "Stage.hpp"
 #include "Target.hpp"
 #include "Transform.hpp"
@@ -24,7 +24,7 @@
 #include "Window.hpp"
 #include "ecs.hpp"
 #include "engine.hpp"
-#include "input/input.hpp"
+#include "input.hpp"
 
 namespace cevy::engine {
 template <typename Windower>

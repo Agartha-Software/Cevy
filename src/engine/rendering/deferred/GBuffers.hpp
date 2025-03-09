@@ -5,12 +5,7 @@
 ** Deferred G buffer encapsulation
 */
 
-#if (_WIN32)
-#include <GL/gl3w.h>
-#endif
-#if (__linux__)
-#include <GL/glew.h>
-#endif
+#include "glx.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -20,13 +15,13 @@
 class GBuffers {
   public:
   struct gbuffer_spec {
-    uint attachment = 0;
+    uint32_t attachment = 0;
     int format = -1;
     int filter = -1;
     int active = 0;
   };
-  GBuffers(uint width, uint height) : width(width), height(height) {
-    std::cout << " <<<< GBuffers(" << width << "," << height << ") @" << this << "  <<<<" << std::endl;
+  GBuffers(uint32_t width = 0, uint32_t height = 0) : width(width), height(height) {
+    std::cout << " <<<< GBuffers(width, height) @" << this << "  <<<<" << std::endl;
   };
 
   GBuffers(GBuffers &&rhs) {
@@ -109,7 +104,7 @@ class GBuffers {
     rebuild();
   }
 
-  void add(uint attachment, int format, int filter) {
+  void add(uint32_t attachment, int format, int filter) {
     if (attachment >= MAX_SIZE)
       return;
 
@@ -119,7 +114,7 @@ class GBuffers {
     glDrawBuffers(this->attachments.size(), &this->attachments[0]);
   }
 
-  int add_spec(uint attachment, int format, int filter) {
+  int add_spec(uint32_t attachment, int format, int filter) {
     if (attachment >= MAX_SIZE)
       return -1;
 
@@ -140,7 +135,7 @@ class GBuffers {
     return index;
   }
 
-  void remove(uint attachment) {
+  void remove(uint32_t attachment) {
     if (attachment >= MAX_SIZE)
       return;
     auto found = std::find_if(this->specs.begin(), this->specs.end(),
@@ -168,7 +163,7 @@ class GBuffers {
   }
 
   void read() const {
-    for (uint i = 0; i < this->textures.size(); ++i) {
+    for (uint32_t i = 0; i < this->textures.size(); ++i) {
       const auto texture = this->textures[i];
       const auto attachment_n = this->specs[i].attachment;
       if (texture) {
@@ -183,9 +178,9 @@ class GBuffers {
     glBindFramebuffer(GL_FRAMEBUFFER, this->framebuffer);
   }
 
-  uint getFramebuffer() const { return this->framebuffer; }
+  uint32_t getFramebuffer() const { return this->framebuffer; }
 
-  uint getDepthbuffer() const { return this->depthbuffer; }
+  uint32_t getDepthbuffer() const { return this->depthbuffer; }
 
   protected:
   void build(size_t index) {
@@ -210,11 +205,11 @@ class GBuffers {
 
   size_t MAX_SIZE = 0;
 
-  uint width;
-  uint height;
+  uint32_t width;
+  uint32_t height;
 
-  uint framebuffer = 0;
-  uint depthbuffer = 0;
+  uint32_t framebuffer = 0;
+  uint32_t depthbuffer = 0;
 
   std::vector<GLuint> textures;
   std::vector<GLenum> attachments;

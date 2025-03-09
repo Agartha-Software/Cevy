@@ -17,14 +17,8 @@ version : 0.3 - 15 / 01 / 2014
 #ifndef SHADER_PROGRAM_HPP
 #define SHADER_PROGRAM_HPP
 
-#if (_WIN32)
-	#include <GL/gl3w.h>
-#endif
-#if (__linux__)
-	#include <GL/glew.h>
-#endif
+#include "glx.hpp"
 
-#include <GL/gl.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>

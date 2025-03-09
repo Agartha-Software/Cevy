@@ -5,8 +5,6 @@
 ## engine-cmake
 ##
 
-set(CMAKE_CXX_STANDARD 17)
-
 set(IMGUI_FOLDER ${CMAKE_BINARY_DIR}/_deps/imgui)
 
 add_library(engine

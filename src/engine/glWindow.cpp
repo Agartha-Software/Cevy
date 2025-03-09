@@ -8,19 +8,12 @@
 // clang-format off
 
 #include "Event.hpp"
-#include "ShaderProgram.hpp"
 // clang-format on
 #include "Window.hpp"
-#include <GL/glext.h>
 #include <optional>
 #include <stdexcept>
 #include <unordered_map>
-#if (_WIN32)
-#include <GL/gl3w.h>
-#endif
-#if (__linux__)
-#include <GL/glew.h>
-#endif
+#include "glx.hpp"
 
 #include "GLFW/glfw3.h"
 #include "Scheduler.hpp"
