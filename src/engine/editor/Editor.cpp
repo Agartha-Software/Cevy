@@ -13,6 +13,7 @@
 #include "engine.hpp"
 #include "glWindow.hpp"
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "state.hpp"
@@ -25,7 +26,7 @@ void cevy::editor::Editor::init(glWindow &glwindow) {
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-  io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+  //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
@@ -109,16 +110,75 @@ void intercept_inputs(
   }
 }
 
+void docking_window() {
+  auto io = ImGui::GetIO();
+  static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+
+  // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
+  // because it would be confusing to have two docking targets within each others.
+  ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+
+  ImGuiViewport* viewport = ImGui::GetMainViewport();
+  ImGui::SetNextWindowPos(viewport->Pos);
+  ImGui::SetNextWindowSize(viewport->Size);
+  ImGui::SetNextWindowViewport(viewport->ID);
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+  window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+  window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
+  if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) {
+    window_flags |= ImGuiWindowFlags_NoBackground;
+  }
+
+  // Important: note that we proceed even if Begin() returns false (aka window is collapsed).
+  // This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
+  // all active windows docked into it will lose their parent and become undocked.
+  // We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
+  // any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+  ImGui::Begin("DockSpace", nullptr, window_flags);
+  ImGui::PopStyleVar();
+  ImGui::PopStyleVar(2);
+
+  if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
+    ImGuiID dockspace_id = ImGui::GetID("DockSpace");
+    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+
+    static auto first_time = true;
+    if (first_time) {
+      first_time = false;
+
+      ImGui::DockBuilderRemoveNode(dockspace_id); // clear any previous layout
+      ImGui::DockBuilderAddNode(dockspace_id, dockspace_flags);
+      ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
+
+      auto dock_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 1.f / 4.f, nullptr, &dockspace_id);
+      auto game_window_id = ImGui::DockBuilderSplitNode(dockspace_id,  ImGuiDir_Left, 2./3., nullptr, &dockspace_id);
+      auto dock_right = ImGui::DockBuilderSplitNode(dockspace_id,  ImGuiDir_Right, 1.f, nullptr, &dockspace_id);
+      auto dock_bottom = ImGui::DockBuilderSplitNode(game_window_id,  ImGuiDir_Down, 0.3f, nullptr, &game_window_id);
+
+      ImGui::DockBuilderDockWindow("left", dock_left);
+      ImGui::DockBuilderDockWindow("GameWindow", game_window_id);
+      ImGui::DockBuilderDockWindow("right", dock_right);
+      ImGui::DockBuilderDockWindow("bottom", dock_bottom);
+      ImGui::DockBuilderFinish(dockspace_id);
+    }
+  }
+  ImGui::End();
+}
+
 void pre_render(cevy::ecs::Resource<cevy::engine::Window> windower) {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
   auto &glwindow = windower->get_handler<glWindow>();
   auto &self = glwindow.get_module<cevy::editor::Editor>();
-  ImGui::ShowDemoWindow(); // Show demo window! :)
   auto io = ImGui::GetIO();
   //ImGui:: SetNextWindowSize(io.DisplaySize);
   //ImGui::SetNextWindowPos(ImVec2(0, 0));
+  docking_window();
+
   ImGui::Begin("GameWindow");
   {
     // Using a Child allow to fill all the space of the window.
@@ -137,6 +197,12 @@ void pre_render(cevy::ecs::Resource<cevy::engine::Window> windower) {
     ImGui::Image((ImTextureID)self.texture, wsize, ImVec2(0, 1), ImVec2(1, 0));
     ImGui::EndChild();
   }
+  ImGui::End();
+  ImGui::Begin("left");
+  ImGui::End();
+  ImGui::Begin("right");
+  ImGui::End();
+  ImGui::Begin("bottom");
   ImGui::End();
 }
 
