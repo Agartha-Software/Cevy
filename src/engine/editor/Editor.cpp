@@ -8,6 +8,7 @@
 #include "Editor.hpp"
 
 #include "Event.hpp"
+#include "EditorWindow.hpp"
 #include "Resource.hpp"
 #include "Window.hpp"
 #include "engine.hpp"
@@ -158,6 +159,7 @@ void docking_window() {
       auto dock_right = ImGui::DockBuilderSplitNode(dockspace_id,  ImGuiDir_Right, 1.f, nullptr, &dockspace_id);
       auto dock_bottom = ImGui::DockBuilderSplitNode(game_window_id,  ImGuiDir_Down, 0.3f, nullptr, &game_window_id);
 
+      // Window Names Hard coded for now
       ImGui::DockBuilderDockWindow("left", dock_left);
       ImGui::DockBuilderDockWindow("GameWindow", game_window_id);
       ImGui::DockBuilderDockWindow("right", dock_right);
@@ -168,42 +170,60 @@ void docking_window() {
   ImGui::End();
 }
 
+void main_menu() {
+  if (ImGui::BeginMainMenuBar()) {
+    if (ImGui::BeginMenu("File")) {
+      ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Edit")) {
+      if (ImGui::MenuItem("Undo", "CTRL+Z")) {}
+      if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {} // Disabled item
+      ImGui::Separator();
+      if (ImGui::MenuItem("Cut", "CTRL+X")) {}
+      if (ImGui::MenuItem("Copy", "CTRL+C")) {}
+      if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+      ImGui::EndMenu();
+    }
+    ImGui::EndMainMenuBar();
+  }
+}
+
+void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows) {
+  ImGui::PushItemWidth(ImGui::GetFontSize() * -12);
+
+  if (ImGui::BeginMenuBar()) {
+    if (ImGui::BeginMenu("Examples")) {
+      for (auto &window: windows) {
+        ImGui::MenuItem(window->getId().c_str(), NULL, &window->enabled);
+      }
+      ImGui::EndMenu();
+    }
+    ImGui::EndMenuBar();
+  }
+}
+
 void pre_render(cevy::ecs::Resource<cevy::engine::Window> windower) {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
   auto &glwindow = windower->get_handler<glWindow>();
-  auto &self = glwindow.get_module<cevy::editor::Editor>();
+  auto &editor = glwindow.get_module<cevy::editor::Editor>();
   auto io = ImGui::GetIO();
+  main_menu();
   //ImGui:: SetNextWindowSize(io.DisplaySize);
   //ImGui::SetNextWindowPos(ImVec2(0, 0));
   docking_window();
 
-  ImGui::Begin("GameWindow");
-  {
-    // Using a Child allow to fill all the space of the window.
-    // It also alows customization
-    ImGui::BeginChild("GameRender");
-    // Get the size of the child (i.e. the whole draw size of the windows).
-    self.viewportPos = ImGui::GetWindowPos();
-    self.viewportSize = ImGui::GetWindowSize();
-    ImVec2 wsize = ImGui::GetWindowSize();
-    if (wsize.x != glwindow.targetSize().x || wsize.y != glwindow.targetSize().y) {
-      glwindow.setTargetSize(wsize.x, wsize.y);
-      glBindTexture(GL_TEXTURE_2D, self.texture);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wsize.x, wsize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  for (auto &window: editor.windows) {
+    ImGui::Begin(window->getId().c_str(), nullptr, ImGuiWindowFlags_MenuBar);
+    {
+      if (window->getMenuActive()) {
+        menu(editor.windows);
+      }
+      window->render(editor, glwindow);
     }
-    // Because I use the texture from OpenGL, I need to invert the V from the UV.
-    ImGui::Image((ImTextureID)self.texture, wsize, ImVec2(0, 1), ImVec2(1, 0));
-    ImGui::EndChild();
+    ImGui::End();
   }
-  ImGui::End();
-  ImGui::Begin("left");
-  ImGui::End();
-  ImGui::Begin("right");
-  ImGui::End();
-  ImGui::Begin("bottom");
-  ImGui::End();
 }
 
 void render(cevy::ecs::Resource<cevy::engine::Window> windower) {

@@ -8,7 +8,9 @@
 add_library(editor
   STATIC
   Editor.cpp
-  )
+  EditorWindow.cpp
+  GameWindow.cpp
+)
 
 target_include_directories(editor PUBLIC
   .
