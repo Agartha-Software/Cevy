@@ -192,9 +192,9 @@ void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows) {
   ImGui::PushItemWidth(ImGui::GetFontSize() * -12);
 
   if (ImGui::BeginMenuBar()) {
-    if (ImGui::BeginMenu("Examples")) {
+    if (ImGui::BeginMenu("Windows")) {
       for (auto &window: windows) {
-        ImGui::MenuItem(window->getId().c_str(), NULL, &window->enabled);
+        ImGui::MenuItem(window->getId().c_str(), NULL, &window->open);
       }
       ImGui::EndMenu();
     }
@@ -209,20 +209,21 @@ void pre_render(cevy::ecs::Resource<cevy::engine::Window> windower) {
   auto &glwindow = windower->get_handler<glWindow>();
   auto &editor = glwindow.get_module<cevy::editor::Editor>();
   auto io = ImGui::GetIO();
+
   main_menu();
-  //ImGui:: SetNextWindowSize(io.DisplaySize);
-  //ImGui::SetNextWindowPos(ImVec2(0, 0));
   docking_window();
 
   for (auto &window: editor.windows) {
-    ImGui::Begin(window->getId().c_str(), nullptr, ImGuiWindowFlags_MenuBar);
-    {
-      if (window->getMenuActive()) {
-        menu(editor.windows);
+    if (window->open) {
+      ImGui::Begin(window->getId().c_str(), &window->open, ImGuiWindowFlags_MenuBar);
+      {
+        if (window->getMenuActive()) {
+          menu(editor.windows);
+        }
+        window->render(editor, glwindow);
       }
-      window->render(editor, glwindow);
+      ImGui::End();
     }
-    ImGui::End();
   }
 }
 

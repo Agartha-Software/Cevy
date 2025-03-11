@@ -20,9 +20,9 @@ namespace cevy::editor {
     virtual void render(cevy::editor::Editor &editor, glWindow &glwindow) = 0;
     virtual bool getMenuActive() = 0;
     virtual const std::string getId() = 0;
-    bool enabled;
+    bool open;
 
-    EditorWindow(): enabled(false) {
+    EditorWindow(): open(true) {
     }
   };
 
@@ -32,7 +32,7 @@ namespace cevy::editor {
     public:
     LogWindow(const std::string id) : id(id) {}
 
-    void render(cevy::editor::Editor &editor, glWindow &glwindow) override {
+    void render(cevy::editor::Editor &, glWindow &) override {
       ImGui::Text("Test1");
       ImGui::Text("Test2");
       ImGui::Text("Test3");

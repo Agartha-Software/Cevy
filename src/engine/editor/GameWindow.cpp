@@ -10,7 +10,6 @@
 #include "imgui.h"
 
 void cevy::editor::GameWindow::render(cevy::editor::Editor &editor, glWindow &glwindow) {
-  ImGui::Begin("GameWindow");
   // Using a Child allow to fill all the space of the window.
   // It also alows customization
   ImGui::BeginChild("GameRender");
@@ -26,5 +25,4 @@ void cevy::editor::GameWindow::render(cevy::editor::Editor &editor, glWindow &gl
   // Because I use the texture from OpenGL, I need to invert the V from the UV.
   ImGui::Image((ImTextureID)editor.texture, wsize, ImVec2(0, 1), ImVec2(1, 0));
   ImGui::EndChild();
-  ImGui::End();
 }
