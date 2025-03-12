@@ -113,8 +113,13 @@ struct TextureBuilder {
   int load_rgb();
   int load_alpha();
   int get_alpha(const TextureBuilder& other);
-  std::optional<cevy::engine::Texture> build();
-  std::optional<Handle<cevy::engine::Texture>> build(AssetManager& manager);
+
+  bool good() const {
+    std::cout << "txBuilder:" << this->rgb_file_name << ":rdy?:" << (this->data != nullptr || this->rgb_file_name != "" || this->alpha_file_name != "") << std::endl;
+    return this->data != nullptr || this->rgb_file_name != "" || this->alpha_file_name != "";
+  }
+  cevy::engine::Texture build();
+  Handle<cevy::engine::Texture> build(AssetManager& manager);
 };
 
 class PbrMaterial {
@@ -127,7 +132,9 @@ public:
     pair(T&& t) : a(std::forward<T>(t)), b(std::nullopt) {};
     pair(V&& v) : a(std::nullopt), b(std::forward<V>(v)) {};
     pair(T&& t, V&& v) : a(std::forward<T>(t)), b(std::forward<V>(v)) {};
+    pair(const T& t, const V& v) : a(t), b(v) {};
     pair(V&& v, T&& t) : a(std::forward<T>(t)), b(std::forward<V>(v)) {};
+    pair(const V& v, const T& t) : a(t), b(v) {};
   };
 
   using color_tex = pair<glm::vec4, std::string>;

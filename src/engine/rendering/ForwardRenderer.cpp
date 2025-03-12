@@ -110,7 +110,7 @@ void cevy::engine::ForwardRenderer::render_system(
     // light_buffer.push_back(pipeline::Light(light, o_tm.has_value() ? o_tm->position :
     // glm::vec3()));
     light_buffer.push_back(
-        pipeline::Light(light, o_tm.has_value() ? o_tm->get_world().position : glm::vec3()));
+        pipeline::Light(light, o_tm.has_value() ? o_tm->get_world() : Transform()));
   }
 
   glBindBuffer(GL_UNIFORM_BUFFER, self.uboLights);

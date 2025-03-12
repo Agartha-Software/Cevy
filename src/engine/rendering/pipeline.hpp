@@ -7,10 +7,16 @@
 
 #pragma once
 
+#define GLM_FORCE_SWIZZLE
+
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <string>
+
 #include "PointLight.hpp"
 #include "ShaderProgram.hpp"
-#include <glm/glm.hpp>
-#include <string>
+#include "SpotLight.hpp"
+#include "Transform.hpp"
 
 namespace cevy::engine {
 struct pipeline {
@@ -170,41 +176,75 @@ struct pipeline {
   }; // struct layout
 
   struct Light {
-    enum class Type {
-      Point,
+    enum class Type : uint32_t {
+      Point = 1,
+      Spot = 2,
+      Sun = 3,
     };
-    inline static const int count = 15;
-    template <glm::length_t N, typename T>
-    Light(const PointLight &l, glm::vec<N, T> position) {
+
+    inline static constexpr int count = 15;
+    template <typename LightType>
+    Light(const LightType &l, const Transform &tm) : Light(l, tm) {}
+    Light(const PointLight &l, const Transform &tm) {
       // this->position = {float(position.x), float(position.y), float(position.z), 1.0f};
       this->model = {
-          glm::vec4(l.range, 0, 0, 0), //
-          glm::vec4(0, l.range, 0, 0), //
-          glm::vec4(0, 0, l.range, 0), //
-          glm::vec4(position, 1)       //
+          glm::vec4(1, 0, 0, 0),    //
+          glm::vec4(0, 1, 0, 0),    //
+          glm::vec4(0, 0, 1, 0),    //
+          glm::vec4(tm.position, 1) //
       }; // collumn major, visually transposed
       this->radius = l.radius;
       this->color = l.color;
+      this->range = l.range;
+      this->range = l.range;
+      this->falloff = 2;
+      this->type = Type::Point;
+    }
+    Light(const SpotLight &l, const Transform &tm) {
+
+      this->model = glm::translate(glm::mat4(1), tm.position) * glm::mat4(tm.rotation);
+
+      this->radius = l.softness;
+      this->angle = l.angle;
+      this->range = l.range;
+      this->falloff = 2;
+      this->color = l.color;
+      this->type = Type::Spot;
+    }
+    Light(const SunLight &l, const Transform &tm) {
+      this->model = glm::translate(glm::mat4(1), tm.position) * glm::mat4(tm.rotation);
+
+      this->radius = 0;
+      this->angle = 0;
+      this->range = l.range;
+      this->falloff = 2;
+      this->color = l.color;
+      this->type = Type::Spot;
     }
     Light(glm::mat4 model, glm::vec3 color, float radius)
         : model(model), color(color), radius(radius) {};
     glm::mat4 model;
     glm::vec3 color;
-    float radius; /// 0 for directionnal, non-0 for point;
+    float radius;
+    float range;
+    float angle;
+    float falloff;
+    Type type;
   };
 };
-template<typename Pipeline = pipeline>
+template <typename Pipeline = pipeline>
 class ShaderBuilder {
   public:
-  static ShaderProgram build_from_files(const std::string& vertex, const std::string& fragment);
-  static ShaderProgram build_from_source(const std::string& vertex, const std::string& fragment);
+  static ShaderProgram build_from_files(const std::string &vertex, const std::string &fragment);
+  static ShaderProgram build_from_source(const std::string &vertex, const std::string &fragment);
+
   protected:
-  static void build(ShaderProgram& shader);
+  static void build(ShaderProgram &shader);
 };
 
-
-template<typename pipeline>
-ShaderProgram ShaderBuilder<pipeline>::build_from_files(const std::string &vertex, const std::string &fragment) {
+template <typename pipeline>
+ShaderProgram ShaderBuilder<pipeline>::build_from_files(const std::string &vertex,
+                                                        const std::string &fragment) {
   ShaderProgram shader;
   shader.initFromFiles(vertex, fragment);
 
@@ -213,8 +253,9 @@ ShaderProgram ShaderBuilder<pipeline>::build_from_files(const std::string &verte
   return shader;
 }
 
-template<typename pipeline>
-ShaderProgram ShaderBuilder<pipeline>::build_from_source(const std::string &vertex, const std::string &fragment) {
+template <typename pipeline>
+ShaderProgram ShaderBuilder<pipeline>::build_from_source(const std::string &vertex,
+                                                         const std::string &fragment) {
   ShaderProgram shader;
   shader.initFromStrings(vertex, fragment);
 

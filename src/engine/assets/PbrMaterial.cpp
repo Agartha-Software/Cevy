@@ -107,13 +107,13 @@ PbrMaterial::PbrMaterial(AssetManager &mngr, const definition &def) : PbrMateria
     normal_builder.rgb_file_name = def.normal;
   }
 
-  this->diffuse_texture = diffuse_builder.build(mngr);
-  this->specular_texture = specular_builder.build(mngr);
-  this->metallic_texture = metallic_builder.build(mngr);
+  this->diffuse_texture = diffuse_builder.good() ? std::make_optional(diffuse_builder.build(mngr)) : std::nullopt;
+  this->specular_texture = specular_builder.good() ? std::make_optional(specular_builder.build(mngr)) : std::nullopt;
+  this->metallic_texture = metallic_builder.good() ? std::make_optional(metallic_builder.build(mngr)) : std::nullopt;
   this->specular_texture = this->specular_texture ? this->specular_texture : this->metallic_texture;
 
-  this->emission_texture = emit_builder.build(mngr);
-  this->normal_texture = normal_builder.build(mngr);
+  this->emission_texture = emit_builder.good() ? std::make_optional(emit_builder.build(mngr)) : std::nullopt;
+  this->normal_texture = normal_builder.good() ? std::make_optional(normal_builder.build(mngr)) : std::nullopt;
 
   if (def.metallic.b != "") {
     this->shader = mngr.get<Shader>("gbuffer_pbr");
@@ -173,7 +173,7 @@ Texture TextureBuilder::from(const glm::vec4u8 &pixel, int width, int height) {
 
   // std::fill(reinterpret_cast<glm::vec<4, uint8_t> *>(builder.data),
   //           reinterpret_cast<glm::vec<4, uint8_t> *>(builder.data) + width * height, pixel);
-  return builder.build().value();
+  return builder.build();
 }
 
 Texture TextureBuilder::from(const glm::vec4 &pixel, int width, int height) {
@@ -190,7 +190,7 @@ Texture TextureBuilder::from(const glm::vec4 &pixel, int width, int height) {
 
   // std::fill(reinterpret_cast<glm::vec4 *>(builder.data),
   //           reinterpret_cast<glm::vec4 *>(builder.data) + width * height, pixel);
-  return builder.build().value();
+  return builder.build();
 }
 
 
@@ -300,22 +300,23 @@ int TextureBuilder::get_alpha(const TextureBuilder &other) {
   return 0;
 }
 
-std::optional<Texture> TextureBuilder::build() {
-  if (this->rgb_file_name != "") {
-    if (this->load_rgb()) {
-      return std::nullopt;
-    }
-  }
-  if (this->alpha_file_name != "") {
-    if (this->load_alpha()) {
-      return std::nullopt;
-    }
-  }
-
+Texture TextureBuilder::build() {
   std::string name_full = this->rgb_file_name;
   if (this->alpha_file_name != "") {
     name_full += this->alpha_file_name;
   }
+
+  if (this->rgb_file_name != "") {
+    if (this->load_rgb()) {
+      throw std::runtime_error("TextureBuilder failed at load_rgb:" + name_full);
+    }
+  }
+  if (this->alpha_file_name != "") {
+    if (this->load_alpha()) {
+      throw std::runtime_error("TextureBuilder failed at load_alpha:" + name_full);
+    }
+  }
+
 
   if (this->data) {
     uint texture;
@@ -337,10 +338,10 @@ std::optional<Texture> TextureBuilder::build() {
 
     return Texture(texture, name_full);
   }
-  return std::nullopt;
+  throw std::runtime_error("TextureBuilder failed at this->data (without load):" + name_full);
 }
 
-std::optional<Handle<Texture>> TextureBuilder::build(AssetManager &manager) {
+Handle<Texture> TextureBuilder::build(AssetManager &manager) {
   std::string name_full = this->rgb_file_name;
   if (this->alpha_file_name != "") {
     name_full += "_" + this->alpha_file_name;
@@ -349,17 +350,17 @@ std::optional<Handle<Texture>> TextureBuilder::build(AssetManager &manager) {
   auto o_tex = manager.get<Texture>(name_full);
 
   if (o_tex) {
-    return o_tex;
+    return o_tex.value();
   }
 
   if (this->rgb_file_name != "") {
     if (this->load_rgb()) {
-      return std::nullopt;
+      throw std::runtime_error("TextureBuilder failed at load_rgb:" + name_full);
     }
   }
   if (this->alpha_file_name != "") {
     if (this->load_alpha()) {
-      return std::nullopt;
+      throw std::runtime_error("TextureBuilder failed at load_alpha:" + name_full);
     }
   }
 
@@ -388,7 +389,7 @@ std::optional<Handle<Texture>> TextureBuilder::build(AssetManager &manager) {
     std::cout << "successfully generated '" << name_full << "'" << std:: endl;
     return manager.load(Texture(texture, name_full), name_full);
   }
-  return std::nullopt;
+  throw std::runtime_error("TextureBuilder failed at this->data (with load):" + name_full);
 }
 
 void cevy::engine::Texture::init() {}
