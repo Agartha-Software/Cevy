@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "PbrMaterial.hpp"
 #include "App.hpp"
+#include "Handle.hpp"
 #include "Model.hpp"
 #include "Plugin.hpp"
 #include "cevy.hpp"
@@ -101,9 +101,7 @@ class AssetManager {
   std::unordered_map<std::string, size_t> mesh_keys;
   std::vector<Handle<cevy::engine::Model>> meshes;
   std::unordered_map<std::string, size_t> texture_keys;
-  std::vector<Handle<cevy::engine::Texture>> textures;
   std::unordered_map<std::string, size_t> material_keys;
-  std::vector<Handle<cevy::engine::PbrMaterial>> materials;
 
   std::unordered_map<std::string, cevy::any> factories;
   // std::vector<ShaderProgram> _shaders;
