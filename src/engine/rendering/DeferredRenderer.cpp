@@ -13,7 +13,12 @@
 #if (__linux__)
 #include <GL/glew.h>
 #endif
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/geometric.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/matrix.hpp>
+#include <stdexcept>
 
 #include "Atmosphere.hpp"
 #include "DeferredRenderer.hpp"
@@ -98,13 +103,17 @@ void cevy::engine::DeferredRenderer::init() {
   this->accumulate_shader->addUniform("width");
   this->accumulate_shader->addUniform("height");
   this->accumulate_shader->addUniform("canvas");
+  this->accumulate_shader->addUniform("projector");
   this->accumulate_shader->addUniform("view");
   this->accumulate_shader->addUniform("invView");
   this->accumulate_shader->addUniform("debug_draw");
   this->accumulate_shader->addUniform("lightPosition");
+  this->accumulate_shader->addUniform("lightDirection");
   this->accumulate_shader->addUniform("lightEnergy");
+  this->accumulate_shader->addUniform("lightAngle");
   this->accumulate_shader->addUniform("lightRadius");
   this->accumulate_shader->addUniform("lightRange");
+  this->accumulate_shader->addUniform("lightType");
 
   std::cout << "loading gBuffer_shader" << std::endl;
 
@@ -133,7 +142,10 @@ void cevy::engine::DeferredRenderer::init() {
   this->gbuffer.init_default();
   this->billboard.init();
 
+  this->shadowMap.init();
+
   this->primitives.sphere = primitives::sphere(1, 10, 6);
+  this->primitives.cube = primitives::cube(1);
   this->primitives.blank = TextureBuilder::from(glm::vec4u8(255, 255, 255, 127), 2, 2);
   // this->primitives.black = TextureBuilder::from(glm::vec4u8(0, 0, 0, 1), 2, 2);
   this->primitives.flat = TextureBuilder::from(glm::vec4(0.5, 0.5, 1, 1), 2, 2);
@@ -142,7 +154,9 @@ void cevy::engine::DeferredRenderer::init() {
 void cevy::engine::DeferredRenderer::render_system(
     DeferredRenderer &self, Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-    Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world) {
+    Query<option<Transform>, option<cevy::engine::PointLight>, option<cevy::engine::SpotLight>>
+        lights,
+    const ecs::World &world) {
 
   auto r_atmo = world.get_resource<const Atmosphere>();
   const auto &atmosphere = r_atmo.has_value() ? r_atmo->get() : cevy::engine::Atmosphere();
@@ -154,6 +168,7 @@ void cevy::engine::DeferredRenderer::render_system(
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
+  glViewport(0, 0, self.width, self.height);
 
   if (cams.size() == 0) {
     return;
@@ -169,12 +184,15 @@ void cevy::engine::DeferredRenderer::render_system(
 
   // self.gBuffer_shader->use();
 
-  auto view = glm::scale(camera.projection, glm::vec3(1, camera.aspect, 1)) * camera.view;
+  auto &view = self.renderContext.view;
+  view = glm::scale(camera.projection, glm::vec3(1, camera.aspect, 1)) * camera.view;
   view = view / view[3][3];
 
-  auto invView = glm::inverse(camera.view);
+  auto &invView = self.renderContext.invView;
+  invView = glm::inverse(camera.view);
   // invView = invView / invView[3][3];
 
+  self.renderContext.models.clear();
 
   for (auto [o_tm, model, o_material, o_color] : models) {
     auto tm = o_tm ? o_tm->get_world().mat4() : glm::mat4(1);
@@ -182,11 +200,11 @@ void cevy::engine::DeferredRenderer::render_system(
     auto &color = o_color ? o_color.value().as_vec() : white;
     PbrMaterial &material = o_material ? o_material->get() : self.defaultMaterial;
     auto &shader = material.shader ? material.shader->get() : self.defaultMaterial.shader->get();
+    self.renderContext.models.emplace_back(model, tm * model->modelMatrix(), 0);
 
     // if (!material.shader)
     //   continue;
     shader.use();
-
 
     glUniformMatrix4fv(shader.uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(shader.uniform("invView"), 1, GL_FALSE, glm::value_ptr(invView));
@@ -228,64 +246,25 @@ void cevy::engine::DeferredRenderer::render_system(
     model->draw();
   };
 
-  self.gbuffer.read();
-  glDepthMask(GL_FALSE);
+  for (auto [o_tm, o_point, o_spot] : lights) {
+    const auto &tm = o_tm.has_value() ? o_tm->get_world() : Transform();
 
-  glEnable(GL_BLEND);
-  glBlendEquation(GL_FUNC_ADD);
-  glBlendFunc(GL_ONE, GL_ONE);
+    if (all(!o_point.has_value(), !o_spot.has_value()))
+      continue;
 
-  glClearStencil(0);
+    pipeline::Light gl_light = o_point.has_value() ? pipeline::Light(o_point.value(), tm) :    //
+                                   (o_spot.has_value() ? pipeline::Light(o_spot.value(), tm) : //
+                                        throw std::runtime_error(""));
+    // pipeline::Light gl_light = o_point.has_value() ? pipeline::Light { o_point.value(),
+    // mat[3].xyz()} : pipeline::Light { o_spot.value(), mat}; //(light, pos);
 
-  for (auto [o_tm, light] : lights) {
-    const auto &pos = o_tm.has_value() ? o_tm->get_world().position : glm::vec3();
-    pipeline::Light gl_light(light, pos);
-
-#if 0  // use stencil
-    glEnable(GL_STENCIL_TEST);
-    glClear(GL_STENCIL_BUFFER_BIT);
-    glStencilMask(0xff);
-
-    glColorMask(false, false, false, false);
-    glStencilFunc(GL_ALWAYS, 0xff, 0xff);
-    glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR_WRAP, GL_KEEP);
-    glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR_WRAP, GL_KEEP);
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-
-    self.null_shader->use();
-    glUniformMatrix4fv(self.null_shader->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(self.null_shader->uniform("model"), 1, GL_FALSE,
-                       glm::value_ptr(gl_light.model));
-    self.primitives.sphere.draw();
-
-    glStencilFunc(GL_EQUAL, 0x1, 0xff);
-
-    glColorMask(true, true, true, true);
-#endif // use stencil
-
-    self.accumulate_shader->use();
-    glUniform3fv(self.accumulate_shader->uniform("lightPosition"), 1, glm::value_ptr(pos));
-    glUniform3fv(self.accumulate_shader->uniform("lightEnergy"), 1, glm::value_ptr(gl_light.color));
-    glUniform1f(self.accumulate_shader->uniform("lightRadius"), gl_light.radius);
-    glUniform1i(self.accumulate_shader->uniform("debug_draw"), 0);
-
-    glUniform1f(self.accumulate_shader->uniform("width"), self.width);
-    glUniform1f(self.accumulate_shader->uniform("height"), self.height);
-
-    glUniformMatrix4fv(self.accumulate_shader->uniform("invView"), 1, GL_FALSE,
-                       glm::value_ptr(invView));
-    glUniformMatrix4fv(self.accumulate_shader->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
-    glUniform3fv(self.accumulate_shader->uniform("lightEnergy"), 1, glm::value_ptr(gl_light.color));
-    glUniformMatrix4fv(self.accumulate_shader->uniform("canvas"), 1, GL_FALSE,
-                       glm::value_ptr(view * gl_light.model));
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
-    self.primitives.sphere.draw();
-    // glDisable(GL_CULL_FACE);
-    // self.billboard.draw();
+    self.light_pass(gl_light);
+    // break;
   }
+
+  self.renderContext.models.clear();
+
+  self.gbuffer.read();
 
   glDisable(GL_STENCIL_TEST);
 
@@ -306,4 +285,122 @@ void cevy::engine::DeferredRenderer::render_system(
   glUniform1f(self.compose_shader->uniform("fog_far"), std::min(camera.far, fog_dist));
   self.billboard.screenspace({-1, -1}, {1, 1});
   self.billboard.draw();
+}
+
+glm::mat4 operator*(const glm::mat4 &m, const glm::vec3 &v2) {
+  return m * glm::mat4(v2.x, 0, 0, 0, //
+                       0, v2.y, 0, 0, //
+                       0, 0, v2.z, 0, //
+                       0, 0, 0, 1);
+};
+
+void cevy::engine::DeferredRenderer::light_pass(const pipeline::Light &light) {
+  auto light_direction = glm::normalize((light.model * glm::vec4(0, 0, -1, 0)).xyz());
+  auto projector = glm::inverse(light.model);
+  auto persp = glm::mat4(1);
+  auto squash = glm::mat4(1);
+  if (light.type == pipeline::Light::Type::Spot) {
+    persp = glm::perspective(light.angle * 2, 1.f, 0.1f, light.range);
+    squash = glm::inverse(-persp);
+    squash = squash / squash[3][3];
+    squash = squash * glm::vec3(-1);
+    // squash[3][3] = -1;
+  } else {
+    squash = glm::mat4(1) * glm::vec3(light.range);
+  }
+  projector = persp * projector;
+
+#if 0  // use stencil
+  glEnable(GL_STENCIL_TEST);
+  glClear(GL_STENCIL_BUFFER_BIT);
+  glStencilMask(0xff);
+
+  glColorMask(false, false, false, false);
+  glStencilFunc(GL_ALWAYS, 0xff, 0xff);
+  glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR_WRAP, GL_KEEP);
+  glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR_WRAP, GL_KEEP);
+  glEnable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
+
+  self.null_shader->use();
+  glUniformMatrix4fv(self.null_shader->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
+  glUniformMatrix4fv(self.null_shader->uniform("model"), 1, GL_FALSE,
+                      glm::value_ptr(gl_light.model));
+  self.primitives.sphere.draw();
+
+  glStencilFunc(GL_EQUAL, 0x1, 0xff);
+
+  glColorMask(true, true, true, true);
+#endif // use stencil
+
+  glDepthMask(GL_TRUE);
+
+  glDisable(GL_BLEND);
+  glCullFace(GL_BACK);
+  glEnable(GL_DEPTH_TEST);
+
+  { // shadow map
+    glViewport(0, 0, this->shadowMap.size().x, this->shadowMap.size().y);
+    this->shadowMap.write();
+    glClear(GL_DEPTH_BUFFER_BIT);
+    this->null_shader->use();
+    glColorMask(false, false, false, false);
+
+    glUniformMatrix4fv(this->null_shader->uniform("view"), 1, GL_FALSE, glm::value_ptr(projector));
+
+    for (auto [model, matrix, _] : this->renderContext.models) {
+      glUniformMatrix4fv(this->null_shader->uniform("model"), 1, GL_FALSE, glm::value_ptr(matrix));
+      model->draw();
+    }
+
+    glColorMask(true, true, true, true);
+  }
+
+  this->gbuffer.read();
+
+  glDepthMask(GL_FALSE);
+
+  glEnable(GL_BLEND);
+  glBlendEquation(GL_FUNC_ADD);
+  glBlendFunc(GL_ONE, GL_ONE);
+
+  glClearStencil(0);
+
+  glViewport(0, 0, this->width, this->height);
+  this->gbuffer.write();
+
+  this->shadowMap.read(0);
+
+  this->accumulate_shader->use();
+  glUniform3fv(this->accumulate_shader->uniform("lightDirection"), 1,
+               glm::value_ptr(light_direction));
+  glUniform3fv(this->accumulate_shader->uniform("lightPosition"), 1,
+               glm::value_ptr(light.model[3]));
+  glUniform3fv(this->accumulate_shader->uniform("lightEnergy"), 1, glm::value_ptr(light.color));
+  glUniform1f(this->accumulate_shader->uniform("lightRadius"), light.radius);
+  glUniform1f(this->accumulate_shader->uniform("lightAngle"), light.angle);
+  glUniform1ui(this->accumulate_shader->uniform("lightType"), static_cast<uint32_t>(light.type));
+  glUniform1i(this->accumulate_shader->uniform("debug_draw"), 0);
+
+  glUniform1f(this->accumulate_shader->uniform("width"), this->width);
+  glUniform1f(this->accumulate_shader->uniform("height"), this->height);
+
+  glUniformMatrix4fv(this->accumulate_shader->uniform("invView"), 1, GL_FALSE,
+                     glm::value_ptr(this->renderContext.invView));
+  glUniformMatrix4fv(this->accumulate_shader->uniform("view"), 1, GL_FALSE,
+                     glm::value_ptr(this->renderContext.view));
+  glUniform3fv(this->accumulate_shader->uniform("lightEnergy"), 1, glm::value_ptr(light.color));
+  glUniformMatrix4fv(this->accumulate_shader->uniform("canvas"), 1, GL_FALSE,
+                     glm::value_ptr(this->renderContext.view * light.model * squash));
+  glUniformMatrix4fv(this->accumulate_shader->uniform("projector"), 1, GL_FALSE,
+                     glm::value_ptr(projector));
+  glDisable(GL_DEPTH_TEST);
+
+  glCullFace(GL_FRONT);
+
+  if (light.type == pipeline::Light::Type::Point) {
+    this->primitives.sphere.draw();
+  } else {
+    this->primitives.cube.draw();
+  }
 }

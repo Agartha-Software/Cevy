@@ -1,10 +1,18 @@
 #version 450
 
+const uint TYPE_POINT = 1;
+const uint TYPE_SPOT = 2;
+const uint TYPE_SUN = 3;
+
 uniform mat4 view;
+uniform mat4 projector;
 uniform mat4 invView;
 uniform vec3 lightPosition;
 uniform vec3 lightEnergy;
+uniform vec3 lightDirection;
+uniform float lightAngle;
 uniform float lightRadius;
+uniform uint lightType;
 
 uniform float width;
 uniform float height;
@@ -13,26 +21,27 @@ uniform bool debug_draw;
 
 in vec2 texCoord;
 
+layout (binding = 0) uniform sampler2D shadowMap;
+
 layout (binding = 1) uniform sampler2D gPosition;
 layout (binding = 2) uniform sampler2D gNormal;
 layout (binding = 3) uniform sampler2D gAlbedo;
 layout (binding = 4) uniform sampler2D gSpecular;
 
-out vec4 fragColor;
+layout (location = 0) out vec4 fragColor;
 
-void shade_light(
-    out vec3 diffuse_light,
-    out vec3 specular_light,
+void shade_light_point(
+    inout vec3 diffuse_light,
+    inout vec3 specular_light,
     vec3 normal,
     float dnv,
     vec3 energy,
     vec3 ray,
+    float lightDist,
     float radius,
     vec3 viewVec,
     float roughness,
     float halflambert) {
-    float lightDist = length(ray);
-    ray /= lightDist;
 
     vec3 light = max(energy / (lightDist * lightDist), vec3(0));
 
@@ -49,7 +58,57 @@ void shade_light(
     // phong = max(0, lambert) * pow(max(0, dot(reflect(-ray, normal), -viewVec)), exponent) * exponent / 4;
 
     float hl = halflambert * 0.5;
-    lambert = lambert * (1 - hl) + hl;
+    // lambert = lambert * (1 - hl) + hl;
+    diffuse_light = light * max(0, lambert);
+    specular_light = light * phong;
+}
+
+void shade_light_spot(
+    inout vec3 diffuse_light,
+    inout vec3 specular_light,
+    vec3 normal,
+    float dnv,
+    vec3 energy,
+    vec3 projectedCoords,
+    vec3 ray,
+    float lightDist,
+    float radius,
+    vec3 viewVec,
+    float roughness,
+    float halflambert) {
+
+    vec3 light = max(energy / (lightDist * lightDist), vec3(0));
+
+    vec3 lightDirection_override = normalize(lightDirection);
+    // lightDirection_override = normalize((inverse(projector) * vec4(0, 0, 1, 1)).xyz);
+    // vec3 lightDirection_override = normalize(- lightPosition);
+
+    float off_angle = acos(dot(ray, lightDirection_override));
+
+    float blend = max(0, 1 - (off_angle / lightAngle));
+
+    light *= pow(blend, 2.0 * lightRadius);
+
+    float depth_delta = texture(shadowMap, projectedCoords.xy).x - projectedCoords.z;
+
+    depth_delta = clamp(depth_delta * 10000 + 1, 0, 1) ;
+
+    light *= depth_delta;
+
+    float lambert = dot(normal, -ray);
+
+    // float halfLambert = lambert * 0.5 + 0.5;
+
+    vec3 halfway = normalize(-ray - viewVec);
+
+    float phong;
+
+    float exponent = 1 + 1 / roughness;
+    phong = max(0, lambert) * pow(max(0, dot(normal, halfway)), exponent * 2) * exponent / 2;
+    // phong = max(0, lambert) * pow(max(0, dot(reflect(-ray, normal), -viewVec)), exponent) * exponent / 4;
+
+    float hl = halflambert * 0.5;
+    // lambert = lambert * (1 - hl) + hl;
     diffuse_light = light * max(0, lambert);
     specular_light = light * phong;
 }
@@ -71,6 +130,10 @@ void main() {
     // float emit_illum = 1 - emit_ambient;
     float halflambert = float((flags & 4) >> 2);
 
+    vec4 projected = projector * vec4(position.xyz, 1);
+    projected /= projected.w;
+    projected.xyz = projected.xyz * 0.5 + 0.5;
+
     vec3 cameraPos = invView[3].xyz;// / invView[3].w;
     vec3 viewVec = position.xyz - cameraPos;
     float viewDistance = length(viewVec);
@@ -78,28 +141,50 @@ void main() {
     float dnv = -dot(normal, viewVec);
     vec3 ray = position.xyz - lightPosition;
 
-    vec3 diffuse_light;
+    float lightDist = length(ray);
+    ray /= lightDist;
 
-    vec3 specular_light;
+    vec3 diffuse_light = vec3(0);
 
-    shade_light(diffuse_light,
-        specular_light,
-        normal,
-        dnv,
-        lightEnergy,
-        ray,
-        lightRadius,
-        viewVec,
-        roughness * roughness,
-        halflambert);
+    vec3 specular_light = vec3(0);
+
+
+
+    if (lightType == TYPE_SPOT) {
+        shade_light_spot(diffuse_light,
+            specular_light,
+            normal,
+            dnv,
+            lightEnergy,
+            projected.xyz,
+            ray,
+            lightDist,
+            lightRadius,
+            viewVec,
+            roughness * roughness,
+            halflambert);
+    } else if (lightType == TYPE_POINT) {
+        shade_light_point(diffuse_light,
+            specular_light,
+            normal,
+            dnv,
+            lightEnergy,
+            ray,
+            lightDist,
+            lightRadius,
+            viewVec,
+            roughness * roughness,
+            halflambert);
+    }
 
     vec3 surface = vec3(0);
     surface += diffuse_light * albedo;
     surface += specular_light * specular;
 
     bool debug_draw_override = debug_draw;
+    debug_draw_override = true;
 
-    surface = mix(surface, lightEnergy * 0.01, float(debug_draw_override));
+    surface += lightEnergy * 0.0001 * float(debug_draw_override);
 
-    fragColor = vec4(surface, 1);
+    fragColor = vec4(surface, 0);
 }

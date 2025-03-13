@@ -15,6 +15,7 @@
 #include "ShaderProgram.hpp"
 #include "deferred/Billboard.hpp"
 #include "deferred/GBuffers.hpp"
+#include "deferred/ShadowMap.hpp"
 #include "pipeline.hpp"
 #include "rendering.hpp"
 #include <GLFW/glfw3.h>
@@ -77,7 +78,7 @@ class cevy::engine::DeferredRenderer {
   public:
   template <typename Windower>
   DeferredRenderer(const Windower &win)
-      : width(win.size().x), height(win.size().y), gbuffer(width, height) {
+      : width(win.size().x), height(win.size().y), gbuffer(width, height), shadowMap() {
     this->aspect = float(width) / float(height);
     std::cout << " <<<< DeferredRenderer(win) @" << this << " <<<<" << std::endl;
   }
@@ -95,6 +96,8 @@ class cevy::engine::DeferredRenderer {
     rhs.alive = "DeferredRenderer is moved-from";
     this->primitives.sphere = std::move(rhs.primitives.sphere);
     this->primitives.blank = std::move(rhs.primitives.blank);
+    this->primitives.flat = std::move(rhs.primitives.flat);
+    this->shadowMap = std::move(rhs.shadowMap);
   }
 
   ~DeferredRenderer() {
@@ -106,9 +109,12 @@ class cevy::engine::DeferredRenderer {
   static void
   render_system(DeferredRenderer &self, Query<Camera> cams,
          Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-         Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world);
+         Query<option<Transform>, option<cevy::engine::PointLight>, option<cevy::engine::SpotLight>> lights, const ecs::World &world);
 
   protected:
+
+  void light_pass(const pipeline::Light& light);
+
   GLFWwindow *glfWindow;
   std::unique_ptr<ShaderProgram> null_shader = nullptr;
   // std::unique_ptr<ShaderProgram> gBuffer_shader = nullptr;
@@ -125,8 +131,18 @@ class cevy::engine::DeferredRenderer {
 
   GBuffers gbuffer;
   Billboard billboard;
+
+  ShadowMap shadowMap;
+
+  struct {
+    glm::mat4 view;
+    glm::mat4 invView;
+    std::vector<std::tuple<Handle<Model>, glm::mat4, uint16_t>> models;
+  } renderContext;
+
   struct {
     Model sphere;
+    Model cube;
     Texture blank;
     Texture black;
     Texture flat;

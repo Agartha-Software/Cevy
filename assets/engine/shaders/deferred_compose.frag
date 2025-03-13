@@ -9,8 +9,6 @@ uniform float fog_far;
 uniform float width;
 uniform float height;
 
-in vec2 texCoord;
-
 layout (binding = 0) uniform sampler2D renderBuffer;
 layout (binding = 1) uniform sampler2D gPosition;
 layout (binding = 2) uniform sampler2D gNormal;
@@ -29,7 +27,6 @@ vec3 filmicToneMapping(vec3 color) {
 
 void main() {
     vec2 screenCoord;
-    // screenCoord = texCoord.xy;
     screenCoord = gl_FragCoord.xy / vec2(width, height);
     vec4 position = texture(gPosition, screenCoord);
     vec4 packed_normal = texture(gNormal, screenCoord);
@@ -50,25 +47,13 @@ void main() {
     viewVec /= viewDistance;
     float dnv = -dot(normal, viewVec);
 
-    float fresnel = 1.125 - 0.45 / (max(0, dnv) + 0.4);
+    vec3 surface = max(vec3(0, 0, 0), texture(renderBuffer, screenCoord).rgb);
 
-    vec3 surface = max(vec3(0, 0, 0), texture(renderBuffer, texCoord).rgb);
-
-    // surface += ambientColor * (albedo * fresnel + (1 - fresnel) * specular);
+    surface += ambientColor * (albedo + specular);
 
     surface = mix(surface, fog, clamp(pow(position.w / fog_far, 0.5), 0.8, 1));
 
     surface = filmicToneMapping(surface);
 
     fragColor = vec4(surface, 1.0);
-    // fragColor = vec4(albedo, 1.0);
-    // vec4 nm = vec4(normal, 0);
-    // nm = invView * nm;
-    // nm = nm * vec4(1, 1, -1, 1);
-    // nm = nm * 0.5 + 0.5;
-
-    // fragColor = vec4(nm.xyz, 1.0);
-    // fragColor = vec4(nm.xyz, 1.0);
-    // fragColor = vec4(roughness, roughness, roughness, 1.0);
-    // fragColor = vec4(specular * (1 + 1 / roughness), 1.0);
 }
