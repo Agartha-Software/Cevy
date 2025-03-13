@@ -54,6 +54,8 @@ class Engine : public cevy::ecs::Plugin {
     app.init_component<cevy::engine::Transform>();
     app.init_component<cevy::engine::TransformVelocity>();
     app.init_component<cevy::engine::PointLight>();
+    app.init_component<cevy::engine::SpotLight>();
+    app.init_component<cevy::engine::SunLight>();
     app.init_component<cevy::engine::Color>();
     // app.init_component<cevy::engine::Atmosphere>();
     app.add_plugins(cevy::engine::AssetManagerPlugin());
