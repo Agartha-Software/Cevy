@@ -17,16 +17,8 @@ namespace cevy::editor {
 
 class GameWindow : public EditorWindow {
     public:
-    GameWindow() {}
+    GameWindow() : EditorWindow(false, "Game") {}
 
     void render(cevy::editor::Editor &editor, glWindow &glwindow) override;
-
-    bool getMenuActive() override {
-      return false;
-    }
-
-    const std::string getId() override {
-      return "GameWindow";
-    }
   };
 };

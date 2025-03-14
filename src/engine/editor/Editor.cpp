@@ -194,7 +194,7 @@ void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows) {
   if (ImGui::BeginMenuBar()) {
     if (ImGui::BeginMenu("Windows")) {
       for (auto &window: windows) {
-        ImGui::MenuItem(window->getId().c_str(), NULL, &window->open);
+        ImGui::MenuItem(window->id.c_str(), NULL, &window->open);
       }
       ImGui::EndMenu();
     }
@@ -215,9 +215,9 @@ void pre_render(cevy::ecs::Resource<cevy::engine::Window> windower) {
 
   for (auto &window: editor.windows) {
     if (window->open) {
-      ImGui::Begin(window->getId().c_str(), &window->open, ImGuiWindowFlags_MenuBar);
+      ImGui::Begin(window->id.c_str(), &window->open, ImGuiWindowFlags_MenuBar);
       {
-        if (window->getMenuActive()) {
+        if (window->menuActive) {
           menu(editor.windows);
         }
         window->render(editor, glwindow);

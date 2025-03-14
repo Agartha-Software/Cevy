@@ -18,32 +18,23 @@ namespace cevy::editor {
   class EditorWindow {
     public:
     virtual void render(cevy::editor::Editor &editor, glWindow &glwindow) = 0;
-    virtual bool getMenuActive() = 0;
-    virtual const std::string getId() = 0;
     bool open;
+    const bool menuActive;
+    const std::string id;
 
-    EditorWindow(): open(true) {
-    }
+    EditorWindow &operator=(EditorWindow &&rhs) = delete; // can not assign to const members
+    EditorWindow &operator=(const EditorWindow &rhs) = delete; // can not assign to const members
+    EditorWindow(bool menuActive, const std::string &id): open(true), menuActive(menuActive), id(id) {}
   };
 
   class LogWindow : public EditorWindow {
-    const std::string id;
-
     public:
-    LogWindow(const std::string id) : id(id) {}
+    LogWindow(const std::string id) : EditorWindow(true, id) {}
 
     void render(cevy::editor::Editor &, glWindow &) override {
       ImGui::Text("Test1");
       ImGui::Text("Test2");
       ImGui::Text("Test3");
-    }
-
-    bool getMenuActive() override {
-      return true;
-    }
-
-    const std::string getId() override {
-      return id;
     }
   };
 };
