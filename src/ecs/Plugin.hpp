@@ -15,3 +15,9 @@ class cevy::ecs::Plugin {
   Plugin() = default;
   ~Plugin() = default;
 };
+
+namespace cevy::ecs {
+class NullPlugin : public cevy::ecs::Plugin {
+  void build(cevy::ecs::App &) override {};
+};
+} // namespace cevy::ecs

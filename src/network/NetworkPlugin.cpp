@@ -6,6 +6,6 @@
 */
 
 #include "NetworkPlugin.hpp"
-#include "network/network.hpp"
+#include "network.hpp"
 
 using cevy::NetworkPlugin;

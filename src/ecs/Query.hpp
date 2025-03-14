@@ -42,7 +42,8 @@ using remove_optional = eval_cond_t<is_optional<Type>::value, inner_optional, Ty
 
 template <class... T>
 class iterator {
-  static_assert(all(std::negation<std::is_same<T, Entity>>::value...), "Entity must only be first in a request");
+  static_assert(all(std::negation<std::is_same<T, Entity>>::value...),
+                "Entity must only be first in a request");
   template <class Container>
   using iterator_t = typename Container::iterator;
 
@@ -88,7 +89,7 @@ class iterator {
     idx += 1;
   }
 
-  static size_t _compute_size(World& w, size_t nb_e);
+  static size_t _compute_size(World &w, size_t nb_e);
 
   iterator(iterator const &z) : current(z.current), _max(z._max), _idx(z._idx), _entity(_idx) {};
 
@@ -102,7 +103,7 @@ class iterator {
     return old;
   };
 
-  iterator& operator+=(size_t n) {
+  iterator &operator+=(size_t n) {
     incr_all(n);
     return *this;
   };
@@ -111,7 +112,6 @@ class iterator {
     auto it = *this;
     return it += n;
   };
-
 
   value_type operator*() { return to_value(); };
   value_type operator->() { return to_value(); };
@@ -160,7 +160,7 @@ class iterator {
     }
   }
 
-  const value_type to_value() { return value_type{a_value<T>()...}; }
+  const value_type to_value() { return value_type {a_value<T>()...}; }
 
   protected:
   iterator_tuple current;
@@ -171,7 +171,9 @@ class iterator {
 
 template <typename... T>
 class iterator<Entity, T...> : public iterator<T...> {
-  static_assert(all(std::negation<std::is_same<T, Entity>>::value...), "Entity must only be first in a request");
+  static_assert(all(std::negation<std::is_same<T, Entity>>::value...),
+                "Entity must only be first in a request");
+
   public:
   template <class Container>
   using iterator_t = typename Container::iterator;
@@ -181,7 +183,9 @@ class iterator<Entity, T...> : public iterator<T...> {
 
   iterator(iterator_tuple const &it_tuple, size_t max, size_t idx = 0)
       : iterator<T...>(it_tuple, max, idx) {};
-  const value_type to_value() { return value_type{Entity(iterator<T...>::_idx), iterator:: template a_value<T>()...}; }
+  const value_type to_value() {
+    return value_type {Entity(iterator<T...>::_idx), iterator::template a_value<T>()...};
+  }
 
   static iterator begin(World &w, size_t size);
   static iterator end(World &w, size_t size);
@@ -191,7 +195,7 @@ class iterator<Entity, T...> : public iterator<T...> {
     return it += n;
   };
 
-  iterator& operator+=(size_t n) {
+  iterator &operator+=(size_t n) {
     iterator<T...>::incr_all(n);
     return *this;
   };
@@ -210,9 +214,7 @@ class Query {
   using iterator_t = iterator<T...>;
   using iterator_tuple = typename iterator_t::iterator_tuple;
 
-  static Query<T...> query(World &w) {
-    return Query<T...>(w);
-  }
+  static Query<T...> query(World &w) { return Query<T...>(w); }
 
   Query(World &w);
 
@@ -223,7 +225,6 @@ class Query {
   const iterator_t end() const { return _end; };
 
   private:
-
   public:
   size_t size() { return _size; }
 
@@ -236,7 +237,7 @@ class Query {
     return single();
   }
 
-  std::optional<typename iterator_t::value_type> get(const Entity& id) {
+  std::optional<typename iterator_t::value_type> get(const Entity &id) {
     auto at = begin() + id._id;
     if (at.all_set()) {
       return std::make_optional(at.to_value());
@@ -262,7 +263,7 @@ class Query {
   public:
   template <size_t N, typename Indicies = std::make_index_sequence<N>>
   std::array<typename iterator_t::value_type, N> multiple() {
-    return multiple_impl<N>(Indicies{});
+    return multiple_impl<N>(Indicies {});
   }
 
   template <size_t N>

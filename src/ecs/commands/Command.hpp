@@ -11,5 +11,5 @@
 
 class cevy::ecs::Command {
   public:
-  static void apply(cevy::ecs::World &){};
+  static void apply(cevy::ecs::World &) {};
 };

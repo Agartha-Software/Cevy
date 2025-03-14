@@ -49,8 +49,8 @@ class Grid {
   SparseVector<SparseVector<SparseVector<std::vector<entity>>>> _cells;
 
   public:
-  Grid(){};
-  ~Grid(){};
+  Grid() {};
+  ~Grid() {};
 
   SparseVector<SparseVector<SparseVector<std::vector<entity>>>> getCells() const { return _cells; };
   void addEntity(const size_t x, const size_t y, const size_t z, const entity &value);

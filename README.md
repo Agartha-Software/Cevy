@@ -19,8 +19,9 @@ We use *Doxygen* for our doc, you can `make doc` and open `index.html` to see it
 
 [Getting Started](./docs/Getting%20Started.md)  
 [How to use C++evy coming from Bevy](./docs/compare.md)  
-[NetworkRFC](./docs/NetworkRFC.md)  
 
 ### Contributing
 
 Every contribution is welcome! :D
+
+Please check out the [guidelines](CONTRIBUTING.md) before getting started!

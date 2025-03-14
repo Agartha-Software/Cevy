@@ -20,13 +20,18 @@
 #include <utility>
 #include <vector>
 
+#include "App.hpp"
+#include "Model.hpp"
+#include "PbrMaterial.hpp"
+#include "Plugin.hpp"
+#include "ecs.hpp"
+
 void init_asset_manager(cevy::ecs::World &w);
 
 namespace cevy::engine {
 class AssetManager {
   public:
-
-  template<typename Type>
+  template <typename Type>
   std::optional<Handle<Type>> get(const std::string name = "") {
     auto in = this->lookup<Type>(name);
     if (in)
@@ -41,8 +46,9 @@ class AssetManager {
       return std::nullopt;
     }
 
-    std::vector<Handle<Type>>& handles = std::any_cast<std::vector<Handle<Type>>&>(anys_found->second);
-    auto& keys = this->any_keys.at(std::type_index(typeid(Type)));
+    std::vector<Handle<Type>> &handles =
+        std::any_cast<std::vector<Handle<Type>> &>(anys_found->second);
+    auto &keys = this->any_keys.at(std::type_index(typeid(Type)));
 
     auto found = keys.find(name);
     if (found != keys.end()) {
@@ -52,14 +58,15 @@ class AssetManager {
     }
   }
 
-  template<typename Type>
+  template <typename Type>
   Handle<Type> load(Type &&asset, const std::string name = "") {
     auto [anys_found, is_new] = this->anys.try_emplace(std::type_index(typeid(Type)), std::vector<Handle<Type>>());
 
-    std::vector<Handle<Type>>& handles = std::any_cast<std::vector<Handle<Type>>&>(anys_found->second);
+    std::vector<Handle<Type>> &handles =
+        std::any_cast<std::vector<Handle<Type>> &>(anys_found->second);
     size_t idx = handles.size();
     if (name != "") {
-      auto& keys = this->any_keys[std::type_index(typeid(Type))];
+      auto &keys = this->any_keys[std::type_index(typeid(Type))];
       auto found = keys.find(name);
       if (found != keys.end()) {
         return handles.at(found->second) = std::move(Handle<Type>(std::forward<Type>(asset)));
@@ -68,8 +75,8 @@ class AssetManager {
       }
     }
 
-    auto em = handles.emplace_back(std::forward<Handle<Type>>(Handle<Type>(std::forward<Type>(asset))));
-    return em;
+    return handles.emplace_back(
+        std::forward<Handle<Type>>(Handle<Type>(std::forward<Type>(asset))));
   }
 
   protected:
@@ -112,3 +119,11 @@ class AssetManagerPlugin : public ecs::Plugin {
   void build(ecs::App &app);
 };
 } // namespace cevy::engine
+
+template <>
+cevy::engine::Handle<cevy::engine::Model>
+cevy::engine::AssetManager::load(cevy::engine::Model &&model, std::string name);
+
+template <>
+std::optional<cevy::engine::Handle<cevy::engine::Model>>
+cevy::engine::AssetManager::get<cevy::engine::Model>(std::string name);

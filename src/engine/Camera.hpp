@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include "Resource.hpp"
-#include "Window.hpp"
 #include "Query.hpp"
+#include "Resource.hpp"
 #include "Target.hpp"
 #include "Transform.hpp"
+#include "Window.hpp"
 #include "cevy.hpp"
 
 namespace cevy::engine {
@@ -32,4 +32,5 @@ class Camera {
 
 void update_camera(cevy::ecs::Query<cevy::engine::Camera, option<cevy::engine::Target>,
                                     option<cevy::engine::Transform>>
-                       cams, cevy::ecs::Resource<cevy::engine::Window> window);
+                       cams,
+                   cevy::ecs::Resource<cevy::engine::Window> window);

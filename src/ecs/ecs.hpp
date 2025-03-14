@@ -34,7 +34,6 @@ class Resource;
 template <class... Containers>
 class Query;
 
-
 template <class... Containers>
 class iterator;
 } // namespace ecs

@@ -25,6 +25,7 @@
 #include "ecs.hpp"
 #include "engine.hpp"
 #include "glWindow.hpp"
+#include "input.hpp"
 
 namespace cevy::engine {
 template <template <typename T> typename Windower = glWindow, typename Renderer = ForwardRenderer>
@@ -41,7 +42,7 @@ class Engine : public cevy::ecs::Plugin {
     app.add_stage<PreRenderStage>();
     app.add_stage<PostRenderStage>();
 #ifdef DEBUG
-    app.init_resource<cevy::engine::DebugWindow>(cevy::engine::DebugWindow{.open = true});
+    app.init_resource<cevy::engine::DebugWindow>(cevy::engine::DebugWindow {.open = true});
 #endif
     app.init_resource<cevy::engine::Atmosphere>();
     app.init_resource<cevy::engine::Window>(Windower<Renderer>(1280, 720));
@@ -70,8 +71,10 @@ class Engine : public cevy::ecs::Plugin {
                            "assets/engine/shaders/gbuffer_pbr.frag");
     }));
 
+
+    app.add_plugins(cevy::input::InputPlugin());
+    app.add_plugins(typename Windower<Renderer>::Plugin());
     app.add_systems<cevy::engine::PreRenderStage>(update_camera);
-    app.add_systems<cevy::engine::RenderStage>(Windower<Renderer>::render_system);
     app.add_systems<ecs::core_stage::PostUpdate>(TransformVelocity::system);
     app.add_systems<cevy::ecs::core_stage::PreUpdate>(Transform::children_system);
   };

@@ -55,7 +55,8 @@ class ResourceManager {
 
   template <typename Content>
   void insert_resource(const Content &value) {
-    _resources_map.insert_or_assign(std::type_index(typeid(Content)), cevy::make_any<Content>(value));
+    _resources_map.insert_or_assign(std::type_index(typeid(Content)),
+                                    cevy::make_any<Content>(value));
   }
 
   template <typename R, typename... Params>

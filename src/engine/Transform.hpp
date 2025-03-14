@@ -229,7 +229,7 @@ class Transform {
   }
 
   Transform &setScaleXYZ(float x, float y, float z) {
-    scale = glm::vec3{x, y, z};
+    scale = glm::vec3 {x, y, z};
     return *this;
   }
 
@@ -253,37 +253,37 @@ class Transform {
   glm::vec3 xyz() const { return position; }
 
   glm::vec3 fwd() const {
-    glm::vec3 v{0, 0, 1};
+    glm::vec3 v {0, 0, 1};
     v = v * this->rotation;
     return v;
   }
 
   glm::vec3 up() const {
-    glm::vec3 v{0, 1, 0};
+    glm::vec3 v {0, 1, 0};
     v = v * this->rotation;
     return v;
   }
 
   glm::vec3 right() const {
-    glm::vec3 v{0, 1, 0};
+    glm::vec3 v {0, 1, 0};
     v = v * this->rotation;
     return v;
   }
 
   glm::vec3 tan() const {
-    glm::vec3 v{1, 0, 0};
+    glm::vec3 v {1, 0, 0};
     v = v * this->rotation;
     return v;
   }
 
   glm::vec3 cotan() const {
-    glm::vec3 v{0, 1, 0};
+    glm::vec3 v {0, 1, 0};
     v = v * this->rotation;
     return v;
   }
 
   protected:
-  template<template<typename T> typename Windower, typename Renderer>
+  template <template <typename T> typename Windower, typename Renderer>
   friend class Engine;
 
   Transform &parent(const Transform &parent) {
@@ -312,9 +312,10 @@ class Transform {
   glm::quat world_rotation;
   glm::vec3 world_scale;
 
-  static void parent_callback(std::map<size_t, std::tuple<Transform*, size_t>> storage, Transform& self, size_t parent) {
+  static void parent_callback(std::map<size_t, std::tuple<Transform *, size_t>> storage,
+                              Transform &self, size_t parent) {
     if (storage.find(parent) != storage.end()) {
-      auto& [p_tm, p_p] = storage.at(parent);
+      auto &[p_tm, p_p] = storage.at(parent);
       // std::get<1>(storage.at(parent)) = size_t(-1);
       p_p = size_t(-1);
       parent_callback(storage, *p_tm, p_p);
@@ -322,8 +323,9 @@ class Transform {
     }
   };
 
-  static int children_system(ecs::Query<cevy::ecs::Entity, Parent, Transform> children, ecs::Query<ecs::Entity, Transform> all) {
-    std::map<size_t, std::tuple<Transform*, size_t>> storage;
+  static int children_system(ecs::Query<cevy::ecs::Entity, Parent, Transform> children,
+                             ecs::Query<ecs::Entity, Transform> all) {
+    std::map<size_t, std::tuple<Transform *, size_t>> storage;
     for (auto [_, tm]: all) {
       tm.reset_world();
     }
@@ -333,12 +335,11 @@ class Transform {
         auto q_parent = all.get(parent.entity);
         if (q_parent) {
           auto [_, p_tm] = q_parent.value();
-          p_tm.reset_world();
           storage[parent.entity] = std::make_tuple(&p_tm, size_t(-1));
         }
       }
     }
-    for (auto [en, s]: storage) {
+    for (auto [en, s] : storage) {
       auto [tm, p] = s;
       parent_callback(storage, *tm, p);
     }

@@ -17,6 +17,7 @@ endif()
 
 set(OpenGL_GL_PREFERENCE "LEGACY")
 find_package(OpenGL 2 REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
 
 set(IMGUI_FOLDER ${CMAKE_BINARY_DIR}/_deps/imgui)
 
@@ -37,4 +38,4 @@ target_include_directories(imgui
   ${IMGUI_FOLDER}/backends
 )
 
-target_link_libraries(imgui PUBLIC glfw ${OPENGL_LIBRARIES})
+target_link_libraries(imgui PRIVATE glfw ${OPENGL_LIBRARIES})

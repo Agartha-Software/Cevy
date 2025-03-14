@@ -5,16 +5,10 @@
 ** materials implementation
 */
 
+#include "glx.hpp"
 #include <functional>
-#if (_WIN32)
-#include <GL/gl3w.h>
-#endif
-#if (__linux__)
-#include <GL/glew.h>
-#endif
 
 #include "AssetManager.hpp"
-#include "GL/gl.h"
 #include "PbrMaterial.hpp"
 #include "cevy.hpp"
 #include "stb_image.h"
@@ -158,7 +152,6 @@ TextureBuilder::~TextureBuilder() {
   data = nullptr;
 }
 
-
 Texture TextureBuilder::from(const glm::vec4u8 &pixel, int width, int height) {
   TextureBuilder builder;
   builder.width = width;
@@ -168,7 +161,7 @@ Texture TextureBuilder::from(const glm::vec4u8 &pixel, int width, int height) {
 
   for (int x = 0; x < width; ++x)
     for (int y = 0; y < height; ++y) {
-      static_cast<glm::vec4u8*>(builder.data)[x + y * width] = pixel;
+      static_cast<glm::vec4u8 *>(builder.data)[x + y * width] = pixel;
     }
 
   // std::fill(reinterpret_cast<glm::vec<4, uint8_t> *>(builder.data),
@@ -185,14 +178,13 @@ Texture TextureBuilder::from(const glm::vec4 &pixel, int width, int height) {
 
   for (int x = 0; x < width; ++x)
     for (int y = 0; y < height; ++y) {
-      static_cast<glm::vec4*>(builder.data)[x + y * width] = pixel;
+      static_cast<glm::vec4 *>(builder.data)[x + y * width] = pixel;
     }
 
   // std::fill(reinterpret_cast<glm::vec4 *>(builder.data),
   //           reinterpret_cast<glm::vec4 *>(builder.data) + width * height, pixel);
   return builder.build();
 }
-
 
 static uint8_t *normalize_image_data(uint8_t *image_data, int width, int height, int nrChannels,
                                      uint8_t default_value = 0) {
@@ -279,7 +271,8 @@ int TextureBuilder::load_alpha() {
     this->type = Texture::Type::U8_sRGB;
   }
 
-  splice_image_data(static_cast<uint8_t*>(this->data), alpha_data, this->width, this->height, nrChannels, 1);
+  splice_image_data(static_cast<uint8_t *>(this->data), alpha_data, this->width, this->height,
+                    nrChannels, 1);
   return 0;
 }
 
@@ -296,7 +289,8 @@ int TextureBuilder::get_alpha(const TextureBuilder &other) {
     this->type = Texture::Type::U8_sRGB;
   }
 
-  splice_image_data(static_cast<uint8_t*>(this->data), static_cast<uint8_t*>(other.data), this->width, this->height, 4, 3);
+  splice_image_data(static_cast<uint8_t *>(this->data), static_cast<uint8_t *>(other.data),
+                    this->width, this->height, 4, 3);
   return 0;
 }
 
@@ -319,7 +313,7 @@ Texture TextureBuilder::build() {
 
 
   if (this->data) {
-    uint texture;
+    uint32_t texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -331,8 +325,8 @@ Texture TextureBuilder::build() {
     glTexImage2D(GL_TEXTURE_2D, 0, TextureBuilder::formats[int(this->type)][0], this->width,
                  this->height, 0, GL_RGBA, TextureBuilder::formats[int(this->type)][1], this->data);
 
-
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->width, this->height, 0, GL_RGBA,
+    // GL_UNSIGNED_BYTE,
     //              this->data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -365,7 +359,7 @@ Handle<Texture> TextureBuilder::build(AssetManager &manager) {
   }
 
   if (this->data) {
-    uint texture;
+    uint32_t texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 

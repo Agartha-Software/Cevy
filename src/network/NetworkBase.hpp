@@ -25,7 +25,6 @@
 #include <unistd.h>
 #include <vector>
 
-#include "../ecs/SparseVector.hpp"
 #include "asio/io_context.hpp"
 #include "asio/ip/address.hpp"
 #include "asio/ip/tcp.hpp"
@@ -63,9 +62,7 @@ class cevy::NetworkBase {
         _udp_socket(std::move(rhs._udp_socket)), _tcp_socket(std::move(rhs._tcp_socket)),
         _tcp_connexions(std::move(rhs._tcp_connexions)),
         _tcp_acceptor(std::move(rhs._tcp_acceptor)), _temp_tcp_co(std::move(rhs._temp_tcp_co)),
-        _udp_recv(std::move(rhs._udp_recv))
-
-            {};
+        _udp_recv(std::move(rhs._udp_recv)) {};
 
   public:
   union half {
