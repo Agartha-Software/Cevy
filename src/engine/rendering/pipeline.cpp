@@ -10,9 +10,7 @@
 using cevy::engine::pipeline;
 using cevy::engine::ShaderBuilder;
 
-
-
-template<>
+template <>
 void ShaderBuilder<pipeline>::build(ShaderProgram &shader) {
   shader.addUniform(pipeline::uniforms::model::name);
   shader.addUniform(pipeline::uniforms::model_normal::name);

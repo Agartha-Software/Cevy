@@ -33,7 +33,7 @@ struct eval_cond<true, Z, X, Else> {
 template <bool test, template <class...> class Z, class X, class Else>
 using eval_cond_t = typename eval_cond<test, Z, X, Else>::type;
 
-template<typename T, typename Find, typename Replace>
+template <typename T, typename Find, typename Replace>
 using replace = std::conditional<std::is_same_v<T, Find>, Replace, T>;
 
 /// @brief True if all parameter pack is true
@@ -61,11 +61,9 @@ constexpr std::function<R(Args...)> make_function(R (&&func)(Args...)) {
 /// @brief contains all of the engine bits
 namespace cevy {
 
-template <typename M_t, typename T, typename F,
-          typename M_r>
+template <typename M_t, typename T, typename F, typename M_r>
 class Map {
   public:
-
   static inline constexpr M_r map(M_t &&mappable, F &&func) {
     M_r ret;
     auto inserter = std::back_inserter(ret);
@@ -99,14 +97,18 @@ class Map<std::optional<T>, T, F, std::optional<R>> {
   }
 };
 
-template <template <typename...> typename M, typename ...M_as, typename T = typename M<M_as...>::value_type, typename F,
-          typename R = typename std::invoke_result<F, T &&>::type, typename M_r = /* M<replace<M_as, T, R>...>> */ M<R>>
+template <template <typename...> typename M, typename... M_as,
+          typename T = typename M<M_as...>::value_type, typename F,
+          typename R = typename std::invoke_result<F, T &&>::type,
+          typename M_r = /* M<replace<M_as, T, R>...>> */ M<R>>
 inline constexpr M<R> map(M<M_as...> &&mappable, F &&func) {
   return Map<M<M_as...>, T, F, M_r>::map(std::forward<M<T>>(mappable), std::forward<F>(func));
 }
 
-template <template <typename...> typename M, typename ...M_as, typename T = typename M<M_as...>::value_type, typename F,
-          typename R = typename std::invoke_result<F, T &&>::type, typename M_r = /* M<replace<M_as, T, R>...>> */ M<R>>
+template <template <typename...> typename M, typename... M_as,
+          typename T = typename M<M_as...>::value_type, typename F,
+          typename R = typename std::invoke_result<F, T &&>::type,
+          typename M_r = /* M<replace<M_as, T, R>...>> */ M<R>>
 inline constexpr M<R> map(const M<M_as...> &mappable, F &&func) {
   return Map<M<M_as...>, T, F, M_r>::map(mappable, std::forward<F>(func));
 }

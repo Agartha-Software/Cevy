@@ -39,7 +39,7 @@ class AssetManager {
     return this->factory<Type>(name);
   }
 
-  template<typename Type>
+  template <typename Type>
   std::optional<Handle<Type>> lookup(const std::string name = "") {
     auto anys_found = this->anys.find(std::type_index(typeid(Type)));
     if (anys_found == this->anys.end()) {
@@ -60,7 +60,8 @@ class AssetManager {
 
   template <typename Type>
   Handle<Type> load(Type &&asset, const std::string name = "") {
-    auto [anys_found, is_new] = this->anys.try_emplace(std::type_index(typeid(Type)), std::vector<Handle<Type>>());
+    auto [anys_found, is_new] =
+        this->anys.try_emplace(std::type_index(typeid(Type)), std::vector<Handle<Type>>());
 
     std::vector<Handle<Type>> &handles =
         std::any_cast<std::vector<Handle<Type>> &>(anys_found->second);
@@ -80,22 +81,23 @@ class AssetManager {
   }
 
   protected:
-  template<template<typename T> typename Windower, typename Renderer>
+  template <template <typename T> typename Windower, typename Renderer>
   friend class Engine;
 
-  template<typename T>
-  void add_factory(const std::string& key, std::function<T()>&& func) {
+  template <typename T>
+  void add_factory(const std::string &key, std::function<T()> &&func) {
     using Func = std::function<T()>;
-    this->factories.emplace(std::make_pair(key, std::move(cevy::make_any<Func>(std::forward<Func>(func)))));
+    this->factories.emplace(
+        std::make_pair(key, std::move(cevy::make_any<Func>(std::forward<Func>(func)))));
   }
 
-
-  template<typename T>
-  std::optional<Handle<T>> factory(const std::string& key) {
+  template <typename T>
+  std::optional<Handle<T>> factory(const std::string &key) {
     using Func = std::function<T()>;
-    auto found = this->factories.find(key); {
+    auto found = this->factories.find(key);
+    {
       if (found != this->factories.end()) {
-        auto &func = std::any_cast<Func&>(found->second);
+        auto &func = std::any_cast<Func &>(found->second);
         return this->load(std::forward<T>(func()), key);
       }
     }

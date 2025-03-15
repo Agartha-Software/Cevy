@@ -5,7 +5,6 @@
 ** Material definition
 */
 
-
 #pragma once
 
 #include "ShaderProgram.hpp"
@@ -110,7 +109,9 @@ struct TextureBuilder {
   int get_alpha(const TextureBuilder &other);
 
   bool good() const {
-    std::cout << "txBuilder:" << this->rgb_file_name << ":rdy?:" << (this->data != nullptr || this->rgb_file_name != "" || this->alpha_file_name != "") << std::endl;
+    std::cout << "txBuilder:" << this->rgb_file_name << ":rdy?:"
+              << (this->data != nullptr || this->rgb_file_name != "" || this->alpha_file_name != "")
+              << std::endl;
     return this->data != nullptr || this->rgb_file_name != "" || this->alpha_file_name != "";
   }
   cevy::engine::Texture build();
@@ -127,9 +128,9 @@ class PbrMaterial {
     pair(T &&t) : a(std::forward<T>(t)), b(std::nullopt) {};
     pair(V &&v) : a(std::nullopt), b(std::forward<V>(v)) {};
     pair(T &&t, V &&v) : a(std::forward<T>(t)), b(std::forward<V>(v)) {};
-    pair(const T& t, const V& v) : a(t), b(v) {};
+    pair(const T &t, const V &v) : a(t), b(v) {};
     pair(V &&v, T &&t) : a(std::forward<T>(t)), b(std::forward<V>(v)) {};
-    pair(const V& v, const T& t) : a(t), b(v) {};
+    pair(const V &v, const T &t) : a(t), b(v) {};
   };
 
   using color_tex = pair<glm::vec4, std::string>;

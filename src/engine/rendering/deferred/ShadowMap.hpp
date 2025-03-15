@@ -14,16 +14,14 @@
 #include <GL/glew.h>
 #endif
 
-#include <utility>
 #include <glm/vec2.hpp>
+#include <utility>
 
 class ShadowMap {
   public:
   ShadowMap(int width = 1024, int height = 1024) : width(width), height(height) {};
-  ShadowMap(ShadowMap&& other) {
-    *this = std::move(other);
-  };
-  ShadowMap& operator=(ShadowMap&& other) {
+  ShadowMap(ShadowMap &&other) { *this = std::move(other); };
+  ShadowMap &operator=(ShadowMap &&other) {
     this->deinit();
     this->framebuffer = other.framebuffer;
     other.framebuffer = 0;
@@ -33,15 +31,14 @@ class ShadowMap {
     this->width = other.width;
     return *this;
   }
-  ~ShadowMap() {
-    this->deinit();
-  }
+  ~ShadowMap() { this->deinit(); }
   void init() {
     glGenFramebuffers(1, &this->framebuffer);
 
     glGenTextures(1, &this->shadowMap);
     glBindTexture(GL_TEXTURE_2D, this->shadowMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, this->width, this->height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, this->width, this->height, 0,
+                 GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -60,21 +57,17 @@ class ShadowMap {
     this->shadowMap = 0;
   }
 
-  void write() {
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->framebuffer);
-  }
+  void write() { glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->framebuffer); }
   void read(uint8_t attachment_n) const {
     glActiveTexture(GL_TEXTURE0 + attachment_n);
     glBindTexture(GL_TEXTURE_2D, this->shadowMap);
   };
 
-  inline constexpr glm::vec<2, uint32_t> size() const {
-    return { this->width, this->height };
-  }
+  inline constexpr glm::vec<2, uint32_t> size() const { return {this->width, this->height}; }
+
   protected:
   GLuint framebuffer;
   GLuint shadowMap;
-
 
   uint32_t width;
   uint32_t height;

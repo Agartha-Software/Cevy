@@ -24,9 +24,7 @@ class Handle {
   Type *operator->() { return _ref.get(); }
   Type &get() { return *_ref.get(); }
   const Type &get() const { return *_ref.get(); }
-  std::shared_ptr<Type> share() const {
-    return _ref;
-  }
+  std::shared_ptr<Type> share() const { return _ref; }
 };
 
 } // namespace cevy::engine

@@ -101,13 +101,18 @@ PbrMaterial::PbrMaterial(AssetManager &mngr, const definition &def) : PbrMateria
     normal_builder.rgb_file_name = def.normal;
   }
 
-  this->diffuse_texture = diffuse_builder.good() ? std::make_optional(diffuse_builder.build(mngr)) : std::nullopt;
-  this->specular_texture = specular_builder.good() ? std::make_optional(specular_builder.build(mngr)) : std::nullopt;
-  this->metallic_texture = metallic_builder.good() ? std::make_optional(metallic_builder.build(mngr)) : std::nullopt;
+  this->diffuse_texture =
+      diffuse_builder.good() ? std::make_optional(diffuse_builder.build(mngr)) : std::nullopt;
+  this->specular_texture =
+      specular_builder.good() ? std::make_optional(specular_builder.build(mngr)) : std::nullopt;
+  this->metallic_texture =
+      metallic_builder.good() ? std::make_optional(metallic_builder.build(mngr)) : std::nullopt;
   this->specular_texture = this->specular_texture ? this->specular_texture : this->metallic_texture;
 
-  this->emission_texture = emit_builder.good() ? std::make_optional(emit_builder.build(mngr)) : std::nullopt;
-  this->normal_texture = normal_builder.good() ? std::make_optional(normal_builder.build(mngr)) : std::nullopt;
+  this->emission_texture =
+      emit_builder.good() ? std::make_optional(emit_builder.build(mngr)) : std::nullopt;
+  this->normal_texture =
+      normal_builder.good() ? std::make_optional(normal_builder.build(mngr)) : std::nullopt;
 
   if (def.metallic.b != "") {
     this->shader = mngr.get<Shader>("gbuffer_pbr");
@@ -311,7 +316,6 @@ Texture TextureBuilder::build() {
     }
   }
 
-
   if (this->data) {
     uint32_t texture;
     glGenTextures(1, &texture);
@@ -369,18 +373,18 @@ Handle<Texture> TextureBuilder::build(AssetManager &manager) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // glTexImage2D(GL_TEXTURE_2D, 0, TextureBuilder::formats[int(this->type)][0], this->width,
-    //              this->height, 0, GL_RGBA, TextureBuilder::formats[int(this->type)][1], this->data);
+    //              this->height, 0, GL_RGBA, TextureBuilder::formats[int(this->type)][1],
+    //              this->data);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                this->data);
+                 this->data);
 
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, this->width, this->height, 0, GL_RGBA,
+    // GL_UNSIGNED_BYTE,
     //         this->data);
-
-
 
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    std::cout << "successfully generated '" << name_full << "'" << std:: endl;
+    std::cout << "successfully generated '" << name_full << "'" << std::endl;
     return manager.load(Texture(texture, name_full), name_full);
   }
   throw std::runtime_error("TextureBuilder failed at this->data (with load):" + name_full);

@@ -92,7 +92,8 @@ Model plane(float size, uint32_t subu, uint32_t subv) {
   // const auto normals = Model::generate_normals(vertices, indices);
 
   Model model;
-  model.tex_coordinates = cevy::map(vertices, [](const glm::vec3& v) { return glm::vec2{v.x, v.y};});
+  model.tex_coordinates =
+      cevy::map(vertices, [](const glm::vec3 &v) { return glm::vec2 {v.x, v.y}; });
   model.indices = std::move(indices);
   model.vertices = std::move(vertices);
   model.normals = std::move(normals);

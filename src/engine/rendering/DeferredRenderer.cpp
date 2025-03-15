@@ -113,14 +113,13 @@ void cevy::engine::DeferredRenderer::init() {
 
   std::cout << "loading gBuffer_shader" << std::endl;
 
-
   this->defaultMaterial.shader.emplace(Handle<ShaderProgram>(ShaderProgram()));
-  auto& gBuffer_shader = this->defaultMaterial.shader.value();
+  auto &gBuffer_shader = this->defaultMaterial.shader.value();
 
   std::cout << "allocated gBuffer_shader" << std::endl;
 
   gBuffer_shader->initFromFiles("assets/engine/shaders/simple.vert",
-                                      "assets/engine/shaders/gbuffer_generic.frag");
+                                "assets/engine/shaders/gbuffer_generic.frag");
   std::cout << "inited gBuffer_shader" << std::endl;
 
   gBuffer_shader->addUniform("model");
@@ -205,15 +204,14 @@ void cevy::engine::DeferredRenderer::render_system(
     glUniformMatrix4fv(shader.uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(shader.uniform("invView"), 1, GL_FALSE, glm::value_ptr(invView));
 
-    glUniform3fv(shader.uniform("custom_ambient"), 1,
-                 glm::value_ptr(material.ambient));
+    glUniform3fv(shader.uniform("custom_ambient"), 1, glm::value_ptr(material.ambient));
     glUniform3fv(shader.uniform("emit_const"), 1, glm::value_ptr(material.emit));
     glUniform3fv(shader.uniform("diffuse_const"), 1,
                  glm::value_ptr(material.diffuse * color.xyz()));
-    glUniform3fv(shader.uniform("specular_const"), 1,
-                 glm::value_ptr(material.specular_tint));
+    glUniform3fv(shader.uniform("specular_const"), 1, glm::value_ptr(material.specular_tint));
     glUniform1f(shader.uniform("roughness_const"), material.roughness);
-    glUniform1i(shader.uniform("normal_mode"), int(pipeline::uniforms::NormalMode::Tangeant) * model->hasTangeants());
+    glUniform1i(shader.uniform("normal_mode"),
+                int(pipeline::uniforms::NormalMode::Tangeant) * model->hasTangeants());
     glUniform1i(shader.uniform("halflambert"), material.halflambert);
     glUniformMatrix4fv(shader.uniform("model"), 1, GL_FALSE,
                        glm::value_ptr(tm * model->modelMatrix()));

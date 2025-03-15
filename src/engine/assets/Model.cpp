@@ -102,10 +102,10 @@ Model &cevy::engine::Model::operator=(const Model &other) {
 class tiny_index_t_impl : public tinyobj::index_t {
   public:
   constexpr tiny_index_t_impl(const tinyobj::index_t i) : tinyobj::index_t(i) {};
-bool operator==(const tiny_index_t_impl b) const {
-  return this->normal_index == b.normal_index && this->texcoord_index == b.texcoord_index &&
-         this->vertex_index == b.vertex_index;
-}
+  bool operator==(const tiny_index_t_impl b) const {
+    return this->normal_index == b.normal_index && this->texcoord_index == b.texcoord_index &&
+           this->vertex_index == b.vertex_index;
+  }
 };
 
 template <>
@@ -114,8 +114,8 @@ struct std::hash<tiny_index_t_impl> {
     size_t dw1 = i.vertex_index;
     size_t dw2 = i.normal_index;
     size_t qw = dw1 + (dw2 << 32);
-    std::size_t h1 = std::hash<size_t>{}(qw);
-    std::size_t h2 = std::hash<size_t>{}(i.texcoord_index);
+    std::size_t h1 = std::hash<size_t> {}(qw);
+    std::size_t h2 = std::hash<size_t> {}(i.texcoord_index);
     return h1 ^ (h2 << 1);
   }
 };

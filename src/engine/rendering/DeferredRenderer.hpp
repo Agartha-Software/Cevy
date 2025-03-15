@@ -106,14 +106,15 @@ class cevy::engine::DeferredRenderer {
   }
 
   void init();
-  static void
-  render_system(DeferredRenderer &self, Query<Camera> cams,
-         Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
-         Query<option<Transform>, option<cevy::engine::PointLight>, option<cevy::engine::SpotLight>> lights, const ecs::World &world);
+  static void render_system(
+      DeferredRenderer &self, Query<Camera> cams,
+      Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+      Query<option<Transform>, option<cevy::engine::PointLight>, option<cevy::engine::SpotLight>>
+          lights,
+      const ecs::World &world);
 
   protected:
-
-  void light_pass(const pipeline::Light& light);
+  void light_pass(const pipeline::Light &light);
 
   GLFWwindow *glfWindow;
   std::unique_ptr<ShaderProgram> null_shader = nullptr;
