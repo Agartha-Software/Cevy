@@ -109,6 +109,7 @@ void cevy::engine::DeferredRenderer::init() {
   this->accumulate_shader->addUniform("lightAngle");
   this->accumulate_shader->addUniform("lightRadius");
   this->accumulate_shader->addUniform("lightRange");
+  this->accumulate_shader->addUniform("lightFade");
   this->accumulate_shader->addUniform("lightType");
 
   std::cout << "loading gBuffer_shader" << std::endl;
@@ -139,7 +140,16 @@ void cevy::engine::DeferredRenderer::init() {
 
   this->shadowMap.init();
 
-  this->primitives.sphere = primitives::sphere(1, 10, 6);
+  {
+    int s_stacks = 4;
+    int s_slices = 6;
+    float s_st_len = glm::pi<float>() * 2 / (s_stacks * 2);
+    float s_sl_len = glm::pi<float>() * 2 / s_slices;
+    float s_diag_len_2 = s_st_len * s_st_len + s_sl_len * s_sl_len;
+    float s_diag_error = std::sqrt(1 * 1 - (s_diag_len_2 / 4));
+    this->primitives.sphere = primitives::sphere(1 / s_diag_error, s_slices, s_stacks);
+  }
+
   this->primitives.cube = primitives::cube(1);
   this->primitives.blank = TextureBuilder::from(glm::vec4u8(255, 255, 255, 127), 2, 2);
   // this->primitives.black = TextureBuilder::from(glm::vec4u8(0, 0, 0, 1), 2, 2);
@@ -372,6 +382,8 @@ void cevy::engine::DeferredRenderer::light_pass(const pipeline::Light &light) {
                glm::value_ptr(light.model[3]));
   glUniform3fv(this->accumulate_shader->uniform("lightEnergy"), 1, glm::value_ptr(light.color));
   glUniform1f(this->accumulate_shader->uniform("lightRadius"), light.radius);
+  glUniform1f(this->accumulate_shader->uniform("lightRange"), light.range);
+  glUniform1f(this->accumulate_shader->uniform("lightFade"), 0.3);
   glUniform1f(this->accumulate_shader->uniform("lightAngle"), light.angle);
   glUniform1ui(this->accumulate_shader->uniform("lightType"), static_cast<uint32_t>(light.type));
   glUniform1i(this->accumulate_shader->uniform("debug_draw"), 0);

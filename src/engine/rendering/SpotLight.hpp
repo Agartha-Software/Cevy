@@ -15,7 +15,7 @@ class SpotLight {
   glm::vec3 color;
   float softness = 0.1;
   float angle = 3.14;
-  float range = 15;
+  float range = 32;
   uint16_t viewlayer_bits;
   uint16_t shadow_viewlayer_bits;
 };
@@ -23,7 +23,7 @@ class SpotLight {
 class SunLight {
   public:
   glm::vec3 color;
-  float range = 8;
+  float range = 32;
   uint16_t viewlayer_bits;
   uint16_t shadow_viewlayer_bits;
 };

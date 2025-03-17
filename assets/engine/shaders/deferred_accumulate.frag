@@ -7,11 +7,14 @@ const uint TYPE_SUN = 3;
 uniform mat4 view;
 uniform mat4 projector;
 uniform mat4 invView;
+
 uniform vec3 lightPosition;
 uniform vec3 lightEnergy;
 uniform vec3 lightDirection;
 uniform float lightAngle;
 uniform float lightRadius;
+uniform float lightRange;
+uniform float lightFade;
 uniform uint lightType;
 
 uniform float width;
@@ -45,9 +48,11 @@ void shade_light_point(
 
     vec3 light = max(energy / (lightDist * lightDist), vec3(0));
 
-    float lambert = dot(normal, -ray);
+    float fade = pow(clamp((lightRange - lightDist) / (lightRange * lightFade), 0, 1), 2);
 
-    // float halfLambert = lambert * 0.5 + 0.5;
+    light *= fade;
+
+    float lambert = dot(normal, -ray);
 
     vec3 halfway = normalize(-ray - viewVec);
 
@@ -89,6 +94,10 @@ void shade_light_spot(
 
     light *= pow(blend, 2.0 * lightRadius);
 
+    float fade = pow(clamp((lightRange - lightDist) / (lightRange * lightFade), 0, 1), 2);
+
+    light *= fade;
+
     float depth_delta = texture(shadowMap, projectedCoords.xy).x - projectedCoords.z;
 
     depth_delta = clamp(depth_delta * 10000 + 1, 0, 1) ;
@@ -96,8 +105,6 @@ void shade_light_spot(
     light *= depth_delta;
 
     float lambert = dot(normal, -ray);
-
-    // float halfLambert = lambert * 0.5 + 0.5;
 
     vec3 halfway = normalize(-ray - viewVec);
 
@@ -149,7 +156,6 @@ void main() {
     vec3 specular_light = vec3(0);
 
 
-
     if (lightType == TYPE_SPOT) {
         shade_light_spot(diffuse_light,
             specular_light,
@@ -182,7 +188,7 @@ void main() {
     surface += specular_light * specular;
 
     bool debug_draw_override = debug_draw;
-    debug_draw_override = true;
+    // debug_draw_override = true;
 
     surface += lightEnergy * 0.0001 * float(debug_draw_override);
 

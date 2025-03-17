@@ -14,7 +14,7 @@ class PointLight {
   public:
   glm::vec3 color;
   float radius = 0.1;
-  float range = 8;
+  float range = 32;
   uint16_t viewlayer_bits;
   uint16_t shadow_viewlayer_bits;
 };
