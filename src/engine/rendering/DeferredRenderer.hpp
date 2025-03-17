@@ -10,7 +10,7 @@
 #include "Camera.hpp"
 #include "Color.hpp"
 #include "Handle.hpp"
-#include "Model.hpp"
+#include "Mesh.hpp"
 #include "PbrMaterial.hpp"
 #include "ShaderProgram.hpp"
 #include "deferred/Billboard.hpp"
@@ -108,7 +108,7 @@ class cevy::engine::DeferredRenderer {
   void init();
   static void render_system(
       DeferredRenderer &self, Query<Camera> cams,
-      Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+      Query<option<Transform>, Handle<Mesh>, option<Handle<PbrMaterial>>, option<Color>> models,
       Query<option<Transform>, option<cevy::engine::PointLight>, option<cevy::engine::SpotLight>>
           lights,
       const ecs::World &world);
@@ -138,12 +138,12 @@ class cevy::engine::DeferredRenderer {
   struct {
     glm::mat4 view;
     glm::mat4 invView;
-    std::vector<std::tuple<Handle<Model>, glm::mat4, uint16_t>> models;
+    std::vector<std::tuple<Handle<Mesh>, glm::mat4, uint16_t>> models;
   } renderContext;
 
   struct {
-    Model sphere;
-    Model cube;
+    Mesh sphere;
+    Mesh cube;
     Texture blank;
     Texture black;
     Texture flat;

@@ -71,7 +71,7 @@ void cevy::engine::ForwardRenderer::init() {
 
 void cevy::engine::ForwardRenderer::render_system(
     ForwardRenderer &self, Query<Camera> cams,
-    Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+    Query<option<Transform>, Handle<Mesh>, option<Handle<PbrMaterial>>, option<Color>> models,
     Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world) {
 
   auto r_atmo = world.get_resource<const Atmosphere>();

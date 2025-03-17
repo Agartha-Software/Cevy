@@ -10,7 +10,7 @@
 #include "Camera.hpp"
 #include "Color.hpp"
 #include "Handle.hpp"
-#include "Model.hpp"
+#include "Mesh.hpp"
 #include "PbrMaterial.hpp"
 #include "ShaderProgram.hpp"
 #include "Window.hpp"
@@ -54,7 +54,7 @@ class cevy::engine::ForwardRenderer {
   void init();
   void static render_system(
       ForwardRenderer &self, Query<Camera> cams,
-      Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+      Query<option<Transform>, Handle<Mesh>, option<Handle<PbrMaterial>>, option<Color>> models,
       Query<option<Transform>, cevy::engine::PointLight> lights, const cevy::ecs::World &world);
 
   protected:

@@ -18,7 +18,7 @@
 
 #include "Atmosphere.hpp"
 #include "DeferredRenderer.hpp"
-#include "Model.hpp"
+#include "Mesh.hpp"
 #include "World.hpp"
 
 // static void renderQuad() {
@@ -158,7 +158,7 @@ void cevy::engine::DeferredRenderer::init() {
 
 void cevy::engine::DeferredRenderer::render_system(
     DeferredRenderer &self, Query<Camera> cams,
-    Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+    Query<option<Transform>, Handle<Mesh>, option<Handle<PbrMaterial>>, option<Color>> models,
     Query<option<Transform>, option<cevy::engine::PointLight>, option<cevy::engine::SpotLight>>
         lights,
     const ecs::World &world) {

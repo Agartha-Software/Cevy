@@ -16,7 +16,7 @@
 // #include "tinyobj_loader_opt.h"
 #include <stdexcept>
 
-#include "Model.hpp"
+#include "Mesh.hpp"
 #include "stb_image.h"
 #include <cstdint>
 #include <glm/gtc/type_ptr.hpp>
@@ -25,25 +25,25 @@
 #include <iostream>
 #include <vector>
 
-using cevy::engine::Model;
+using cevy::engine::Mesh;
 
-Model::Model() {
+Mesh::Mesh() {
   this->modelMatrix_ = glm::identity<glm::mat4>();
   this->t_normalMatrix = glm::identity<glm::mat3>();
   this->initialized = false;
 }
 
-cevy::engine::Model::Model(Model &&other) : Model() { *this = std::move(other); }
+cevy::engine::Mesh::Mesh(Mesh &&other) : Mesh() { *this = std::move(other); }
 
-cevy::engine::Model::Model(const Model &other) : Model() { *this = other; }
+cevy::engine::Mesh::Mesh(const Mesh &other) : Mesh() { *this = other; }
 
-cevy::engine::Model::~Model() {
+cevy::engine::Mesh::~Mesh() {
   if (this->initialized) {
     this->gl_deinit();
   }
 }
 
-Model &cevy::engine::Model::operator=(Model &&other) {
+Mesh &cevy::engine::Mesh::operator=(Mesh &&other) {
   if (this->initialized) {
     gl_deinit();
   }
@@ -80,7 +80,7 @@ Model &cevy::engine::Model::operator=(Model &&other) {
   return *this;
 }
 
-Model &cevy::engine::Model::operator=(const Model &other) {
+Mesh &cevy::engine::Mesh::operator=(const Mesh &other) {
   if (this->initialized) {
     gl_deinit();
   }
@@ -120,14 +120,14 @@ struct std::hash<tiny_index_t_impl> {
   }
 };
 
-cevy::engine::Model cevy::engine::Model::load(const std::string &filename) {
+cevy::engine::Mesh cevy::engine::Mesh::load(const std::string &filename) {
   if (filename.substr(filename.find_last_of(".")) == ".obj") {
     tinyobj::ObjReader reader;
 
     reader.ParseFromFile(filename);
 
     if (reader.Valid()) {
-      Model model;
+      Mesh model;
 
       model.indices.clear();
       std::unordered_map<tiny_index_t_impl, size_t> index_map;
@@ -181,7 +181,7 @@ cevy::engine::Model cevy::engine::Model::load(const std::string &filename) {
   throw std::runtime_error("invalid file type to load:" + filename);
 }
 
-void Model::load(const std::vector<glm::vec3> &vertices, const std::vector<glm::vec3> &normals,
+void Mesh::load(const std::vector<glm::vec3> &vertices, const std::vector<glm::vec3> &normals,
                  const std::vector<uint32_t> &indices) {
   this->vertices.clear();
   this->vertices.reserve(vertices.size());
@@ -200,7 +200,7 @@ void Model::load(const std::vector<glm::vec3> &vertices, const std::vector<glm::
   this->gl_init();
 }
 
-void Model::load(const std::vector<glm::vec4> &vertices, const std::vector<glm::vec3> &normals,
+void Mesh::load(const std::vector<glm::vec4> &vertices, const std::vector<glm::vec3> &normals,
                  const std::vector<uint32_t> &indices) {
   this->vertices = vertices;
   this->indices = indices;
@@ -213,7 +213,7 @@ void Model::load(const std::vector<glm::vec4> &vertices, const std::vector<glm::
   this->gl_init();
 }
 
-void Model::load(const std::vector<float> &vertices, const std::vector<float> &normals,
+void Mesh::load(const std::vector<float> &vertices, const std::vector<float> &normals,
                  const std::vector<uint32_t> &indices) {
   this->vertices.clear();
   this->vertices.reserve(vertices.size() * 4);
@@ -233,7 +233,7 @@ void Model::load(const std::vector<float> &vertices, const std::vector<float> &n
   this->gl_init();
 }
 
-void Model::draw() const {
+void Mesh::draw() const {
   if (!initialized)
     return;
 
@@ -247,7 +247,7 @@ void Model::draw() const {
   glDrawElements(GL_TRIANGLES, this->elements, GL_UNSIGNED_INT, 0);
 }
 
-// void Model::calculate_normals()
+// void Mesh::calculate_normals()
 // {
 // 	this->normals.resize(this->vertices.size());
 
@@ -267,7 +267,7 @@ void Model::draw() const {
 // 	}
 // }
 
-std::vector<glm::vec3> Model::generate_normals(const std::vector<glm::vec3> &vertices,
+std::vector<glm::vec3> Mesh::generate_normals(const std::vector<glm::vec3> &vertices,
                                                const std::vector<uint32_t> &indices) {
   std::vector<glm::vec3> normals(vertices.size());
   // this->normals.resize(this->vertices.size());
@@ -291,7 +291,7 @@ std::vector<glm::vec3> Model::generate_normals(const std::vector<glm::vec3> &ver
   return normals;
 }
 
-void Model::gl_init() {
+void Mesh::gl_init() {
   // create VAO : 1 : # of buffer, vaoHandler: pointer for the handler
   glGenVertexArrays(1, &this->vaoHandle);
   glBindVertexArray(this->vaoHandle);
@@ -365,7 +365,7 @@ void Model::gl_init() {
   initialized = true;
 }
 
-void cevy::engine::Model::gl_deinit() {
+void cevy::engine::Mesh::gl_deinit() {
   glDeleteBuffers(1, &this->vbo_positions);
   glDeleteBuffers(1, &this->vbo_colors);
   glDeleteBuffers(1, &this->vbo_normals);

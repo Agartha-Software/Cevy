@@ -28,7 +28,7 @@ struct pipeline {
     enum class NormalMode : int {
       None = 0b00,
       Tangeant = 0b01,
-      Model = 0b11,
+      Mesh = 0b11,
     };
 
     /// model transform matrix

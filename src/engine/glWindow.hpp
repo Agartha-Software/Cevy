@@ -15,7 +15,7 @@
 #include "Color.hpp"
 #include "Event.hpp"
 #include "Handle.hpp"
-#include "Model.hpp"
+#include "Mesh.hpp"
 #include "PbrMaterial.hpp"
 #include "Plugin.hpp"
 #include "Query.hpp"
@@ -41,7 +41,7 @@ class glWindow : public cevy::engine::Window::generic_window {
   using Transform = cevy::engine::Transform;
   using PbrMaterial = cevy::engine::PbrMaterial;
   using Color = cevy::engine::Color;
-  using Model = cevy::engine::Model;
+  using Mesh = cevy::engine::Mesh;
   using glLight = cevy::engine::pipeline::Light;
 
   public:

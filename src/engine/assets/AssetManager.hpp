@@ -9,7 +9,7 @@
 
 #include "App.hpp"
 #include "Handle.hpp"
-#include "Model.hpp"
+#include "Mesh.hpp"
 #include "Plugin.hpp"
 #include "cevy.hpp"
 #include "ecs.hpp"
@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "App.hpp"
-#include "Model.hpp"
+#include "Mesh.hpp"
 #include "PbrMaterial.hpp"
 #include "Plugin.hpp"
 #include "ecs.hpp"
@@ -108,7 +108,7 @@ class AssetManager {
   std::unordered_map<std::type_index, cevy::any> anys; // any = std::vector<Asset>
 
   std::unordered_map<std::string, size_t> mesh_keys;
-  std::vector<Handle<cevy::engine::Model>> meshes;
+  std::vector<Handle<cevy::engine::Mesh>> meshes;
   std::unordered_map<std::string, size_t> texture_keys;
   std::unordered_map<std::string, size_t> material_keys;
 
@@ -123,9 +123,9 @@ class AssetManagerPlugin : public ecs::Plugin {
 } // namespace cevy::engine
 
 template <>
-cevy::engine::Handle<cevy::engine::Model>
-cevy::engine::AssetManager::load(cevy::engine::Model &&model, std::string name);
+cevy::engine::Handle<cevy::engine::Mesh>
+cevy::engine::AssetManager::load(cevy::engine::Mesh &&model, std::string name);
 
 template <>
-std::optional<cevy::engine::Handle<cevy::engine::Model>>
-cevy::engine::AssetManager::get<cevy::engine::Model>(std::string name);
+std::optional<cevy::engine::Handle<cevy::engine::Mesh>>
+cevy::engine::AssetManager::get<cevy::engine::Mesh>(std::string name);

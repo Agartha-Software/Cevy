@@ -8,7 +8,7 @@
 add_library(assets
   STATIC
   AssetManager.cpp
-  Model.cpp
+  Mesh.cpp
   primitives.cpp
   PbrMaterial.cpp
   )

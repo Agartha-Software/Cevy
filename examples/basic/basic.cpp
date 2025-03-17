@@ -12,7 +12,7 @@
 #include "Color.hpp"
 #include "DeferredRenderer.hpp"
 #include "EnginePlugin.hpp"
-#include "Model.hpp"
+#include "Mesh.hpp"
 #include "PbrMaterial.hpp"
 #include "Transform.hpp"
 #include "Velocity.hpp"
@@ -31,9 +31,9 @@ static glm::vec3 hsv2rgb(glm::vec3 c) {
   return c.z * mix(K.xxx(), clamp(p - K.xxx(), 0.0f, 1.0f), c.y);
 }
 
-int initial_setup(Resource<Asset<Model>> mesh_manager,
+int initial_setup(Resource<Asset<Mesh>> mesh_manager,
                   Resource<Asset<PbrMaterial>> material_manager, Commands cmd) {
-  auto plane_handle = mesh_manager->load(primitives::plane(7, 4, 4));
+  auto plane_handle = mesh_manager->load(primitives::plane(32, 4, 4));
   auto sphere = primitives::sphere(1, 32, 16);
   sphere.setModelMatrix(glm::mat4(Transform(0, 0, 0.5)));
 
@@ -48,10 +48,10 @@ int initial_setup(Resource<Asset<Model>> mesh_manager,
 
   cmd.spawn(plane_handle, mat_white, Color(0.8, 0.8, 1), Transform());
 
-  const int ringCount = 9;
+  const int ringCount = 1;
   const float ringRadius = 5;
   for (int i = 0; i < ringCount; i++) {
-    glm::vec3 rgb = 10.f * hsv2rgb({float(i) / ringCount, 0.9, 1.0f});
+    glm::vec3 rgb = 1000.f * hsv2rgb({float(i) / ringCount, 0.9, 1.0f});
     auto mat_light = material_manager->load(PbrMaterial(glm::vec3(), glm::vec3(), 1));
     mat_light->emit = rgb;
     Transform tm = Transform(
