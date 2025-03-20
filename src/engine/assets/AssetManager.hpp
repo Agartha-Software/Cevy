@@ -22,7 +22,6 @@
 
 #include "App.hpp"
 #include "Mesh.hpp"
-#include "PbrMaterial.hpp"
 #include "Plugin.hpp"
 #include "ecs.hpp"
 
@@ -109,8 +108,6 @@ class AssetManager {
 
   std::unordered_map<std::string, size_t> mesh_keys;
   std::vector<Handle<cevy::engine::Mesh>> meshes;
-  std::unordered_map<std::string, size_t> texture_keys;
-  std::unordered_map<std::string, size_t> material_keys;
 
   std::unordered_map<std::string, cevy::any> factories;
   // std::vector<ShaderProgram> _shaders;

@@ -5,19 +5,15 @@
 ** mesh geometry
 */
 
-#define STB_IMAGE_IMPLEMENTATION
 #define GLM_ENABLE_EXPERIMENTAL
 #define TINYOBJLOADER_IMPLEMENTATION
 
 #include "glx.hpp"
 
-#include "PbrMaterial.hpp"
-#include "cevy.hpp"
-// #include "tinyobj_loader_opt.h"
+#include "tinyobj_loader_opt.h"
 #include <stdexcept>
 
 #include "Mesh.hpp"
-#include "stb_image.h"
 #include <cstdint>
 #include <glm/gtc/type_ptr.hpp>
 #include <unordered_map>
