@@ -14,10 +14,8 @@ add_library(editor
   LoggingWindow.cpp
 )
 
-target_include_directories(editor PUBLIC
-  .
-  ./LegitProfiler
-)
+add_subdirectory(LegitProfiler)
 
-target_link_libraries(editor PUBLIC engine ecs input)
+target_include_directories(editor PUBLIC .)
 
+target_link_libraries(editor PUBLIC engine ecs input legit imgui)

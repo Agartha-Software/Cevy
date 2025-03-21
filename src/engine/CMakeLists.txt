@@ -21,7 +21,6 @@ add_subdirectory(editor)
 add_subdirectory(rendering)
 
 target_link_libraries(engine PUBLIC ecs math assets editor input rendering)
-target_link_libraries(engine PUBLIC imgui) #PRIVATE
 
 if (WIN32)
   target_link_libraries(engine PUBLIC unofficial::gl3w::gl3w glfw glm::glm)
