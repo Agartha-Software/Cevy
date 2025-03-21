@@ -160,8 +160,8 @@ void docking_window() {
       auto dock_bottom = ImGui::DockBuilderSplitNode(game_window_id,  ImGuiDir_Down, 0.3f, nullptr, &game_window_id);
 
       // Window Names Hard coded for now
-      ImGui::DockBuilderDockWindow("left", dock_left);
-      ImGui::DockBuilderDockWindow("GameWindow", game_window_id);
+      ImGui::DockBuilderDockWindow("Profiling", dock_left);
+      ImGui::DockBuilderDockWindow("Game", game_window_id);
       ImGui::DockBuilderDockWindow("right", dock_right);
       ImGui::DockBuilderDockWindow("bottom", dock_bottom);
       ImGui::DockBuilderFinish(dockspace_id);

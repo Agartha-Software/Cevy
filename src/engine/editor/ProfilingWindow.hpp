@@ -1,0 +1,32 @@
+/*
+** AgarthaSoftware, 2024
+** Cevy
+** File description:
+** Editor Game Windows
+*/
+
+#pragma once
+
+#include "LegitProfiler/ImGuiProfilerRenderer.h"
+#include "glWindow.hpp"
+#include "EditorWindow.hpp"
+#include <chrono>
+
+#include <string>
+
+
+namespace cevy::editor {
+
+class ProfilingWindow : public EditorWindow {
+    std::vector<float> frames;
+    std::vector<float> framesAverage;
+    ImGuiUtils::ProfilersWindow legitProfiler;
+    std::chrono::high_resolution_clock::time_point last_call;
+    public:
+    ProfilingWindow() : EditorWindow(true, "Profiling") {
+      legitProfiler = ImGuiUtils::ProfilersWindow();
+    }
+
+    void render(cevy::editor::Editor &editor, glWindow &glwindow) override;
+  };
+};

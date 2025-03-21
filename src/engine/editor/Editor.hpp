@@ -8,13 +8,14 @@
 #pragma once
 
 #include "EditorWindow.hpp"
+#include "GameWindow.hpp"
+#include "ProfilingWindow.hpp"
 #include "Stage.hpp"
 #include "ecs.hpp"
 #include "engine.hpp"
 #include "glWindow.hpp"
 #include "imgui.h"
 #include "input.hpp"
-#include "GameWindow.hpp"
 #include <memory>
 #include <optional>
 #include <vector>
@@ -28,8 +29,9 @@ class EditorInput : public ecs::core_stage::before<input::InputStage> {};
 
 class Editor : public glWindow::Module {
   public:
-  Editor(glWindow &): cursorInViewport(std::nullopt), viewportPos(std::nullopt), viewportSize(std::nullopt) {
-    windows.push_back(std::make_unique<LogWindow>("left"));
+  Editor(glWindow &)
+      : cursorInViewport(std::nullopt), viewportPos(std::nullopt), viewportSize(std::nullopt) {
+    windows.push_back(std::make_unique<ProfilingWindow>());
     windows.push_back(std::make_unique<LogWindow>("right"));
     windows.push_back(std::make_unique<LogWindow>("bottom"));
     windows.push_back(std::make_unique<GameWindow>());
