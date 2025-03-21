@@ -7,7 +7,7 @@
 
 #include "ProfilingWindow.hpp"
 #include "Editor.hpp"
-#include "LegitProfiler/ProfilerTask.h"
+#include "LegitProfiler/ProfilerTask.hpp"
 #include "imgui.h"
 #include <chrono>
 
