@@ -11,6 +11,7 @@ add_library(editor
   EditorWindow.cpp
   GameWindow.cpp
   ProfilingWindow.cpp
+  LoggingWindow.cpp
 )
 
 target_include_directories(editor PUBLIC

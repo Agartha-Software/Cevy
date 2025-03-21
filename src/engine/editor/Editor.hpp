@@ -9,6 +9,7 @@
 
 #include "EditorWindow.hpp"
 #include "GameWindow.hpp"
+#include "LoggingWindow.hpp"
 #include "ProfilingWindow.hpp"
 #include "Stage.hpp"
 #include "ecs.hpp"
@@ -32,7 +33,7 @@ class Editor : public glWindow::Module {
   Editor(glWindow &)
       : cursorInViewport(std::nullopt), viewportPos(std::nullopt), viewportSize(std::nullopt) {
     windows.push_back(std::make_unique<ProfilingWindow>());
-    windows.push_back(std::make_unique<LogWindow>("right"));
+    windows.push_back(std::make_unique<LoggingWindow>());
     windows.push_back(std::make_unique<LogWindow>("bottom"));
     windows.push_back(std::make_unique<GameWindow>());
   }

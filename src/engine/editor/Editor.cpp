@@ -162,7 +162,7 @@ void docking_window() {
       // Window Names Hard coded for now
       ImGui::DockBuilderDockWindow("Profiling", dock_left);
       ImGui::DockBuilderDockWindow("Game", game_window_id);
-      ImGui::DockBuilderDockWindow("right", dock_right);
+      ImGui::DockBuilderDockWindow("Logger", dock_right);
       ImGui::DockBuilderDockWindow("bottom", dock_bottom);
       ImGui::DockBuilderFinish(dockspace_id);
     }
