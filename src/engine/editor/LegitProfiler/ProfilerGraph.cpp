@@ -87,8 +87,8 @@ void legit::ProfilerGraph::RenderTimings(int graphWidth, int legendWidth, int he
 void legit::ProfilerGraph::RebuildTaskStats(size_t endFrame, size_t framesCount) {
   for (auto &taskStat : this->taskStats) {
     taskStat.maxTime = -1.0f;
-    taskStat.priorityOrder = size_t(-1);
-    taskStat.onScreenIndex = size_t(-1);
+    taskStat.priorityOrder = -1;
+    taskStat.onScreenIndex = -1;
   }
 
   for (size_t frameNumber = 0; frameNumber < framesCount; frameNumber++) {
@@ -155,10 +155,10 @@ void legit::ProfilerGraph::RenderLegend(ImDrawList *drawList, glm::vec2 legendPo
 
   auto &currFrame =
       this->frames[(this->currFrameIndex - frameIndexOffset - 1 + 2 * this->frames.size()) % this->frames.size()];
-  size_t maxTasksCount = size_t(legendSize.y / (markerRightRectHeight + markerRightRectSpacing));
+  size_t maxTasksCount = legendSize.y / (markerRightRectHeight + markerRightRectSpacing);
 
   for (auto &taskStat : this->taskStats) {
-    taskStat.onScreenIndex = size_t(-1);
+    taskStat.onScreenIndex = -1;
   }
 
   size_t tasksToShow = std::min<size_t>(this->taskStats.size(), maxTasksCount);
@@ -199,7 +199,7 @@ void legit::ProfilerGraph::RenderLegend(ImDrawList *drawList, glm::vec2 legendPo
     float taskTimeMs = float(task.endTime - task.startTime);
     std::ostringstream timeText;
     timeText.precision(2);
-    timeText << std::fixed << std::string("[") << (taskTimeMs);
+    timeText << std::fixed << "[" << (taskTimeMs);
 
     drawList->AddText(to_im_vec(markerRightRectMax + textMargin), textColor, timeText.str().c_str());
     drawList->AddText(to_im_vec(markerRightRectMax + textMargin + glm::vec2(nameOffset, 0.0f)), textColor, (std::string("ms] ") + task.name).c_str());

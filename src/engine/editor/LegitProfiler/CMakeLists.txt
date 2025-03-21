@@ -8,6 +8,7 @@
 add_library(legit
   STATIC
     ProfilerGraph.cpp
+    ProfilerWindow.cpp
 )
 
 target_include_directories(legit PUBLIC
