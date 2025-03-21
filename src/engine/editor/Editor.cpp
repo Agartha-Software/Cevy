@@ -188,7 +188,7 @@ void main_menu() {
   }
 }
 
-void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows) {
+void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows, std::unique_ptr<cevy::editor::EditorWindow> &window) {
   ImGui::PushItemWidth(ImGui::GetFontSize() * -12);
 
   if (ImGui::BeginMenuBar()) {
@@ -196,6 +196,12 @@ void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows) {
       for (auto &window: windows) {
         ImGui::MenuItem(window->id.c_str(), NULL, &window->open);
       }
+      ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Settings")) {
+      ImGui::Checkbox("Background", &window->background);
+      ImGui::Checkbox("Resizable", &window->resizable);
+      ImGui::Checkbox("Draggable", &window->draggable);
       ImGui::EndMenu();
     }
     ImGui::EndMenuBar();
@@ -215,13 +221,18 @@ void pre_render(cevy::ecs::Resource<cevy::engine::Window> windower) {
 
   for (auto &window: editor.windows) {
     if (window->open) {
-      ImGui::Begin(window->id.c_str(), &window->open, ImGuiWindowFlags_MenuBar);
-      {
-        if (window->menuActive) {
-          menu(editor.windows);
-        }
-        window->render(editor, glwindow);
+      int window_flags = ImGuiWindowFlags_MenuBar;
+      window_flags |= window->background ? 0 : ImGuiWindowFlags_NoBackground;
+      window_flags |= window->resizable ? 0 : ImGuiWindowFlags_NoResize;
+      window_flags |= window->draggable ? 0 : ImGuiWindowFlags_NoMove;
+
+      ImGui::Begin(window->id.c_str(), &window->open, window_flags);
+
+      if (window->menuActive) {
+        menu(editor.windows, window);
       }
+      window->render(editor, glwindow);
+
       ImGui::End();
     }
   }
