@@ -23,8 +23,7 @@
 
 namespace cevy::ecs {
 
-typedef struct AppExit {
-} AppExit;
+struct AppExit {};
 
 class Scheduler {
   using SystemId = size_t;
