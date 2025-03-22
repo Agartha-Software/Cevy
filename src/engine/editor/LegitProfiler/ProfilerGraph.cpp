@@ -1,5 +1,8 @@
 /*
-
+The Legit profiler is based on this project:
+https://github.com/Raikiri/LegitProfiler
+by Raikiri
+It's been heavily modified to fit our needs and follows our code guidelines.
 */
 
 #include "legitProfiler.hpp"
