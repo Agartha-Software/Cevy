@@ -93,7 +93,7 @@ class Scheduler {
   using system_function = std::function<void(World &)>;
   using system = std::tuple<system_function, std::type_index>;
   std::vector<system> _systems;
-  Scheduler() : _stage(_at_start_schedule.begin()){};
+  Scheduler() {};
   ~Scheduler() = default;
 
   template <class F, class S, class... Args>
@@ -149,11 +149,10 @@ class Scheduler {
 
   protected:
   mutable bool _stop = false;
-  std::list<std::type_index>::iterator _stage;
 
   void runStartStages(World &world);
   void runStages(World &world);
-  void runStage(World &world);
+  void runStage(World &world, std::list<std::type_index>::iterator &stage);
 
   private:
   /* Bevy-compliant */

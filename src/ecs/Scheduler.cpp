@@ -11,31 +11,33 @@
 
 using cevy::ecs::Scheduler;
 
-void Scheduler::runStage(World &world) {
+void Scheduler::runStage(World &world, std::list<std::type_index>::iterator &stage) {
   std::vector<std::reference_wrapper<system>> curr_sys;
 
   std::copy_if(_systems.begin(), _systems.end(), std::back_inserter(curr_sys),
-               [this](const system &sys) { return std::get<1>(sys) == *_stage; });
+               [&stage](const system &sys) { return std::get<1>(sys) == *stage; });
 
   /* this part could be multi-threaded */
   for (auto sys : curr_sys) {
     std::get<0>(sys.get())(world);
   }
-
-  _stage++;
 }
 
 void Scheduler::runStartStages(World &world) {
-  _stage = _at_start_schedule.begin();
-  while (_stage != _at_start_schedule.end()) {
-    runStage(world);
+  std::list<std::type_index>::iterator stage = _at_start_schedule.begin();
+
+  while (stage != _at_start_schedule.end()) {
+    runStage(world, stage);
+    stage++;
   }
 }
 
 void Scheduler::runStages(World &world) {
-  _stage = _schedule.begin();
-  while (_stage != _schedule.end()) {
-    runStage(world);
+  std::list<std::type_index>::iterator stage = _schedule.begin();
+
+  while (stage != _schedule.end()) {
+    runStage(world, stage);
+    stage++;
   }
 }
 
