@@ -11,7 +11,7 @@
 
 using cevy::ecs::Scheduler;
 
-void Scheduler::runStage(World &world, std::list<std::type_index>::iterator &stage) {
+void Scheduler::runStage(World &world, std::list<StageTypeIndex>::iterator &stage) {
   std::vector<std::reference_wrapper<system>> curr_sys;
 
   std::copy_if(_systems.begin(), _systems.end(), std::back_inserter(curr_sys),
@@ -23,8 +23,8 @@ void Scheduler::runStage(World &world, std::list<std::type_index>::iterator &sta
   }
 }
 
-void Scheduler::runStages(World &world, std::list<std::type_index> stage_list) {
-  std::list<std::type_index>::iterator stage = stage_list.begin();
+void Scheduler::runStages(World &world, std::list<StageTypeIndex> stage_list) {
+  std::list<StageTypeIndex>::iterator stage = stage_list.begin();
 
   while (stage != stage_list.end()) {
     auto &stage_specs = world.resource<StageSpecs>();
@@ -38,9 +38,9 @@ void Scheduler::runStages(World &world, std::list<std::type_index> stage_list) {
 }
 
 void Scheduler::run(World &world) {
-  runStages(world, _at_start_schedule);
+  runStages(world, world.resource<StartupScheduleOrder>().order);
   while (!_stop) {
-    runStages(world, _schedule);
+    runStages(world, world.resource<ScheduleOrder>().order);
     while (!world._command_queue.empty()) {
       std::function<void(World &)> func = world._command_queue.front();
       world._command_queue.pop();
