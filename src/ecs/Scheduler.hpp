@@ -13,6 +13,7 @@
 #include <list>
 #include <optional>
 #include <tuple>
+#include <chrono>
 #include <type_traits>
 #include <typeindex>
 
@@ -24,6 +25,15 @@
 namespace cevy::ecs {
 
 struct AppExit {};
+
+struct StageSpec {
+  std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
+  std::chrono::time_point<std::chrono::high_resolution_clock> stopTime;
+};
+
+struct StageSpecs {
+  std::unordered_map<std::type_index, StageSpec> map;
+};
 
 class Scheduler {
   using SystemId = size_t;
@@ -149,8 +159,7 @@ class Scheduler {
   protected:
   mutable bool _stop = false;
 
-  void runStartStages(World &world);
-  void runStages(World &world);
+  void runStages(World &world, std::list<std::type_index> list);
   void runStage(World &world, std::list<std::type_index>::iterator &stage);
 
   private:

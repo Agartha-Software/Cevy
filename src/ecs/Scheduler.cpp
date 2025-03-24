@@ -23,28 +23,24 @@ void Scheduler::runStage(World &world, std::list<std::type_index>::iterator &sta
   }
 }
 
-void Scheduler::runStartStages(World &world) {
-  std::list<std::type_index>::iterator stage = _at_start_schedule.begin();
+void Scheduler::runStages(World &world, std::list<std::type_index> stage_list) {
+  std::list<std::type_index>::iterator stage = stage_list.begin();
 
-  while (stage != _at_start_schedule.end()) {
+  while (stage != stage_list.end()) {
+    auto &stage_specs = world.resource<StageSpecs>();
+
+    auto stageStart = std::chrono::high_resolution_clock::now();
     runStage(world, stage);
-    stage++;
-  }
-}
-
-void Scheduler::runStages(World &world) {
-  std::list<std::type_index>::iterator stage = _schedule.begin();
-
-  while (stage != _schedule.end()) {
-    runStage(world, stage);
+    auto stageStop = std::chrono::high_resolution_clock::now();
+    stage_specs.map.insert_or_assign(*stage, StageSpec {stageStart, stageStop});
     stage++;
   }
 }
 
 void Scheduler::run(World &world) {
-  runStartStages(world);
+  runStages(world, _at_start_schedule);
   while (!_stop) {
-    runStages(world);
+    runStages(world, _schedule);
     while (!world._command_queue.empty()) {
       std::function<void(World &)> func = world._command_queue.front();
       world._command_queue.pop();
