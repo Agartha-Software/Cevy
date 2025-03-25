@@ -28,6 +28,6 @@ class ProfilingWindow : public EditorWindow {
       legitProfiler = legit::ProfilerWindow();
     }
 
-    void render(cevy::editor::Editor &editor, glWindow &glwindow) override;
+    void render(cevy::editor::Editor &editor, glWindow &glwindow, cevy::ecs::World &world) override;
   };
 };

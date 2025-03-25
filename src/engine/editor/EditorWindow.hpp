@@ -17,7 +17,7 @@ namespace cevy::editor {
 
   class EditorWindow {
     public:
-    virtual void render(cevy::editor::Editor &editor, glWindow &glwindow) = 0;
+    virtual void render(cevy::editor::Editor &editor, glWindow &glwindow, cevy::ecs::World &world) = 0;
     bool open;
     bool resizable;
     bool background;
@@ -36,7 +36,7 @@ namespace cevy::editor {
     public:
     LogWindow(const std::string id) : EditorWindow(true, id) {}
 
-    void render(cevy::editor::Editor &, glWindow &) override {
+    void render(cevy::editor::Editor &, glWindow &, cevy::ecs::World &) override {
       ImGui::Text("Test1");
       ImGui::Text("Test2");
       ImGui::Text("Test3");

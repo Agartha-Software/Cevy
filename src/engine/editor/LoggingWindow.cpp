@@ -9,6 +9,6 @@
 #include "Editor.hpp"
 #include "imgui.h"
 
-void cevy::editor::LoggingWindow::render(cevy::editor::Editor &, glWindow &) {
+void cevy::editor::LoggingWindow::render(cevy::editor::Editor &, glWindow &, cevy::ecs::World &) {
   ImGui::Text("1");
 }

@@ -20,6 +20,6 @@ class LoggingWindow : public EditorWindow {
     LoggingWindow() : EditorWindow(true, "Logger") {
     }
 
-    void render(cevy::editor::Editor &editor, glWindow &glwindow) override;
+    void render(cevy::editor::Editor &editor, glWindow &glwindow, cevy::ecs::World &world) override;
   };
 };

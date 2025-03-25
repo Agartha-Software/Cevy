@@ -208,7 +208,7 @@ void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows, std
   }
 }
 
-void pre_render(cevy::ecs::Resource<cevy::engine::Window> windower) {
+void pre_render(cevy::ecs::World &world, cevy::ecs::Resource<cevy::engine::Window> windower) {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
@@ -231,7 +231,7 @@ void pre_render(cevy::ecs::Resource<cevy::engine::Window> windower) {
       if (window->menuActive) {
         menu(editor.windows, window);
       }
-      window->render(editor, glwindow);
+      window->render(editor, glwindow, world);
 
       ImGui::End();
     }

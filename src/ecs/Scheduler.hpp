@@ -23,7 +23,7 @@ struct AppExit {};
 
 struct StageSpec {
   std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
-  std::chrono::time_point<std::chrono::high_resolution_clock> stopTime;
+  std::chrono::time_point<std::chrono::high_resolution_clock> endTime;
 };
 
 struct StageSpecs {
