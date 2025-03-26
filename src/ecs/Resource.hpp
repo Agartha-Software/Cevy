@@ -31,6 +31,7 @@ class cevy::ecs::Resource {
   Content *operator->() { return &_content; };
   operator Content &() { return _content; };
   Content &get() { return _content; };
+  const Content &get() const { return _content; };
 };
 
 template <class T>
