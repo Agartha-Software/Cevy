@@ -132,8 +132,6 @@ private:
   void initialise(const std::string& vertexShaderSource, const std::string& fragmentShaderSource)
   {
     programId = glCreateProgram();
-    // std::cout << "USING PROGRAM " << programId <<std::endl;
-    // glUseProgram(programId);
     // Compile the shaders and return their id values
     vertexShaderId = compileShader(vertexShaderSource, GL_VERTEX_SHADER);
     fragmentShaderId = compileShader(fragmentShaderSource, GL_FRAGMENT_SHADER);

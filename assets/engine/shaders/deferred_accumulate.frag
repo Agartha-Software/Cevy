@@ -98,9 +98,10 @@ void shade_light_spot(
 
     light *= fade;
 
-    float depth_delta = texture(shadowMap, projectedCoords.xy).x - projectedCoords.z;
+    float depth = texture(shadowMap, projectedCoords.xy).x;
+    float depth_delta = depth - projectedCoords.z;
 
-    depth_delta = clamp(depth_delta * 10000 + 1, 0, 1) ;
+    depth_delta = clamp(depth_delta * 10000 + 0.8 / projectedCoords.z, 0, 1) ;
 
     light *= depth_delta;
 
@@ -137,7 +138,7 @@ void main() {
     // float emit_illum = 1 - emit_ambient;
     float halflambert = float((flags & 4) >> 2);
 
-    vec4 projected = projector * vec4(position.xyz, 1);
+    vec4 projected = projector * vec4(position.xyz + normal * 0.001, 1);
     projected /= projected.w;
     projected.xyz = projected.xyz * 0.5 + 0.5;
 
@@ -190,7 +191,8 @@ void main() {
     bool debug_draw_override = debug_draw;
     // debug_draw_override = true;
 
-    surface += lightEnergy * 0.0001 * float(debug_draw_override);
+    surface = mix(surface, lightEnergy * 0.001, float(debug_draw_override) * 0.1);
+    surface += lightEnergy * 0.001 * float(debug_draw_override);
 
     fragColor = vec4(surface, 0);
 }

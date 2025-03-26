@@ -175,6 +175,11 @@ struct pipeline {
     };
   }; // struct layout
 
+  struct Instance {
+    glm::mat4 matrix;
+    glm::vec4 color;
+  };
+
   struct Light {
     enum class Type : uint32_t {
       Point = 1,

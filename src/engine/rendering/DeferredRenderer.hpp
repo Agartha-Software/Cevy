@@ -20,6 +20,7 @@
 #include "rendering.hpp"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <memory>
 
 class cevy::engine::DeferredRenderer {
   struct pipeline : engine::pipeline {
@@ -87,7 +88,8 @@ class cevy::engine::DeferredRenderer {
     std::cout << " <<<< DeferredRenderer MOVE CONSTRUCT @" << this << " <<<<" << std::endl;
     this->width = rhs.width;
     this->height = rhs.height;
-    this->defaultMaterial = std::move(rhs.defaultMaterial);
+    // this->defaultMaterial = std::move(rhs.defaultMaterial);
+    this->defaultShader = std::move(rhs.defaultShader);
     this->null_shader.swap(rhs.null_shader);
     // this->gBuffer_shader.swap(rhs.gBuffer_shader);
     this->compose_shader.swap(rhs.compose_shader);
@@ -122,7 +124,8 @@ class cevy::engine::DeferredRenderer {
   // std::unique_ptr<ShaderProgram> principled_shader = nullptr;
   std::unique_ptr<ShaderProgram> accumulate_shader = nullptr;
   std::unique_ptr<ShaderProgram> compose_shader = nullptr;
-  PbrMaterial defaultMaterial;
+  // Handle<PbrMaterial> defaultMaterial = Handle<PbrMaterial>(PbrMaterial(), 0);
+  std::unique_ptr<ShaderProgram> defaultShader = nullptr;
 
   std::string alive = "DeferredRenderer is uninitialized";
 
@@ -138,7 +141,9 @@ class cevy::engine::DeferredRenderer {
   struct {
     glm::mat4 view;
     glm::mat4 invView;
-    std::vector<std::tuple<Handle<Mesh>, glm::mat4, uint16_t>> models;
+    // std::vector<std::tuple<Handle<Mesh>, glm::mat4, uint16_t>> models;
+    // std::vector<std::tuple<Handle<Mesh>, glm::mat4, uint16_t>> models;
+    std::unordered_map<std::tuple<Handle<Mesh>, Handle<PbrMaterial>>, std::vector<pipeline::Instance>> models;
   } renderContext;
 
   struct {

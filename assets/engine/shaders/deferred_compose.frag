@@ -53,7 +53,7 @@ void main() {
     surface += ambientColor * (albedo + specular);
 
     // vec3 bg = (view * vec4(0, 0, 1, 0)).xyz;
-    surface = mix(surface, fog, clamp(pow(position.w / fog_far, 0.5), 0.8, 1));
+    surface = mix(surface, fog, clamp(pow(position.w / fog_far, 0.5), 0, 1));
 
     surface = filmicToneMapping(surface);
 
