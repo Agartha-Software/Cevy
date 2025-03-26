@@ -59,6 +59,8 @@
 // <http://www.gnu.org/licenses/>.
 
 #include <any>
+#include <stdexcept>
+#include <typeindex>
 
 #ifndef _CUSTOM_ANY_NC
 #define _CUSTOM_ANY_NC 1
@@ -413,6 +415,12 @@ class any_nc {
       return static_cast<_Tp *>(__storage._M_ptr);
     }
   };
+
+  public:
+  struct bad_any_cast : public std::runtime_error {
+    bad_any_cast(const std::type_index& from, const std::type_index& to) :
+      std::runtime_error(std::string("bad any cast: from <") + from.name() + "> to <" + to.name() + ">") {};
+  };
 };
 
 /// Exchange the states of two @c any_nc objects.
@@ -439,7 +447,7 @@ make_any_nc(initializer_list<_Up> __il, _Args &&...__args) {
  * @tparam  _ValueType  A const-reference or CopyConstructible type.
  * @param   __any       The object to access.
  * @return  The contained object.
- * @throw   bad_any_cast If <code>
+ * @throw   any_nc::bad_any_cast If <code>
  *          __any.type() != typeid(remove_reference_t<_ValueType>)
  *          </code>
  */
@@ -453,7 +461,7 @@ inline _ValueType any_cast(const any_nc &__any) {
   auto __p = any_cast<_Up>(&__any);
   if (__p)
     return static_cast<_ValueType>(*__p);
-  throw std::bad_any_cast();
+  throw any_nc::bad_any_cast(__any.type(), typeid(_ValueType));
 }
 
 /**
@@ -462,7 +470,7 @@ inline _ValueType any_cast(const any_nc &__any) {
  * @tparam  _ValueType  A reference or CopyConstructible type.
  * @param   __any       The object to access.
  * @return  The contained object.
- * @throw   bad_any_cast If <code>
+ * @throw   any_nc::bad_any_cast If <code>
  *          __any.type() != typeid(remove_reference_t<_ValueType>)
  *          </code>
  *
@@ -478,7 +486,7 @@ inline _ValueType any_cast(any_nc &__any) {
   auto __p = any_cast<_Up>(&__any);
   if (__p)
     return static_cast<_ValueType>(*__p);
-  throw std::bad_any_cast();
+  throw any_nc::bad_any_cast(__any.type(), typeid(_ValueType));
 }
 
 template <typename _ValueType>
@@ -491,7 +499,7 @@ inline _ValueType any_cast(any_nc &&__any) {
   auto __p = any_cast<_Up>(&__any);
   if (__p)
     return static_cast<_ValueType>(std::move(*__p));
-  throw std::bad_any_cast();
+  throw any_nc::bad_any_cast(__any.type(), typeid(_ValueType));
 }
 /// @}
 

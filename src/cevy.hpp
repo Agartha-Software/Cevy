@@ -11,6 +11,8 @@
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <string>
+#include <typeinfo>
 #include <utility>
 
 template <typename T>
@@ -57,6 +59,47 @@ template <typename R, typename... Args>
 constexpr std::function<R(Args...)> make_function(R (&&func)(Args...)) {
   return std::function<R(Args...)>(func);
 };
+
+
+namespace std {
+namespace detail {
+template<typename ...Ts>
+struct hash_pack_impl;
+
+
+template<typename T, typename ...Ts>
+struct hash_pack_impl<T, Ts...> {
+  __attribute__((flatten)) inline size_t operator()(const T &t, const Ts&... ts) const {
+    size_t h = hash_pack_impl<Ts...>()(ts...);
+    return 0x9e3779b9 + ::std::hash<T>()(t) + ((h << 5) + (h >> 3));
+  }
+};
+
+
+template<typename T>
+struct hash_pack_impl<T> {
+  size_t operator()(const T &t) const {
+    return hash<T>()(t);
+  }
+};
+}
+
+template<typename ...Ts>
+struct hash_pack {
+  size_t operator()(const Ts &...ts) const {
+    return detail::hash_pack_impl<Ts...>()(ts...);
+  }
+};
+
+
+template<typename ...Ts>
+struct hash<tuple<Ts...>> {
+    size_t operator()(const tuple<Ts...> &ts) const {
+    return apply(hash_pack<Ts...>(), ts);
+  }
+};
+}
+
 
 /// @brief contains all of the engine bits
 namespace cevy {
@@ -126,6 +169,12 @@ using any = std::any_nc;
 template <typename T, typename... Args>
 auto make_any(Args &&...args) -> decltype(std::make_any_nc<T>(std::forward<Args>(args)...)) {
   return std::make_any_nc<T>(std::forward<Args>(args)...);
+}
+
+template<typename T>
+std::string reflect() {
+  // todo!: demangle
+  return typeid(T).name();
 }
 
 } // namespace cevy
