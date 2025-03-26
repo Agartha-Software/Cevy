@@ -7,24 +7,124 @@
 #pragma once
 
 #include "cevy.hpp"
+#include <any>
 #include <memory>
+#include <optional>
+#include <stdexcept>
+#include <typeindex>
+#include <typeinfo>
 
 namespace cevy::engine {
+struct AssetId {
+  size_t id;
+  operator const size_t&() const {
+    return id;
+  }
+};
 
-template <typename Type>
-class Handle {
-  using value = Type;
+struct ErasedAssetId {
+  AssetId id;
+  std::type_index type;
+};
 
-  std::shared_ptr<Type> _ref;
+template<typename>
+class Assets;
+template<typename>
+class AssetsData;
+class ErasedHandle;
+
+template <typename A>
+class Handle : protected std::shared_ptr<std::optional<A>> {
+  friend class Assets<A>;
+  friend class AssetsData<A>;
+  public:
+  using value = A;
+  using shared = std::shared_ptr<std::optional<A>>;
+
+  // explicit Handle() : shared(nullptr) {};
+  protected:
+  AssetId id;
+  Handle &replace(A&& asset) {
+    shared::get()->emplace(std::forward<A>(asset));
+    return *this;
+  }
+  template<typename ...Args>
+  Handle &emplace(Args &&...args) {
+    shared::get()->emplace(std::forward<A>(std::forward<A>(args)...));
+    return *this;
+  }
+  // const A *ptr() const { return shared().get(); }
 
   public:
-  Handle(Type &&ref) : _ref(std::make_shared<Type>(std::forward<Type>(ref))) {};
+  Handle(const shared &ptr, AssetId id) : shared(ptr), id(id) {};
+  Handle(const Handle &rhs) : shared(rhs), id(rhs.id) {};
+  Handle(Handle &&rhs) : shared(std::forward<shared>(rhs)), id(rhs.id) {};
+  // Handle(A &&ref) : shared(std::make_shared<typename shared::element_type>(std::make_optional(std::forward<A>(ref)))) {};
+  // template <typename... Args>
+  // Handle(Args &&...arg) : shared(std::make_shared<A>(std::forward<Args>(arg)...)) {};
 
-  const Type *operator->() const { return _ref.get(); }
-  Type *operator->() { return _ref.get(); }
-  Type &get() { return *_ref.get(); }
-  const Type &get() const { return *_ref.get(); }
-  std::shared_ptr<Type> share() const { return _ref; }
+  const A *operator->() const { return &shared::get()->value(); }
+  A *operator->() { return &shared::get()->value(); }
+  A &get() { return shared::get()->value(); }
+  const A &get() const { return shared::get()->value(); }
+  const shared &share() const { return *this; }
+
+  operator AssetId() const {
+    return id;
+  }
+
+  operator ErasedAssetId() const {
+    return {id, typeid(A)};
+  }
+
+  bool operator==(const Handle<A> rhs) const {
+    return shared::get() == rhs.shared::get();
+  }
+
+  Handle &operator=(Handle<A> &&rhs) {
+    shared::operator=(std::forward<shared>(shared(rhs)));
+    return *this;
+  }
+
+  Handle &operator=(const Handle<A> &rhs) {
+    shared::operator=(rhs.share());
+    return *this;
+  }
+};
+
+struct ErasedHandle {
+  cevy::any handle;
+  std::type_index type;
+  AssetId id;
+  template<typename A>
+  ErasedHandle(Handle<A> &&handle) : handle(cevy::make_any<Handle<A>>(handle)), type(typeid(A)), id(handle) {};
+  template<typename A>
+  operator Handle<A>&&() && {
+    if (type != typeid(A)) {
+      throw std::runtime_error("ErasedHandled::Handle<" + reflect<A>() + ">() when type is " + this->type.name());
+    }
+    return std::any_cast<Handle<A>&&>(std::move(this->handle));
+  }
 };
 
 } // namespace cevy::engine
+
+namespace std {
+  template<typename T>
+  struct hash<cevy::engine::Handle<T>> {
+    std::size_t operator()(const cevy::engine::Handle<T> &handle) const noexcept {
+    return std::hash<void *> {}(handle.share().get());
+    // return std::hash<void *> {}(static_cast<void *>(handle._M_ptr));
+    }
+  };
+// template <typename A>
+// class optional<cevy::engine::Handle<A>> : public cevy::engine::Handle<A> {
+//   public:
+//   optional(std::nullopt_t) {}
+//   // optional<cevy::engine::Handle<A>>(std::nullopt_t) {}
+//   operator bool() const { return *this != nullptr; }
+
+//   bool operator==(nullptr_t) const { return this->ptr() == nullptr; }
+//   bool operator!=(nullptr_t) const { return this->ptr() != nullptr; }
+// };
+}; // namespace std
