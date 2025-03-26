@@ -7,7 +7,7 @@
 #include <glm/gtx/string_cast.hpp>
 
 #include "App.hpp"
-#include "Asset.hpp"
+#include "Assets.hpp"
 #include "AssetManager.hpp"
 #include "Color.hpp"
 #include "DeferredRenderer.hpp"
@@ -31,15 +31,15 @@ static glm::vec3 hsv2rgb(glm::vec3 c) {
   return c.z * mix(K.xxx(), clamp(p - K.xxx(), 0.0f, 1.0f), c.y);
 }
 
-int initial_setup(Resource<Asset<Mesh>> mesh_manager,
-                  Resource<Asset<PbrMaterial>> material_manager, Commands cmd) {
-  auto plane_handle = mesh_manager->load(primitives::plane(32, 4, 4));
+int initial_setup(Resource<Assets<Mesh>> mesh_manager,
+                  Resource<Assets<PbrMaterial>> material_manager, Commands cmd) {
+  auto plane_handle = mesh_manager->add(primitives::plane(32, 4, 4));
   auto sphere = primitives::sphere(1, 32, 16);
-  sphere.setModelMatrix(glm::mat4(Transform(0, 0, 0.5)));
+  sphere.setModelMatrix(glm::mat4(Transform(0, 0, 1.5)));
 
-  auto sphere_handle = mesh_manager->load(std::move(sphere));
-  auto mat_white = material_manager->load(PbrMaterial());
-  auto mat_sphere = material_manager->load(PbrMaterial(glm::vec3(0.1, .1, .1), glm::vec3(1), 12));
+  auto sphere_handle = mesh_manager->add(std::move(sphere));
+  auto mat_white = material_manager->add(PbrMaterial());
+  auto mat_sphere = material_manager->add(PbrMaterial(glm::vec3(0.1, .1, .1), glm::vec3(1), 12));
   cmd.spawn(Camera(), Transform(glm::vec3(0, -10, 5),
                                 glm::quat({glm::half_pi<float>() * 0.8, 0, 0}), glm::vec3(1)));
 
@@ -49,16 +49,17 @@ int initial_setup(Resource<Asset<Mesh>> mesh_manager,
   cmd.spawn(plane_handle, mat_white, Color(0.8, 0.8, 1), Transform());
 
   const int ringCount = 1;
-  const float ringRadius = 5;
+  const float ringRadius = 10;
   for (int i = 0; i < ringCount; i++) {
-    glm::vec3 rgb = 1000.f * hsv2rgb({float(i) / ringCount, 0.9, 1.0f});
-    auto mat_light = material_manager->load(PbrMaterial(glm::vec3(), glm::vec3(), 1));
+    glm::vec3 rgb = 1000.f * hsv2rgb({float(i) / ringCount, 0.01, 1.0f});
+    auto mat_light = material_manager->add(PbrMaterial(glm::vec3(), glm::vec3(), 1));
     mat_light->emit = rgb;
-    Transform tm = Transform(
-        glm::vec3(ringRadius * std::cos(glm::two_pi<float>() * float(i) / ringCount),
-                  ringRadius * std::sin(glm::two_pi<float>() * float(i) / ringCount), 3.0f),
-        glm::quat(), glm::vec3(.5, .5, .5));
-    PointLight light = {rgb, 1.0f};
+    glm::vec3 pos = glm::vec3(ringRadius * std::cos(glm::two_pi<float>() * float(i) / ringCount),
+    ringRadius * std::sin(glm::two_pi<float>() * float(i) / ringCount), 15 + 0 *float(i) / ringCount);
+    glm::quat rot = glm::quatLookAt(-glm::normalize(pos), {0, 0, 1});
+    Transform tm = Transform(pos, rot, glm::vec3(.5, .5, .5));
+    SpotLight light = {rgb, 0.8, 0.5};
+    // PointLight light = {rgb, 1.0f};
     auto entity = cmd.spawn(Parent {rotator.id()}, tm, light, sphere_handle, mat_light);
   }
 
