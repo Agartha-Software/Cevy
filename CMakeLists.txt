@@ -18,6 +18,10 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if (!USE_WAYLAND)
+    add_definitions(-DGLFW_HINT_X11=1)
+endif()
+
 add_subdirectory(deps)
 
 find_package(glm CONFIG REQUIRED)
