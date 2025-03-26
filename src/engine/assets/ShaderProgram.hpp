@@ -132,7 +132,8 @@ private:
   void initialise(const std::string& vertexShaderSource, const std::string& fragmentShaderSource)
   {
     programId = glCreateProgram();
-    glUseProgram(programId);
+    // std::cout << "USING PROGRAM " << programId <<std::endl;
+    // glUseProgram(programId);
     // Compile the shaders and return their id values
     vertexShaderId = compileShader(vertexShaderSource, GL_VERTEX_SHADER);
     fragmentShaderId = compileShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
@@ -314,7 +315,7 @@ public:
   }
 
   // Method to enable the shader program - we'll suggest this for inlining
-  inline void use()
+  void use() const
   {
     // Santity check that we're initialised and ready to go...
     if (initialised)
@@ -330,7 +331,7 @@ public:
   }
 
   // Method to disable the shader - we'll also suggest this for inlining
-  inline void disable()
+  void disable() const
   {
     glUseProgram(0);
   }
@@ -340,7 +341,7 @@ public:
   }
 
   // Method to return the bound location of a named attribute, or -1 if the attribute was not found
-  GLuint attribute(const std::string attributeName)
+  GLuint attribute(const std::string attributeName) const
   {
     // You could do this method with the single line:
     //
@@ -365,11 +366,11 @@ public:
     }
 
     // Otherwise return the attribute location from the attribute map
-    return attributeMap[attributeName];
+    return attributeIter->second;
   }
 
   // Method to returns the bound location of a named uniform
-  GLuint uniform(const std::string uniformName)
+  GLuint uniform(const std::string uniformName) const
   {
     // Note: You could do this method with the single line:
     //
@@ -391,7 +392,8 @@ public:
     }
 
     // Otherwise return the attribute location from the uniform map
-    return uniformMap[uniformName];
+    // return uniformMap[uniformName];
+    return uniformIter->second;
   }
 
   // Method to add an attribute to the shader and return the bound location

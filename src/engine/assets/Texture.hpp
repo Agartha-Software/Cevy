@@ -10,9 +10,9 @@
 #include <glm/glm.hpp>
 #include <optional>
 
+#include "AssetManager.hpp"
 #include "ShaderProgram.hpp"
 #include "tinyobj_loader_opt.h"
-#include "AssetManager.hpp"
 
 namespace cevy::engine {
 using Shader = ShaderProgram;
@@ -111,4 +111,4 @@ struct TextureBuilder {
   Handle<cevy::engine::Texture> build(AssetManager &manager);
 };
 
-}
+} // namespace cevy::engine

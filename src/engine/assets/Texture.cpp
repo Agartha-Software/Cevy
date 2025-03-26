@@ -5,24 +5,29 @@
 ** textures implementation
 */
 
-#define STBI_MALLOC(sz) ((void*)(new char[sz]))
-#define STBI_REALLOC_SIZED(p,oldsz,newsz)   \
-    (size_t(newsz) <= size_t(oldsz) ? (void*)(p) : [](void* lp, size_t loldsz, size_t lnewsz)->void*{char*n = new char[lnewsz]; memcpy(n, lp, loldsz); delete [] (char*)lp; return (void*)n;}(p, oldsz, newsz))
-#define STBI_FREE(p) (delete [](char*)(p))
+#define STBI_MALLOC(sz) ((void *)(new char[sz]))
+#define STBI_REALLOC_SIZED(p, oldsz, newsz)                                                        \
+  (size_t(newsz) <= size_t(oldsz) ? (void *)(p)                                                    \
+                                  : [](void *lp, size_t loldsz, size_t lnewsz) -> void * {         \
+    char *n = new char[lnewsz];                                                                    \
+    memcpy(n, lp, loldsz);                                                                         \
+    delete[] (char *)lp;                                                                           \
+    return (void *)n;                                                                              \
+  }(p, oldsz, newsz))
+#define STBI_FREE(p) (delete[] (char *)(p))
 
 #define STB_IMAGE_IMPLEMENTATION
 
-#include <cstring>
 #include "stb_image.h"
+#include <cstring>
 
-#include "engine.hpp"
 #include "Texture.hpp"
+#include "engine.hpp"
 
 using cevy::engine::Texture;
 using cevy::engine::TextureBuilder;
 template <typename T>
 using Handle = cevy::engine::Handle<T>;
-
 
 std::optional<Texture> Texture::from_tinyobj(const std::string &file_name,
                                              const tinyobj::texture_option_t & /* _option */) {
@@ -59,7 +64,6 @@ std::optional<Texture> Texture::from_tinyobj(const std::string &file_name,
   }
   return std::optional<Texture>();
 }
-
 
 TextureBuilder::~TextureBuilder() {
   if (this->data)
@@ -295,7 +299,7 @@ Handle<Texture> TextureBuilder::build(AssetManager &manager) {
     glGenerateMipmap(GL_TEXTURE_2D);
 
     std::cout << "successfully generated '" << name_full << "'" << std::endl;
-    return manager.load(Texture(texture, name_full), name_full);
+    return manager.add(Texture(texture, name_full), name_full);
   }
   throw std::runtime_error("TextureBuilder failed at this->data (with load):" + name_full);
 }

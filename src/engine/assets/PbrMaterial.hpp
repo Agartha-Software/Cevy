@@ -7,15 +7,13 @@
 
 #pragma once
 
-#include "Handle.hpp"
-#include "engine.hpp"
 #include <glm/ext/vector_float3.hpp>
 #include <glm/glm.hpp>
 #include <optional>
 #include <string>
-#include "Texture.hpp"
 
 #include "Handle.hpp"
+#include "Texture.hpp"
 #include "engine.hpp"
 
 namespace cevy::engine {

@@ -5,19 +5,13 @@
 ** materials implementation
 */
 
-#include "glx.hpp"
-#include <functional>
-
-#include "AssetManager.hpp"
 #include "PbrMaterial.hpp"
-#include "cevy.hpp"
+#include "AssetManager.hpp"
 #include "stb_image.h"
 #include <iostream>
 #include <optional>
-#include <stdexcept>
 
 using cevy::engine::PbrMaterial;
-using cevy::engine::Texture;
 using cevy::engine::TextureBuilder;
 template <typename T>
 using Handle = cevy::engine::Handle<T>;
@@ -107,8 +101,8 @@ PbrMaterial PbrMaterial::from_tinyobj(const tinyobj::material_t &material) {
   new_material.specular_tint = {material.specular[0], material.specular[1], material.specular[2]};
   printf("spec %f %f %f \n", new_material.specular_tint.x, new_material.specular_tint.y,
          new_material.specular_tint.z);
-  new_material.diffuse_texture =
-      Texture::from_tinyobj(material.diffuse_texname, material.diffuse_texopt);
+  // new_material.diffuse_texture =
+  //     Texture::from_tinyobj(material.diffuse_texname, material.diffuse_texopt);
   // printf("name '%s'\n", new_material.diffuse_texture->file_name.c_str());
   new_material.roughness = 1 / (material.shininess - 1);
   return new_material;
