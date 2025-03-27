@@ -5,12 +5,12 @@
 ** Editor Profiling Windows
 */
 
-#include <cstddef>
-#include <ostream>
-#include <typeindex>
+#include <string>
 #define GLM_FORCE_SWIZZLE
 #define GLM_ENABLE_EXPERIMENTAL
 
+#include <cstddef>
+#include <typeindex>
 #include "ProfilingWindow.hpp"
 #include "Editor.hpp"
 #include "ProfilerTask.hpp"
@@ -19,6 +19,7 @@
 #include <chrono>
 
 #include <algorithm>
+#include <cxxabi.h>
 #include <unordered_map>
 
 static glm::vec3 hsv2rgb(glm::vec3 c) {
@@ -39,6 +40,15 @@ static glm::vec3 hsv2rgb(glm::vec3 c) {
 
 //   return RGBA_LE(hex);
 // }
+
+
+std::string get_stage_name(std::type_index index) {
+  char *demangled = abi::__cxa_demangle(index.name(),0,0,NULL);
+  std::string demangled_clean = std::string(demangled);
+
+  free(demangled);
+  return demangled_clean.substr(demangled_clean.find_last_of(':') + 1);
+}
 
 std::vector<legit::ProfilerTask> convert_to_profiler_task(const cevy::ecs::StageSpecs &specs, const std::list<cevy::ecs::StageTypeIndex> &indexes) {
   if (!specs.map.contains(std::type_index(typeid(cevy::editor::EditorPreRender)))) {
@@ -65,7 +75,7 @@ std::vector<legit::ProfilerTask> convert_to_profiler_task(const cevy::ecs::Stage
     tasks.push_back(legit::ProfilerTask {
       .startTime = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(spec.startTime - last_start).count() / 1000000,
       .endTime = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(spec.endTime - last_start).count() / 1000000,
-      .name = stage_index.name(),
+      .name = get_stage_name(stage_index),
       .color = hex
     });
 

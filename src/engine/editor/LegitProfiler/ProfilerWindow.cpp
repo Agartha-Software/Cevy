@@ -31,7 +31,7 @@ void legit::ProfilerWindow::Render() {
   int maxGraphHeight = 300;
   int availableGraphHeight = (int(canvasSize.y) - sizeMargin) / 2;
   int graphHeight = std::min(maxGraphHeight, availableGraphHeight);
-  int legendWidth = 200;
+  int legendWidth = 235;
   int graphWidth = int(canvasSize.x) - legendWidth;
   gpuGraph.RenderTimings(graphWidth, legendWidth, graphHeight, frameOffset);
   cpuGraph.RenderTimings(graphWidth, legendWidth, graphHeight, frameOffset);
