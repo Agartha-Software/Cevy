@@ -8,7 +8,6 @@
 #pragma once
 
 #include "any_nc.hpp"
-#include <cstdint>
 #include <functional>
 #include <optional>
 #include <string>

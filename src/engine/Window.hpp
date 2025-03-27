@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Plugin.hpp"
+#include "cursor.hpp"
 #include <glm/glm.hpp>
 #include <memory>
 #include <type_traits>
@@ -20,34 +21,48 @@ class Window {
     virtual bool open() = 0;
     virtual void pollEvents() = 0;
 
-    virtual glm::vec<2, int> size() const = 0;
-    virtual void setSize(int width, int height) = 0;
+    virtual glm::vec<2, int> windowSize() const = 0;
+    virtual glm::vec<2, int> renderSize() const = 0;
+    virtual void setWindowSize(int width, int height) = 0;
+    virtual void setRenderSize(int width, int height) = 0;
     virtual void setFullscreen(bool fullscreen) = 0;
+    virtual bool isFullscreen() const = 0;
+    virtual void setCursorState(CursorState state) = 0;
     using Plugin = ecs::NullPlugin;
   };
-  template <template <typename> typename Windower, typename Renderer>
-  Window(Windower<Renderer> &&win) {
-    this->window = std::make_shared<Windower<Renderer>>(std::forward<Windower<Renderer>>(win));
+  template <template <typename...> typename Windower, typename... Module>
+  Window(Windower<Module...> &&win) {
+    this->window = std::make_shared<Windower<Module...>>(std::forward<Windower<Module...>>(win));
   }
 
-  template <template <typename> typename Windower, typename Renderer,
-            std::enable_if_t<std::is_base_of_v<generic_window, Windower<Renderer>>>>
+  template <template <typename...> typename Windower, typename... Module,
+            std::enable_if_t<std::is_base_of_v<generic_window, Windower<Module...>>>>
   Window(int width, int height) {
-    this->window = std::make_shared<Windower<Renderer>>(width, height);
+    this->window = std::make_shared<Windower<Module...>>(width, height);
   }
-  template <template <typename> typename Windower, typename Renderer>
-  Windower<Renderer> *operator->() {
-    return dynamic_cast<Windower<Renderer> *>(this->window.get());
-  }
-  template <template <typename> typename Windower, typename Renderer>
-  Windower<Renderer> *get_handler() {
-    return dynamic_cast<Windower<Renderer> *>(this->window.get());
+  // template <template <typename> typename Windower, typename Renderer>
+  // Windower<Renderer> *operator->() {
+  //   return dynamic_cast<Windower<Renderer> *>(this->window.get());
+  // }
+  // template <template <typename> typename Windower, typename Renderer>
+  // Windower<Renderer> *get_handler() {
+  //   return dynamic_cast<Windower<Renderer> *>(this->window.get());
+  // }
+
+  template <typename Windower>
+  Windower &get_handler() {
+    return dynamic_cast<Windower &>(*this->window);
   }
 
   bool open() { return this->window->open(); }
-  glm::vec<2, int> size() const { return this->window->size(); }
-  void setSize(int width, int height) { this->window->setSize(width, height); }
+  glm::vec<2, int> windowSize() const { return this->window->windowSize(); }
+  glm::vec<2, int> renderSize() const { return this->window->renderSize(); }
+  void setWindowSize(int width, int height) { this->window->setWindowSize(width, height); }
+  void setRenderSize(int width, int height) { this->window->setRenderSize(width, height); }
   void setFullscreen(bool fullscreen) { this->window->setFullscreen(fullscreen); }
+  bool isFullscreen() const { return this->window->isFullscreen(); }
+  void setCursorState(CursorState state) { return this->window->setCursorState(state); }
+
   generic_window *operator->() { return window.get(); }
 
   protected:

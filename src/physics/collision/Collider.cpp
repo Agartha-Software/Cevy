@@ -9,7 +9,6 @@
 #include "Position.hpp"
 #include "Rotation.hpp"
 #include "ecs.hpp"
-#include <cstdio>
 #include <optional>
 #include <tuple>
 

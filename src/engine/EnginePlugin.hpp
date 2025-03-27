@@ -13,10 +13,11 @@
 #include "Camera.hpp"
 #include "Color.hpp"
 #include "DefaultPlugin.hpp"
-#include "ForwardRenderer.hpp"
 #include "Line.hpp"
 #include "PhysicsProps.hpp"
 #include "Plugin.hpp"
+#include "PointLight.hpp"
+#include "SpotLight.hpp"
 #include "Stage.hpp"
 #include "Target.hpp"
 #include "Transform.hpp"
@@ -24,11 +25,10 @@
 #include "Window.hpp"
 #include "ecs.hpp"
 #include "engine.hpp"
-#include "glWindow.hpp"
 #include "input.hpp"
 
 namespace cevy::engine {
-template <template <typename T> typename Windower = glWindow, typename Renderer = ForwardRenderer>
+template <typename Windower>
 class Engine : public cevy::ecs::Plugin {
   public:
   // void build(cevy::ecs::App &app);
@@ -45,7 +45,7 @@ class Engine : public cevy::ecs::Plugin {
     app.init_resource<cevy::engine::DebugWindow>(cevy::engine::DebugWindow {.open = true});
 #endif
     app.init_resource<cevy::engine::Atmosphere>();
-    app.init_resource<cevy::engine::Window>(Windower<Renderer>(1280, 720));
+    app.init_resource<cevy::engine::Window>(Windower(1600, 900));
     app.init_component<cevy::engine::Camera>();
     app.init_component<cevy::engine::Velocity>();
     app.init_component<cevy::engine::PhysicsProps>();
@@ -74,7 +74,7 @@ class Engine : public cevy::ecs::Plugin {
         }));
 
     app.add_plugins(cevy::input::InputPlugin());
-    app.add_plugins(typename Windower<Renderer>::Plugin());
+    app.add_plugins(typename Windower::Plugin());
     app.add_systems<cevy::engine::PreRenderStage>(update_camera);
     app.add_systems<ecs::core_stage::PostUpdate>(TransformVelocity::system);
     app.add_systems<cevy::ecs::core_stage::PreUpdate>(Transform::children_system);

@@ -42,6 +42,9 @@ void main() {
     float emit_illum = 1 - emit_ambient;
     float halflambert = float((flags & 4) >> 2);
 
+    // fragColor = vec4(albedo, 1);
+    // return;
+
     vec3 cameraPos = invView[3].xyz;// / invView[3].w;
     vec3 viewVec = position.xyz - cameraPos;
     float viewDistance = length(viewVec);

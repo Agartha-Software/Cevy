@@ -5,6 +5,7 @@
 ** Deferred renderer
 */
 
+#include <cassert>
 #define GLM_FORCE_SWIZZLE
 
 #include "glx.hpp"
@@ -64,7 +65,7 @@ inline glm::mat4 operator*(const glm::mat4 &m, const glm::vec3 &v2) {
                        0, 0, 0, 1);
 };
 
-void cevy::engine::DeferredRenderer::init() {
+void cevy::engine::DeferredRenderer::init(glWindow &) {
   this->alive = "DeferredRenderer is initialized";
   // std::cerr << " <<<< DeferredRenderer::init() <<<<" << std::endl;
 
@@ -168,12 +169,20 @@ void cevy::engine::DeferredRenderer::init() {
   this->primitives.flat = TextureBuilder::from(glm::vec4(0.5, 0.5, 1, 1), 2, 2);
 }
 
+void cevy::engine::DeferredRenderer::deinit(glWindow &) {}
+
 void cevy::engine::DeferredRenderer::render_system(
-    DeferredRenderer &self, Query<Camera> cams,
+    Resource<Window> win, Query<Camera> cams,
     Query<option<Transform>, Handle<Mesh>, option<Handle<PbrMaterial>>, option<Color>> models,
     Query<option<Transform>, option<cevy::engine::PointLight>, option<cevy::engine::SpotLight>>
         lights,
     const ecs::World &world) {
+  auto &window = win->get_handler<glWindow>();
+  auto window_size = window.windowSize();
+  auto target_size = window.targetSize();
+
+  DeferredRenderer &self = window.get_module<DeferredRenderer>();
+
   // static float last_time = 0;
   // auto time = world.resource<cevy::ecs::Time>();
   // last_time = 0.9 * last_time + 0.1 * time.delta_seconds();
@@ -316,6 +325,44 @@ void cevy::engine::DeferredRenderer::render_system(
   glUniform1f(self.compose_shader->uniform("fog_far"), std::min(camera.far, fog_dist));
   self.billboard.screenspace({-1, -1}, {1, 1});
   self.billboard.draw();
+
+
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, window.getCurrentFrameBuffer());
+
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, self.gbuffer.getFramebuffer());
+  // glBindFramebuffer(GL_READ_FRAMEBUFFER, window.getCurrentFrameBuffer());
+
+  // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, window.getCurrentFrameBuffer());
+
+  // auto factor = std::min(target_size.x / float(self.width), target_size.y / float(self.height));
+
+  // auto left = (target_size.x - factor * self.width);
+  // auto bottom = (target_size.y - factor * self.height);
+
+  auto factor = std::max(target_size.x / float(self.width), target_size.y / float(self.height));
+//
+  auto left = (target_size.x - factor * self.width) / 2;
+  auto bottom = (target_size.y - factor * self.height) / 2;
+
+  // glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height,
+  //                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+
+  // glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, window_size.x, window_size.y,
+  //                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
+  // glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, target_size.x, target_size.y,
+  //                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+
+
+  // glBlitFramebuffer(0, 0, window_size.x, window_size.y, 0, 0,self.width, self.height,
+  //                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+  glBlitFramebuffer(0, 0, self.width, self.height, left, bottom, factor * self.width, factor * self.height,
+                  GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+  // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  // glBindFramebuffer(GL_TEXTURE_2D, 0);
 }
 
 void cevy::engine::DeferredRenderer::light_pass(const pipeline::Light &light) {

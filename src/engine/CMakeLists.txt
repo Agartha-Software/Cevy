@@ -11,18 +11,19 @@ add_library(engine
   STATIC
     Transform.hpp
     Camera.cpp
+    glWindow.cpp
 )
 
 add_subdirectory(math)
 add_subdirectory(assets)
 add_subdirectory(input)
+add_subdirectory(editor)
 add_subdirectory(rendering)
 
-target_link_libraries(engine PUBLIC ecs math assets input rendering)
-target_link_libraries(engine PRIVATE imgui) #PRIVATE
+target_link_libraries(engine PUBLIC ecs math assets editor input rendering)
 
 if (WIN32)
-  target_link_libraries(engine PRIVATE unofficial::gl3w::gl3w glfw glm::glm)
+  target_link_libraries(engine PUBLIC unofficial::gl3w::gl3w glfw glm::glm)
 endif()
 if (UNIX)
   target_link_libraries(engine PRIVATE GLEW::glew glfw glm::glm OpenGL::GL)

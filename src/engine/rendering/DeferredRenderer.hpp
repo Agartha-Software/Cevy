@@ -13,16 +13,19 @@
 #include "Mesh.hpp"
 #include "PbrMaterial.hpp"
 #include "ShaderProgram.hpp"
+#include "Window.hpp"
 #include "deferred/Billboard.hpp"
 #include "deferred/GBuffers.hpp"
 #include "deferred/ShadowMap.hpp"
+#include "engine.hpp"
+#include "glWindow.hpp"
 #include "pipeline.hpp"
 #include "rendering.hpp"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <memory>
 
-class cevy::engine::DeferredRenderer {
+class cevy::engine::DeferredRenderer : public glWindow::Module {
   struct pipeline : engine::pipeline {
     using unorm8 = uint8_t; /// unsigned normalized: 1.0 is mapped to 255 etc
                             /// https://www.khronos.org/opengl/wiki/Normalized_Integer
@@ -77,9 +80,8 @@ class cevy::engine::DeferredRenderer {
   using Resource = ecs::Resource<T>;
 
   public:
-  template <typename Windower>
-  DeferredRenderer(const Windower &win)
-      : width(win.size().x), height(win.size().y), gbuffer(width, height), shadowMap() {
+  DeferredRenderer(const glWindow &win)
+      : glfWindow(win.getGLFWwindow()), width(win.renderSize().x), height(win.renderSize().y), gbuffer(width, height), shadowMap() {
     this->aspect = float(width) / float(height);
     std::cout << " <<<< DeferredRenderer(win) @" << this << " <<<<" << std::endl;
   }
@@ -107,9 +109,14 @@ class cevy::engine::DeferredRenderer {
     std::cout << " <<<< ~DeferredRenderer @" << this << "<<<<" << std::endl;
   }
 
-  void init();
+  void build(ecs::App &app) override {
+    app.add_systems<RenderStage>(DeferredRenderer::render_system);
+  }
+
+  void init(glWindow &) override;
+  void deinit(glWindow &) override;
   static void render_system(
-      DeferredRenderer &self, Query<Camera> cams,
+      Resource<Window> win, Query<Camera> cams,
       Query<option<Transform>, Handle<Mesh>, option<Handle<PbrMaterial>>, option<Color>> models,
       Query<option<Transform>, option<cevy::engine::PointLight>, option<cevy::engine::SpotLight>>
           lights,

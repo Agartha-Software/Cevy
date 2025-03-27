@@ -11,38 +11,36 @@
 
 using cevy::ecs::Scheduler;
 
-void Scheduler::runStage(World &world) {
+void Scheduler::runStage(World &world, std::list<StageTypeIndex>::iterator &stage) {
   std::vector<std::reference_wrapper<system>> curr_sys;
 
   std::copy_if(_systems.begin(), _systems.end(), std::back_inserter(curr_sys),
-               [this](const system &sys) { return std::get<1>(sys) == *_stage; });
+               [&stage](const system &sys) { return std::get<1>(sys) == *stage; });
 
   /* this part could be multi-threaded */
   for (auto sys : curr_sys) {
     std::get<0>(sys.get())(world);
   }
-
-  _stage++;
 }
 
-void Scheduler::runStartStages(World &world) {
-  _stage = _at_start_schedule.begin();
-  while (_stage != _at_start_schedule.end()) {
-    runStage(world);
-  }
-}
+void Scheduler::runStages(World &world, std::list<StageTypeIndex> stage_list) {
+  std::list<StageTypeIndex>::iterator stage = stage_list.begin();
 
-void Scheduler::runStages(World &world) {
-  _stage = _schedule.begin();
-  while (_stage != _schedule.end()) {
-    runStage(world);
+  while (stage != stage_list.end()) {
+    auto &stage_specs = world.resource<StageSpecs>();
+
+    auto stageStart = std::chrono::high_resolution_clock::now();
+    runStage(world, stage);
+    auto stageStop = std::chrono::high_resolution_clock::now();
+    stage_specs.map.insert_or_assign(*stage, StageSpec {stageStart, stageStop});
+    stage++;
   }
 }
 
 void Scheduler::run(World &world) {
-  runStartStages(world);
+  runStages(world, world.resource<StartupScheduleOrder>().order);
   while (!_stop) {
-    runStages(world);
+    runStages(world, world.resource<ScheduleOrder>().order);
     while (!world._command_queue.empty()) {
       std::function<void(World &)> func = world._command_queue.front();
       world._command_queue.pop();
