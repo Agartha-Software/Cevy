@@ -10,7 +10,7 @@ It's been heavily modified to fit our needs and follows our code guidelines.
 #include "ProfilerTask.hpp"
 #include "imgui.h"
 #include <glm/fwd.hpp>
-#include <glm/gtx/string_cast.hpp>
+// #include <glm/gtx/string_cast.hpp>
 #include <map>
 #include <vector>
 

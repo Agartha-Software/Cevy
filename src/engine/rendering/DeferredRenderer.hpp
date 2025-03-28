@@ -26,6 +26,12 @@
 #include <memory>
 
 class cevy::engine::DeferredRenderer : public glWindow::Module {
+  template <typename... T>
+  using Query = ecs::Query<T...>;
+  template <typename T>
+  using Resource = ecs::Resource<T>;
+
+  public:
   struct pipeline : engine::pipeline {
     using unorm8 = uint8_t; /// unsigned normalized: 1.0 is mapped to 255 etc
                             /// https://www.khronos.org/opengl/wiki/Normalized_Integer
@@ -74,12 +80,6 @@ class cevy::engine::DeferredRenderer : public glWindow::Module {
     };
   };
 
-  template <typename... T>
-  using Query = ecs::Query<T...>;
-  template <typename T>
-  using Resource = ecs::Resource<T>;
-
-  public:
   DeferredRenderer(const glWindow &win)
       : glfWindow(win.getGLFWwindow()), width(win.renderSize().x), height(win.renderSize().y), gbuffer(width, height), shadowMap() {
     this->aspect = float(width) / float(height);
@@ -111,6 +111,17 @@ class cevy::engine::DeferredRenderer : public glWindow::Module {
 
   void build(ecs::App &app) override {
     app.add_systems<RenderStage>(DeferredRenderer::render_system);
+    app.resource<AssetManager>().add_factory<Shader>(
+      "gbuffer_generic", std::function([]() {
+        return ShaderBuilder<pipeline>::build_from_files(
+            "assets/engine/shaders/simple.vert", "assets/engine/shaders/gbuffer_generic.frag");
+      }));
+
+    app.resource<AssetManager>().add_factory<Shader>(
+      "gbuffer_pbr", std::function([]() {
+        return ShaderBuilder<pipeline>::build_from_files(
+            "assets/engine/shaders/simple.vert", "assets/engine/shaders/gbuffer_pbr.frag");
+      }));
   }
 
   void init(glWindow &) override;
@@ -161,3 +172,7 @@ class cevy::engine::DeferredRenderer : public glWindow::Module {
     Texture flat;
   } primitives;
 };
+
+template <>
+void cevy::engine::ShaderBuilder<cevy::engine::DeferredRenderer::pipeline>::build(
+    ShaderProgram &shader); // DeferredRender.cpp

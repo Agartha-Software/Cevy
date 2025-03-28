@@ -8,7 +8,7 @@ It's been heavily modified to fit our needs and follows our code guidelines.
 #pragma once
 
 #include "imgui.h"
-#include <glm/gtx/string_cast.hpp>
+#include <glm/ext/vector_float2.hpp>
 
 namespace legit {
 

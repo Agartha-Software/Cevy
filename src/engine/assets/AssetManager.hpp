@@ -175,8 +175,15 @@ class AssetManager {
     }
   }
 
+  template <typename T>
+  void add_factory(const AssetPath &path, std::function<T()> &&func) {
+    using Func = std::function<T()>;
+    this->factories.emplace(
+        std::make_pair(path, std::move(cevy::make_any<Func>(std::forward<Func>(func)))));
+  }
+
   protected:
-  template <template <typename T> typename Windower, typename Renderer>
+  template <typename Windower>
   friend class Engine;
 
   template<typename A>
@@ -188,12 +195,6 @@ class AssetManager {
     return this->asset_datas.at(erased.asset.type()).add(std::move(erased));
   }
 
-  template <typename T>
-  void add_factory(const AssetPath &path, std::function<T()> &&func) {
-    using Func = std::function<T()>;
-    this->factories.emplace(
-        std::make_pair(path, std::move(cevy::make_any<Func>(std::forward<Func>(func)))));
-  }
 
   template <typename T>
   std::optional<Handle<T>> factory(const AssetPath &path) {

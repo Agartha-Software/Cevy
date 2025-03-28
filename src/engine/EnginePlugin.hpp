@@ -45,7 +45,7 @@ class Engine : public cevy::ecs::Plugin {
     app.init_resource<cevy::engine::DebugWindow>(cevy::engine::DebugWindow {.open = true});
 #endif
     app.init_resource<cevy::engine::Atmosphere>();
-    app.init_resource<cevy::engine::Window>(Windower(1600, 900));
+    app.init_resource<cevy::engine::Window>(Windower(1280, 720));
     app.init_component<cevy::engine::Camera>();
     app.init_component<cevy::engine::Velocity>();
     app.init_component<cevy::engine::PhysicsProps>();
@@ -60,18 +60,6 @@ class Engine : public cevy::ecs::Plugin {
     app.init_component<cevy::engine::Color>();
     // app.init_component<cevy::engine::Atmosphere>();
     app.add_plugins(cevy::engine::AssetManagerPlugin());
-
-    app.resource<AssetManager>().add_factory<Shader>(
-        "gbuffer_generic", std::function([]() {
-          return ShaderBuilder<typename Windower<Renderer>::pipeline>::build_from_files(
-              "assets/engine/shaders/simple.vert", "assets/engine/shaders/gbuffer_generic.frag");
-        }));
-
-    app.resource<AssetManager>().add_factory<Shader>(
-        "gbuffer_pbr", std::function([]() {
-          return ShaderBuilder<typename Windower<Renderer>::pipeline>::build_from_files(
-              "assets/engine/shaders/simple.vert", "assets/engine/shaders/gbuffer_pbr.frag");
-        }));
 
     app.add_plugins(cevy::input::InputPlugin());
     app.add_plugins(typename Windower::Plugin());

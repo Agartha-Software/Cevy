@@ -12,7 +12,6 @@ It's been heavily modified to fit our needs and follows our code guidelines.
 #include <algorithm>
 #include <array>
 #include <glm/fwd.hpp>
-#include <glm/gtx/string_cast.hpp>
 #include <ios>
 #include <iostream>
 #include <map>

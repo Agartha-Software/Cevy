@@ -244,6 +244,8 @@ class ShaderBuilder {
   static ShaderProgram build_from_source(const std::string &vertex, const std::string &fragment);
 
   protected:
+  template<typename>
+  friend class ShaderBuilder;
   static void build(ShaderProgram &shader);
 };
 
@@ -269,3 +271,6 @@ ShaderProgram ShaderBuilder<pipeline>::build_from_source(const std::string &vert
   return shader;
 }
 }; // namespace cevy::engine
+
+template<>
+void cevy::engine::ShaderBuilder<cevy::engine::pipeline>::build(ShaderProgram &shader); // pipeline.cpp

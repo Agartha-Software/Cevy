@@ -24,6 +24,12 @@
 #include "World.hpp"
 #include "Time.hpp"
 
+template <>
+void cevy::engine::ShaderBuilder<cevy::engine::DeferredRenderer::pipeline>::build(
+    ShaderProgram &shader) {
+  cevy::engine::ShaderBuilder<cevy::engine::pipeline>::build(shader);
+};
+
 // static void renderQuad() {
 //   static uint quadVAO = 0;
 //   static uint quadVBO;
@@ -310,7 +316,6 @@ void cevy::engine::DeferredRenderer::render_system(
 
   glDisable(GL_BLEND);
   glCullFace(GL_BACK);
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   self.compose_shader->use();
 
@@ -340,8 +345,7 @@ void cevy::engine::DeferredRenderer::render_system(
   // auto bottom = (target_size.y - factor * self.height);
 
   auto factor = std::max(target_size.x / float(self.width), target_size.y / float(self.height));
-//
-  auto left = (target_size.x - factor * self.width) / 2;
+   auto left = (target_size.x - factor * self.width) / 2;
   auto bottom = (target_size.y - factor * self.height) / 2;
 
   // glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height,
