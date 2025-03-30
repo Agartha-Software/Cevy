@@ -19,16 +19,19 @@
 #include "cursor.hpp"
 #include "glx.hpp"
 
+#include "App.hpp"
 #include "Camera.hpp"
 #include "Color.hpp"
 #include <GLFW/glfw3.h>
 #include "Handle.hpp"
 #include "Model.hpp"
 #include "PbrMaterial.hpp"
+#include "Plugin.hpp"
 #include "Query.hpp"
 #include "Scheduler.hpp"
 #include "state.hpp"
 #include "pipeline.hpp"
+#include "state.hpp"
 
 class glWindow : public cevy::engine::Window::generic_window {
   public:

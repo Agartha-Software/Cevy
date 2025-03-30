@@ -18,8 +18,8 @@
 namespace cevy::engine {
 class Velocity : public glm::vec3 {
   public:
-  Velocity(){};
-  ~Velocity(){};
+  Velocity() {};
+  ~Velocity() {};
 
   protected:
   private:
@@ -31,9 +31,9 @@ inline static glm::vec3 lerp(const glm::vec3 &A, const glm::vec3 &B, float t) {
 
 class TransformVelocity : public engine::Transform {
   public:
-  TransformVelocity() : engine::Transform(){};
-  TransformVelocity(const Transform &tm) : engine::Transform(tm){};
-  ~TransformVelocity(){};
+  TransformVelocity() : engine::Transform() {};
+  TransformVelocity(const Transform &tm) : engine::Transform(tm) {};
+  ~TransformVelocity() {};
 
   /// delta scale
   TransformVelocity &operator*=(float s) {

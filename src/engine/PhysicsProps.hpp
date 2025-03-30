@@ -13,8 +13,8 @@ class PhysicsProps {
   public:
   float mass = 1;
   float decay = 0.005;
-  PhysicsProps(){};
-  ~PhysicsProps(){};
+  PhysicsProps() {};
+  ~PhysicsProps() {};
 
   PhysicsProps &setDecay(float val) {
     decay = val;

@@ -18,6 +18,6 @@ class cevy::ecs::Plugin {
 
 namespace cevy::ecs {
 class NullPlugin : public cevy::ecs::Plugin {
-  void build(cevy::ecs::App &) override{};
+  void build(cevy::ecs::App &) override {};
 };
 } // namespace cevy::ecs

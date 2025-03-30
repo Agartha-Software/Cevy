@@ -49,7 +49,7 @@ void update_mouse_motion_window_focus(
       delta = {0, 0};
     }
 
-    mouseMotionWriter.send(cevy::input::mouseMotion{.pos = cursorPosition->pos, .delta = delta});
+    mouseMotionWriter.send(cevy::input::mouseMotion {.pos = cursorPosition->pos, .delta = delta});
     cursorPosition->pos = cursorMoved.pos;
     cursorPosition->delta = delta;
   }

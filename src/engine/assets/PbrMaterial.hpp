@@ -1,15 +1,15 @@
 
 #pragma once
 
-#include "Handle.hpp"
-#include "engine.hpp"
-#include "tinyobj_loader_opt.h"
 #include <glm/ext/vector_float3.hpp>
 #include <glm/glm.hpp>
 #include <optional>
 #include <string>
 
+#include "Handle.hpp"
+#include "engine.hpp"
 #include "glx.hpp"
+#include "tinyobj_loader_opt.h"
 
 namespace cevy::engine {
 class Texture {
@@ -106,11 +106,11 @@ class PbrMaterial {
   struct pair {
     std::optional<T> a;
     std::optional<V> b;
-    pair() : a(std::nullopt), b(std::nullopt){};
-    pair(T &&t) : a(std::forward<T>(t)), b(std::nullopt){};
-    pair(V &&v) : a(std::nullopt), b(std::forward<V>(v)){};
-    pair(T &&t, V &&v) : a(std::forward<T>(t)), b(std::forward<V>(v)){};
-    pair(V &&v, T &&t) : a(std::forward<T>(t)), b(std::forward<V>(v)){};
+    pair() : a(std::nullopt), b(std::nullopt) {};
+    pair(T &&t) : a(std::forward<T>(t)), b(std::nullopt) {};
+    pair(V &&v) : a(std::nullopt), b(std::forward<V>(v)) {};
+    pair(T &&t, V &&v) : a(std::forward<T>(t)), b(std::forward<V>(v)) {};
+    pair(V &&v, T &&t) : a(std::forward<T>(t)), b(std::forward<V>(v)) {};
   };
 
   using color_tex = pair<glm::vec4, std::string>;
@@ -133,7 +133,7 @@ class PbrMaterial {
       : diffuse(diffuse), specular_tint(specular), phong_exponent(exponent) {
     halflambert = true;
   }
-  ~PbrMaterial(){};
+  ~PbrMaterial() {};
 
   PbrMaterial(PbrMaterial &&other) : PbrMaterial() { *this = std::move(other); };
 

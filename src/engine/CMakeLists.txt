@@ -26,7 +26,7 @@ if (WIN32)
   target_link_libraries(engine PUBLIC unofficial::gl3w::gl3w glfw glm::glm)
 endif()
 if (UNIX)
-  target_link_libraries(engine PUBLIC GLEW::glew glfw glm::glm OpenGL::GL)
+  target_link_libraries(engine PRIVATE GLEW::glew glfw glm::glm OpenGL::GL)
 endif()
 
 target_include_directories(engine PUBLIC ./)

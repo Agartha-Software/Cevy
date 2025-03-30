@@ -41,7 +41,7 @@ class Engine : public cevy::ecs::Plugin {
     app.add_stage<PreRenderStage>();
     app.add_stage<PostRenderStage>();
 #ifdef DEBUG
-    app.init_resource<cevy::engine::DebugWindow>(cevy::engine::DebugWindow{.open = true});
+    app.init_resource<cevy::engine::DebugWindow>(cevy::engine::DebugWindow {.open = true});
 #endif
     app.init_resource<cevy::engine::Atmosphere>();
     app.init_resource<cevy::engine::Window>(Windower(1600, 900));

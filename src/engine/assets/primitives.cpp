@@ -45,8 +45,8 @@ Model plane(float size, uint32_t subu, uint32_t subv) {
   bool colorMode = 0;
   size_t idx = 0;
   auto rdev = std::random_device();
-  std::mt19937 gen{rdev()};
-  auto d = std::normal_distribution<float>{-1.0, 1.0};
+  std::mt19937 gen {rdev()};
+  auto d = std::normal_distribution<float> {-1.0, 1.0};
 
   for (uint32_t u = 0; u < subu; u++) {
     colorMode = u % 2;

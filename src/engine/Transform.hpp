@@ -229,7 +229,7 @@ class Transform {
   }
 
   Transform &setScaleXYZ(float x, float y, float z) {
-    scale = glm::vec3{x, y, z};
+    scale = glm::vec3 {x, y, z};
     return *this;
   }
 
@@ -253,31 +253,31 @@ class Transform {
   glm::vec3 xyz() const { return position; }
 
   glm::vec3 fwd() const {
-    glm::vec3 v{0, 0, 1};
+    glm::vec3 v {0, 0, 1};
     v = v * this->rotation;
     return v;
   }
 
   glm::vec3 up() const {
-    glm::vec3 v{0, 1, 0};
+    glm::vec3 v {0, 1, 0};
     v = v * this->rotation;
     return v;
   }
 
   glm::vec3 right() const {
-    glm::vec3 v{0, 1, 0};
+    glm::vec3 v {0, 1, 0};
     v = v * this->rotation;
     return v;
   }
 
   glm::vec3 tan() const {
-    glm::vec3 v{1, 0, 0};
+    glm::vec3 v {1, 0, 0};
     v = v * this->rotation;
     return v;
   }
 
   glm::vec3 cotan() const {
-    glm::vec3 v{0, 1, 0};
+    glm::vec3 v {0, 1, 0};
     v = v * this->rotation;
     return v;
   }

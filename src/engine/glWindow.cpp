@@ -300,7 +300,7 @@ bool glWindow::init_context() {
 
   printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION),
           glGetString(GL_SHADING_LANGUAGE_VERSION));
-  glfwSwapInterval(1); // enable vsync
+  glfwSwapInterval(0); // vsync disable
 
   glGenFramebuffers(1, &this->framebuffer);
 

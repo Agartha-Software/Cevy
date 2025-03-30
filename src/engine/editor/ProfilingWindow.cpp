@@ -51,7 +51,7 @@ std::string get_stage_name(std::type_index index) {
 }
 
 std::vector<legit::ProfilerTask> convert_to_profiler_task(const cevy::ecs::StageSpecs &specs, const std::list<cevy::ecs::StageTypeIndex> &indexes) {
-  if (!specs.map.contains(std::type_index(typeid(cevy::editor::EditorPreRender)))) {
+  if (specs.map.find(std::type_index(typeid(cevy::editor::EditorPreRender))) == specs.map.end()) {
     return {};
   }
 

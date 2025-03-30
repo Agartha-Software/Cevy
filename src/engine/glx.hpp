@@ -7,6 +7,8 @@
 
 #pragma once
 
+// clang-format off
+
 #if (_WIN32)
 #include <GL/gl3w.h>
 #include <GL/gl.h>
@@ -30,3 +32,5 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 #endif
+
+// clang-format on

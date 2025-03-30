@@ -67,9 +67,9 @@ class cevy::CevyNetwork : public cevy::NetworkBase {
 
   CevyNetwork(NetworkMode mode, const std::string &endpoint, size_t udp_port, size_t tcp_port,
               size_t client_offset)
-      : NetworkBase(mode, endpoint, udp_port, tcp_port, client_offset){};
-  CevyNetwork(CevyNetwork &&rhs) : NetworkBase(rhs){};
-  ~CevyNetwork(){};
+      : NetworkBase(mode, endpoint, udp_port, tcp_port, client_offset) {};
+  CevyNetwork(CevyNetwork &&rhs) : NetworkBase(rhs) {};
+  ~CevyNetwork() {};
 
   template <typename T>
   static uint8_t byte(const T &t, size_t n) {

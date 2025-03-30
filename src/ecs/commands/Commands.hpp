@@ -23,7 +23,7 @@ class cevy::ecs::Commands {
   friend class cevy::ecs::World;
 
   cevy::ecs::World &_world_access;
-  Commands(cevy::ecs::World &world_access) : _world_access(world_access){};
+  Commands(cevy::ecs::World &world_access) : _world_access(world_access) {};
 
   public:
   template <typename GivenCommand,

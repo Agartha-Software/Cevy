@@ -22,7 +22,7 @@ class cevy::ecs::Resource {
   private:
   Content &_content;
   friend class cevy::ecs::ResourceManager;
-  Resource(Content &content) : _content(content){};
+  Resource(Content &content) : _content(content) {};
 
   public:
   using value = Content;
