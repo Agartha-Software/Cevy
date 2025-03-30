@@ -5,10 +5,10 @@
 ** Editor Profiling Windows
 */
 
-#include <string>
 #define GLM_FORCE_SWIZZLE
 #define GLM_ENABLE_EXPERIMENTAL
 
+#include <string>
 #include <cstddef>
 #include <typeindex>
 #include "ProfilingWindow.hpp"

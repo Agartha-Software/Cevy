@@ -163,7 +163,7 @@ void docking_window() {
       ImGui::DockBuilderDockWindow("Profiling", dock_left);
       ImGui::DockBuilderDockWindow("Game", game_window_id);
       ImGui::DockBuilderDockWindow("Logger", dock_right);
-      ImGui::DockBuilderDockWindow("bottom", dock_bottom);
+      ImGui::DockBuilderDockWindow("Basic", dock_bottom);
       ImGui::DockBuilderFinish(dockspace_id);
     }
   }

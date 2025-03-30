@@ -34,7 +34,7 @@ class Editor : public glWindow::Module {
       : cursorInViewport(std::nullopt), viewportPos(std::nullopt), viewportSize(std::nullopt) {
     windows.push_back(std::make_unique<ProfilingWindow>());
     windows.push_back(std::make_unique<LoggingWindow>());
-    windows.push_back(std::make_unique<LogWindow>("bottom"));
+    windows.push_back(std::make_unique<BasicWindow>("Basic"));
     windows.push_back(std::make_unique<GameWindow>());
   }
 
