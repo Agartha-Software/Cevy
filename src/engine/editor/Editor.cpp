@@ -208,18 +208,18 @@ static void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windo
   }
 }
 
-static void pre_render(cevy::ecs::World &world, cevy::ecs::Resource<cevy::engine::Window> windower) {
+void cevy::editor::Editor::pre_render(cevy::ecs::World &world, cevy::ecs::Resource<cevy::engine::Window> windower) {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
   auto &glwindow = windower->get_handler<glWindow>();
-  auto &editor = glwindow.get_module<cevy::editor::Editor>();
+  auto &self = glwindow.get_module<cevy::editor::Editor>();
   auto io = ImGui::GetIO();
 
   main_menu();
   docking_window();
 
-  for (auto &window: editor.windows) {
+  for (auto &window: self.windows) {
     if (window->open) {
       int window_flags = ImGuiWindowFlags_MenuBar;
       window_flags |= window->background ? 0 : ImGuiWindowFlags_NoBackground;
@@ -229,16 +229,16 @@ static void pre_render(cevy::ecs::World &world, cevy::ecs::Resource<cevy::engine
       ImGui::Begin(window->id.c_str(), &window->open, window_flags);
 
       if (window->menuActive) {
-        menu(editor.windows, window);
+        menu(self.windows, window);
       }
-      window->render(editor, glwindow, world);
+      window->render(self, glwindow, world);
 
       ImGui::End();
     }
   }
 }
 
-static void render(cevy::ecs::Resource<cevy::engine::Window> windower) {
+void cevy::editor::Editor::render(cevy::ecs::Resource<cevy::engine::Window> windower) {
   auto &glwindow = windower->get_handler<glWindow>();
 
   auto &self = glwindow.get_module<cevy::editor::Editor>();
