@@ -188,7 +188,7 @@ static void main_menu() {
   }
 }
 
-static void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows, std::unique_ptr<cevy::editor::EditorWindow> &window) {
+static void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows, cevy::editor::EditorWindow &window) {
   ImGui::PushItemWidth(ImGui::GetFontSize() * -12);
 
   if (ImGui::BeginMenuBar()) {
@@ -199,9 +199,9 @@ static void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windo
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Settings")) {
-      ImGui::Checkbox("Background", &window->background);
-      ImGui::Checkbox("Resizable", &window->resizable);
-      ImGui::Checkbox("Draggable", &window->draggable);
+      ImGui::Checkbox("Background", &window.background);
+      ImGui::Checkbox("Resizable", &window.resizable);
+      ImGui::Checkbox("Draggable", &window.draggable);
       ImGui::EndMenu();
     }
     ImGui::EndMenuBar();
@@ -229,7 +229,7 @@ void cevy::editor::Editor::pre_render(cevy::ecs::World &world, cevy::ecs::Resour
       ImGui::Begin(window->id.c_str(), &window->open, window_flags);
 
       if (window->menuActive) {
-        menu(self.windows, window);
+        menu(self.windows, *window);
       }
       window->render(self, glwindow, world);
 
