@@ -42,7 +42,7 @@ static glm::vec3 hsv2rgb(glm::vec3 c) {
 // }
 
 
-std::string get_stage_name(std::type_index index) {
+static std::string get_stage_name(std::type_index index) {
   char *demangled = abi::__cxa_demangle(index.name(),0,0,NULL);
   std::string demangled_clean = std::string(demangled);
 
@@ -50,7 +50,7 @@ std::string get_stage_name(std::type_index index) {
   return demangled_clean.substr(demangled_clean.find_last_of(':') + 1);
 }
 
-std::vector<legit::ProfilerTask> convert_to_profiler_task(const cevy::ecs::StageSpecs &specs, const std::list<cevy::ecs::StageTypeIndex> &indexes) {
+static std::vector<legit::ProfilerTask> convert_to_profiler_task(const cevy::ecs::StageSpecs &specs, const std::list<cevy::ecs::StageTypeIndex> &indexes) {
   if (specs.map.find(std::type_index(typeid(cevy::editor::EditorPreRender))) == specs.map.end()) {
     return {};
   }

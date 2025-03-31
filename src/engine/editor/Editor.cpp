@@ -19,7 +19,7 @@
 #include "imgui_impl_opengl3.h"
 #include "state.hpp"
 
-#include <GL/gl.h>
+#include "glx.hpp"
 
 void cevy::editor::Editor::init(glWindow &glwindow) {
   // Setup Dear ImGui context
@@ -57,11 +57,11 @@ void cevy::editor::Editor::deinit(glWindow &) {
   glDeleteFramebuffers(1, &this->framebuffer);
 }
 
-void intercept_default_cursor_placement(cevy::ecs::Resource<cevy::input::cursorInWindow> inWindow) {
+static void intercept_default_cursor_placement(cevy::ecs::Resource<cevy::input::cursorInWindow> inWindow) {
   inWindow->inside = false;
 }
 
-void clean_gl_window_inputs(cevy::ecs::World &world) {
+static void clean_gl_window_inputs(cevy::ecs::World &world) {
   auto o_cursor_moved = world.get_resource<cevy::ecs::Event<cevy::input::cursorMoved>>();
   auto o_cursor_entered = world.get_resource<cevy::ecs::Event<cevy::input::cursorEntered>>();
   auto o_cursor_left = world.get_resource<cevy::ecs::Event<cevy::input::cursorLeft>>();
@@ -77,7 +77,7 @@ void clean_gl_window_inputs(cevy::ecs::World &world) {
   }
 }
 
-void intercept_inputs(
+static void intercept_inputs(
   cevy::ecs::EventWriter<cevy::input::cursorMoved> cursor_moved,
   cevy::ecs::EventWriter<cevy::input::cursorEntered> cursor_entered_writer,
   cevy::ecs::EventWriter<cevy::input::cursorLeft> cursor_left_writer,
@@ -111,7 +111,7 @@ void intercept_inputs(
   }
 }
 
-void docking_window() {
+static void docking_window() {
   auto io = ImGui::GetIO();
   static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
 
@@ -170,7 +170,7 @@ void docking_window() {
   ImGui::End();
 }
 
-void main_menu() {
+static void main_menu() {
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
       ImGui::EndMenu();
@@ -188,7 +188,7 @@ void main_menu() {
   }
 }
 
-void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows, std::unique_ptr<cevy::editor::EditorWindow> &window) {
+static void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows, std::unique_ptr<cevy::editor::EditorWindow> &window) {
   ImGui::PushItemWidth(ImGui::GetFontSize() * -12);
 
   if (ImGui::BeginMenuBar()) {
@@ -208,7 +208,7 @@ void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows, std
   }
 }
 
-void pre_render(cevy::ecs::World &world, cevy::ecs::Resource<cevy::engine::Window> windower) {
+static void pre_render(cevy::ecs::World &world, cevy::ecs::Resource<cevy::engine::Window> windower) {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
@@ -238,7 +238,7 @@ void pre_render(cevy::ecs::World &world, cevy::ecs::Resource<cevy::engine::Windo
   }
 }
 
-void render(cevy::ecs::Resource<cevy::engine::Window> windower) {
+static void render(cevy::ecs::Resource<cevy::engine::Window> windower) {
   auto &glwindow = windower->get_handler<glWindow>();
 
   auto &self = glwindow.get_module<cevy::editor::Editor>();
