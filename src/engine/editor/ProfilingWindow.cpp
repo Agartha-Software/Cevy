@@ -106,7 +106,7 @@ void cevy::editor::ProfilingWindow::render(cevy::editor::Editor &, glWindow &, c
   }
   ImGui::Text("Elapsed time since last frame: %.3f ms",
               std::chrono::duration_cast<std::chrono::microseconds>(elapsed_time).count() / 1000.f);
-  ImGui::Text("Current FPS %.3f", ImGui::GetIO().Framerate);
+  ImGui::Text("Current FPS: %.3f", ImGui::GetIO().Framerate);
   ImGui::Text("Framerate");
   ImGui::PlotHistogram("##Framerate", &frames[0], frames.size(), 0, NULL, 0.0f, 140.0f,
                        ImVec2(300, 100));
