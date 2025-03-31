@@ -40,14 +40,6 @@ class Window {
   Window(int width, int height) {
     this->window = std::make_shared<Windower<Module...>>(width, height);
   }
-  // template <template <typename> typename Windower, typename Renderer>
-  // Windower<Renderer> *operator->() {
-  //   return dynamic_cast<Windower<Renderer> *>(this->window.get());
-  // }
-  // template <template <typename> typename Windower, typename Renderer>
-  // Windower<Renderer> *get_handler() {
-  //   return dynamic_cast<Windower<Renderer> *>(this->window.get());
-  // }
 
   template <typename Windower>
   Windower &get_handler() {
