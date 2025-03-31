@@ -255,8 +255,7 @@ void cevy::editor::Editor::render(cevy::ecs::Resource<cevy::engine::Window> wind
   glClear(GL_COLOR_BUFFER_BIT);
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   ImGuiIO &io = ImGui::GetIO();
-  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-  {
+  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
       GLFWwindow* backup_current_context = glfwGetCurrentContext();
       ImGui::UpdatePlatformWindows();
       ImGui::RenderPlatformWindowsDefault();
