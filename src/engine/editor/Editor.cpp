@@ -245,7 +245,6 @@ void cevy::editor::Editor::render(cevy::ecs::Resource<cevy::engine::Window> wind
 
   glBindFramebuffer(GL_READ_FRAMEBUFFER, glwindow.getCurrentFrameBuffer());
 
-  glViewport(0, 0, INT_MAX, INT_MAX);
   glBindTexture(GL_TEXTURE_2D, self.texture);
   glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, glwindow.getTargetSize().x, glwindow.getTargetSize().y, 0);
 
