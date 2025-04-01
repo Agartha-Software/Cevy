@@ -6,7 +6,6 @@
 */
 
 // clang-format off
-
 #include "Event.hpp"
 // clang-format on
 #include "Window.hpp"
@@ -19,10 +18,8 @@
 #include "input/state.hpp"
 #include "glWindow.hpp"
 
-// glWindow::glWindow(int width, int height) : window_size(width, height), render_size(width, height) {
-glWindow::glWindow(int width, int height) : window_size(width, height), render_size(width * 2 / 3, height * 2 / 3), target_size(width, height), fullscreen(false) {
+glWindow::glWindow(int width, int height) : window_size(width, height), render_size(width, height), target_size(width, height), fullscreen(false) {
   open();
-  // this->renderer = std::make_unique<Renderer>(*this);
 }
 
 glWindow::glWindow(glWindow &&rhs) noexcept {
@@ -141,7 +138,6 @@ void glWindow::post_render() {
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
   glBindFramebuffer(GL_READ_FRAMEBUFFER, this->framebuffer);
 
-  // std::cout << this->final_size.x << "  " << this->final_size.y << std::endl;
   glBlitFramebuffer(0, 0, this->window_size.x, this->window_size.y, 0, 0, this->window_size.x, this->window_size.y,
                   GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
