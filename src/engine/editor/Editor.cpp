@@ -244,7 +244,6 @@ void cevy::editor::Editor::render(cevy::ecs::Resource<cevy::engine::Window> wind
   auto &self = glwindow.get_module<cevy::editor::Editor>();
 
   glBindFramebuffer(GL_READ_FRAMEBUFFER, glwindow.getCurrentFrameBuffer());
-  glNamedFramebufferReadBuffer(glwindow.getCurrentFrameBuffer(), GL_BACK_LEFT);
 
   glViewport(0, 0, INT_MAX, INT_MAX);
   glBindTexture(GL_TEXTURE_2D, self.texture);
