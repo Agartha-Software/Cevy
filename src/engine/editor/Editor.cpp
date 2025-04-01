@@ -42,7 +42,7 @@ void cevy::editor::Editor::init(glWindow &glwindow) {
   glGenFramebuffers(1, &this->framebuffer);
   glGenTextures(1, &this->texture);
   glBindTexture(GL_TEXTURE_2D, this->texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, glwindow.windowSize().x, glwindow.windowSize().y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, glwindow.windowSize.x, glwindow.windowSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -248,7 +248,7 @@ void cevy::editor::Editor::render(cevy::ecs::Resource<cevy::engine::Window> wind
 
   glViewport(0, 0, INT_MAX, INT_MAX);
   glBindTexture(GL_TEXTURE_2D, self.texture);
-  glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, glwindow.targetSize().x, glwindow.targetSize().y, 0);
+  glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, glwindow.getTargetSize().x, glwindow.getTargetSize().y, 0);
 
   ImGui::Render();
   glClearColor(0, 0, 0, 0);

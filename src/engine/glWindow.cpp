@@ -18,18 +18,18 @@
 #include "input/state.hpp"
 #include "glWindow.hpp"
 
-glWindow::glWindow(int width, int height) : window_size(width, height), render_size(width, height), target_size(width, height), fullscreen(false) {
-  open();
+glWindow::glWindow(int width, int height) : cevy::engine::Window::GenericWindow(width, height, false), targetSize(width, height) {
+  this->init_context();
 }
 
-glWindow::glWindow(glWindow &&rhs) noexcept {
+glWindow::glWindow(glWindow &&rhs) noexcept : cevy::engine::Window::GenericWindow(rhs.windowSize.x, rhs.windowSize.y, rhs.fullscreen) {
   this->modules = std::move(rhs.modules);
   this->module_keys = std::move(rhs.module_keys);
   rhs.modules.clear();
   rhs.module_keys.clear();
-  this->window_size = rhs.window_size;
-  this->render_size = rhs.render_size;
-  this->target_size = rhs.target_size;
+  this->windowSize = rhs.windowSize;
+  this->renderSize = rhs.renderSize;
+  this->targetSize = rhs.targetSize;
   this->glfWindow = rhs.glfWindow;
   this->framebuffer = rhs.framebuffer;
   rhs.framebuffer = 0;
@@ -63,10 +63,6 @@ glWindow::~glWindow() {
   }
 };
 
-glm::vec<2, int> glWindow::windowSize() const { return window_size; }
-glm::vec<2, int> glWindow::renderSize() const { return render_size; }
-glm::vec<2, int> glWindow::targetSize() const { return target_size; }
-
 bool glWindow::isFullscreen() const {
   return fullscreen;
 }
@@ -77,22 +73,17 @@ void glWindow::setFullscreen(bool fullscreen) {
     auto mode = glfwGetVideoMode(monitor);
 
     glfwSetWindowMonitor(glfWindow, monitor, 0, 0, mode->width, mode->height , 60);
-    this->target_size = { mode->width, mode->height };
-    this->window_size = { mode->width, mode->height };
+    this->targetSize = { mode->width, mode->height };
+    this->windowSize = { mode->width, mode->height };
     this->fullscreen = true;
   } else if (!fullscreen && this->fullscreen) {
-    glfwSetWindowMonitor(glfWindow, NULL, 0, 0, window_size.x, window_size.y, 60);
+    glfwSetWindowMonitor(glfWindow, NULL, 0, 0, windowSize.x, windowSize.y, 60);
     this->fullscreen = false;
   }
 }
 
 void glWindow::setCursorState(cevy::engine::CursorState state) {
   glfwSetInputMode(glfWindow, GLFW_CURSOR, state);
-}
-
-bool glWindow::open() {
-  this->init_context();
-  return 0;
 }
 
 void glWindow::init_system(Resource<cevy::engine::Window> win,
@@ -120,25 +111,25 @@ void glWindow::init_system(Resource<cevy::engine::Window> win,
 
 void glWindow::pre_render_system(Resource<cevy::engine::Window> win,
                               EventWriter<cevy::ecs::AppExit> close) {
-  win.get().get_handler<glWindow>().pre_render(close);
+  win.get().get_handler<glWindow>().preRender(close);
 }
 
 void glWindow::post_render_system(Resource<cevy::engine::Window> win) {
-  win.get().get_handler<glWindow>().post_render();
+  win.get().get_handler<glWindow>().postRender();
 }
 
-void glWindow::pre_render(EventWriter<cevy::ecs::AppExit> close) {
+void glWindow::preRender(EventWriter<cevy::ecs::AppExit> close) {
   if (glfwWindowShouldClose(this->glfWindow)) {
     close.send(cevy::ecs::AppExit());
     return;
   }
 }
 
-void glWindow::post_render() {
+void glWindow::postRender() {
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
   glBindFramebuffer(GL_READ_FRAMEBUFFER, this->framebuffer);
 
-  glBlitFramebuffer(0, 0, this->window_size.x, this->window_size.y, 0, 0, this->window_size.x, this->window_size.y,
+  glBlitFramebuffer(0, 0, this->windowSize.x, this->windowSize.y, 0, 0, this->windowSize.x, this->windowSize.y,
                   GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
   glfwSwapBuffers(this->glfWindow);
@@ -153,26 +144,22 @@ void glWindow::post_render() {
   glfwPollEvents();
 }
 
-void glWindow::pollEvents() {
-  glfwPollEvents();
-}
-
 void glWindow::setWindowSize(int width, int height) {
-  this->window_size = { width, height };
+  this->windowSize = { width, height };
   glBindTexture(GL_TEXTURE_2D, this->render_target);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, std::max(this->target_size.x, width), std::max(this->target_size.y, height), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, std::max(this->targetSize.x, width), std::max(this->targetSize.y, height), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void glWindow::setTargetSize(int width, int height) {
-  this->target_size = { width, height };
+  this->targetSize = { width, height };
   glBindTexture(GL_TEXTURE_2D, this->render_target);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, std::max(this->window_size.x, width), std::max(this->window_size.y, height), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, std::max(this->windowSize.x, width), std::max(this->windowSize.y, height), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void glWindow::setRenderSize(int width, int height) {
-  this->render_size = { width, height };
+  this->renderSize = { width, height };
 }
 
 void glWindow::keyInput(int key, int /*scancode*/, int action, int /* mods */) {
@@ -242,7 +229,7 @@ bool glWindow::init_context() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  this->glfWindow = glfwCreateWindow(window_size.x, window_size.y, "C++evy glWindow", NULL, NULL);
+  this->glfWindow = glfwCreateWindow(this->windowSize.x, this->windowSize.y, "C++evy glWindow", NULL, NULL);
   if (!this->glfWindow) {
     glfwTerminate();
     throw std::runtime_error("failed to create window");
@@ -303,7 +290,7 @@ bool glWindow::init_context() {
   glGenTextures(1, &this->render_target);
 
   glBindTexture(GL_TEXTURE_2D, this->render_target);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->window_size.x, this->window_size.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->windowSize.x, this->windowSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 

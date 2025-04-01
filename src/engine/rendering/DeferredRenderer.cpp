@@ -140,7 +140,7 @@ void cevy::engine::DeferredRenderer::render_system(
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
     Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world) {
   auto &window = win->get_handler<glWindow>();
-  auto target_size = window.targetSize();
+  auto target_size = window.getTargetSize();
 
   DeferredRenderer &self = window.get_module<DeferredRenderer>();
 
