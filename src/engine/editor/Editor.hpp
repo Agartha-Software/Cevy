@@ -15,7 +15,6 @@
 #include "ecs.hpp"
 #include "engine.hpp"
 #include "glWindow.hpp"
-#include "imgui.h"
 #include "input.hpp"
 #include <memory>
 #include <optional>
@@ -38,9 +37,9 @@ class Editor : public glWindow::Module {
     windows.push_back(std::make_unique<GameWindow>());
   }
 
-  void init(glWindow &glwindow);
-  void deinit(glWindow &);
-  void build(cevy::ecs::App &app);
+  void init(glWindow &glwindow) override;
+  void deinit(glWindow &) override;
+  void build(cevy::ecs::App &app) override;
 
   std::vector<std::unique_ptr<EditorWindow>> windows;
   GLuint texture;

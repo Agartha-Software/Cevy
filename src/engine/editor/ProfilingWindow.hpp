@@ -14,7 +14,6 @@
 
 #include <string>
 
-
 namespace cevy::editor {
 
 class ProfilingWindow : public EditorWindow {
