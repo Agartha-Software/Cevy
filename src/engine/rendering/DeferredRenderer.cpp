@@ -10,6 +10,7 @@
 #include "glx.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <cassert>
 
 #include "Atmosphere.hpp"
 #include "DeferredRenderer.hpp"
@@ -49,7 +50,7 @@
 //   return color;
 // }
 
-void cevy::engine::DeferredRenderer::init() {
+void cevy::engine::DeferredRenderer::init(glWindow &) {
   this->alive = "DeferredRenderer is initialized";
   // std::cerr << " <<<< DeferredRenderer::init() <<<<" << std::endl;
 
@@ -132,10 +133,16 @@ void cevy::engine::DeferredRenderer::init() {
   // this->primitives.flat = TextureBuilder::from(glm::vec4(0.5, 0.5, 0.5, 1), 2, 2);
 }
 
+void cevy::engine::DeferredRenderer::deinit(glWindow &) {}
+
 void cevy::engine::DeferredRenderer::render_system(
-    DeferredRenderer &self, Query<Camera> cams,
+    Resource<Window> win, Query<Camera> cams,
     Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
     Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world) {
+  auto &window = win->get_handler<glWindow>();
+  auto target_size = window.getTargetSize();
+
+  DeferredRenderer &self = window.get_module<DeferredRenderer>();
 
   auto r_atmo = world.get_resource<const Atmosphere>();
   const auto &atmosphere = r_atmo.has_value() ? r_atmo->get() : cevy::engine::Atmosphere();
@@ -147,6 +154,7 @@ void cevy::engine::DeferredRenderer::render_system(
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
+  glViewport(0, 0, self.width, self.height);
 
   if (cams.size() == 0) {
     return;
@@ -272,19 +280,72 @@ void cevy::engine::DeferredRenderer::render_system(
 
   glDisable(GL_BLEND);
   glCullFace(GL_BACK);
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 
   self.compose_shader->use();
 
+  // auto target_size = glWindow::getFromWin(self.glfWindow)->renderSize();
+
   glUniform1f(self.compose_shader->uniform("width"), self.width);
   glUniform1f(self.compose_shader->uniform("height"), self.height);
+
+  // glUniform1f(self.compose_shader->uniform("width"), window_size.x);
+  // glUniform1f(self.compose_shader->uniform("height"), window_size.y);
+
   glUniformMatrix4fv(self.compose_shader->uniform("canvas"), 1, GL_FALSE,
-                     glm::value_ptr(glm::mat4(1)));
+  glm::value_ptr(glm::mat4(1)));
   glUniformMatrix4fv(self.compose_shader->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
   glUniformMatrix4fv(self.compose_shader->uniform("invView"), 1, GL_FALSE, glm::value_ptr(invView));
   glUniform3fv(self.compose_shader->uniform("ambientColor"), 1, glm::value_ptr(ambient));
   glUniform3fv(self.compose_shader->uniform("fog"), 1, glm::value_ptr(fog));
   glUniform1f(self.compose_shader->uniform("fog_far"), std::min(camera.far, fog_dist));
   self.billboard.screenspace({-1, -1}, {1, 1});
+
+  // glBindFramebuffer(GL_READ_FRAMEBUFFER, self.gbuffer.getFramebuffer());
+  // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self.gbuffer.getFramebuffer());
+  // glBindFramebuffer(GL_FRAMEBUFFER, self.gbuffer.getFramebuffer());
+
+  // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+  // window.writeWindowTarget();
+  // window.bindWindowTarget();
   self.billboard.draw();
+  assert(window.getCurrentFrameBuffer() && "framebuffer non-zero");
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, window.getCurrentFrameBuffer());
+
+
+  // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, self.gbuffer.getFramebuffer());
+  // glBindFramebuffer(GL_READ_FRAMEBUFFER, window.getCurrentFrameBuffer());
+
+  // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, window.getCurrentFrameBuffer());
+
+  // auto factor = std::min(target_size.x / float(self.width), target_size.y / float(self.height));
+
+  // auto left = (target_size.x - factor * self.width);
+  // auto bottom = (target_size.y - factor * self.height);
+
+  auto factor = std::max(target_size.x / float(self.width), target_size.y / float(self.height));
+//
+  auto left = (target_size.x - factor * self.width) / 2;
+  auto bottom = (target_size.y - factor * self.height) / 2;
+
+  // glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height,
+  //                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+
+  // glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, window_size.x, window_size.y,
+  //                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
+  // glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, target_size.x, target_size.y,
+  //                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+
+
+  // glBlitFramebuffer(0, 0, window_size.x, window_size.y, 0, 0,self.width, self.height,
+  //                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+  glBlitFramebuffer(0, 0, self.width, self.height, left, bottom, factor * self.width, factor * self.height,
+                  GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+  // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  // glBindFramebuffer(GL_TEXTURE_2D, 0);
 }

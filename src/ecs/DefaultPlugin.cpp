@@ -23,9 +23,10 @@ void init_default_schedules(cevy::ecs::App &app) {
   app.add_stage<Last>();
 }
 
-void cevy::ecs::DefaultPlugin::build(cevy::ecs::App &app) {
+void cevy::ecs::DefaultPlugin::build(App &app) {
   init_default_schedules(app);
   app.add_event<AppExit>();
-  app.add_systems<cevy::ecs::core_stage::PostStartup>(init_timer);
-  app.add_systems<cevy::ecs::core_stage::First>(update_timer);
+  app.init_resource<StageSpecs>();
+  app.add_systems<core_stage::PostStartup>(init_timer);
+  app.add_systems<core_stage::First>(update_timer);
 }

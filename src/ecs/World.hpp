@@ -95,7 +95,7 @@ class cevy::ecs::World {
 
   friend class cevy::ecs::Scheduler;
   friend class cevy::ecs::Commands;
-  friend class EntityWorldRef;
+  friend struct EntityWorldRef;
   friend class cevy::ecs::EntityCommands;
 
   private:

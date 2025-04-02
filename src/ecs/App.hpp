@@ -11,6 +11,7 @@
 
 #include "Plugin.hpp"
 #include "Scheduler.hpp"
+#include "Stage.hpp"
 #include "World.hpp"
 #include "ecs.hpp"
 
@@ -22,6 +23,9 @@
  *
  */
 class cevy::ecs::App : public cevy::ecs::World {
+  public:
+  App();
+
   private:
   /**
    * @brief Scheduler represent the manager of Systems and \link cevy::ecs::Stage
@@ -101,39 +105,80 @@ class cevy::ecs::App : public cevy::ecs::World {
    * @tparam Stage
    * Have to be made from the \link cevy::ecs::Stage Stage \endlink struct.
    */
-  template <typename Stage>
+  template <typename S>
   void add_stage() {
-    _scheduler.insert_schedule<Stage>();
+    auto &order = this->resource<std::conditional_t<std::is_same_v<typename S::is_repeat, std::true_type>, cevy::ecs::ScheduleOrder, cevy::ecs::StartupScheduleOrder>>().order;
+
+    if constexpr (!std::is_same_v<typename S::previous, std::nullopt_t>) {
+      auto it = std::find(order.begin(), order.end(),
+                          std::type_index(typeid(typename S::previous)));
+
+      order.insert(it, std::type_index(typeid(S)));
+    } else if constexpr (!std::is_same_v<typename S::next, std::nullopt_t>) {
+      auto it =
+          std::find(order.begin(), order.end(), std::type_index(typeid(typename S::next)));
+
+      ++it;
+      order.insert(it, std::type_index(typeid(S)));
+    } else {
+      order.push_back(std::type_index(typeid(S)));
+    }
   }
+
+  private:
+  template <typename S>
+  bool is_stage_defined() {
+    auto &order = this->resource<std::conditional_t<std::is_same_v<typename S::is_repeat, std::true_type>, cevy::ecs::ScheduleOrder, cevy::ecs::StartupScheduleOrder>>().order;
+
+    auto it = std::find(order.begin(), order.end(), std::type_index(typeid(S)));
+
+    return (it != order.end());
+  }
+
+  public:
 
   /**
    * @brief Move one or multiple systems in this app’s \link cevy::ecs::Scheduler::Update
    * Update\endlink Scheduler.
    *
-   * @warning If the Update Stage haven't been instancited, by hand or with DefaultPlugin
+   * @warning If the Update stage haven't been instancited, by hand or with DefaultPlugin
    * this command will raise a warning and won't do anything until Update is instanciated
    *
    * @tparam System Could be any thing that have the Operator `()` implemented
    */
   template <class... System>
   void add_systems(System &&...system) {
-    (_scheduler.add_system(std::forward<System>(system)), ...);
+    #ifdef DEBUG
+    if (!is_stage_defined<core_stage::Update>()) {
+      std::cerr << "WARNING/Cevy: Stage not yet added to ecs pipeline" << std::endl;
+    }
+    #endif
+
+    (_scheduler.add_system<core_stage::Update>(std::forward<System>(system)), ...);
   }
 
   /**
    * @brief Move one or multiple systems to the given schedule in this app’s \link
    * cevy::ecs::Scheduler Schedules\endlink.
    *
+   * @warning If the Stage haven't been instancited, by hand or with DefaultPlugin
+   * this command will raise a warning and won't do anything until the stage is instanciated
+   *
    * @tparam System Could be any thing that have the Operator `()` implemented
    */
   template <class Stage, class... System>
   void add_systems(System &&...system) {
+    #ifdef DEBUG
+    if (!is_stage_defined<Stage>()) {
+      std::cerr << "WARNING/Cevy: Stage not yet added to ecs pipeline" << std::endl;
+    }
+    #endif
     (_scheduler.add_system<Stage>(std::forward<System>(system)), ...);
   }
 
   template <class F, class S, class... Args>
   void add_class_system(const F &func) {
-    _scheduler.add_class_system<F, S, Args...>(func);
+    _scheduler.add_class_system<F, S, Args...>(func, this->resource<ScheduleOrder>(), this->resource<StartupScheduleOrder>());
   }
 
   /**

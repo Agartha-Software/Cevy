@@ -53,7 +53,7 @@ class TransformVelocity : public engine::Transform {
   }
 
   protected:
-  template <template <typename> typename Windower, typename Renderer>
+  template <typename Windower>
   friend class Engine;
   static void
   system(ecs::Query<engine::Transform, TransformVelocity, option<cevy::engine::PhysicsProps>> q,
