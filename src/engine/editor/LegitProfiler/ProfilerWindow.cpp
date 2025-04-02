@@ -13,7 +13,7 @@ It's been heavily modified to fit our needs and follows our code guidelines.
 #include <glm/fwd.hpp>
 #include <glm/gtx/string_cast.hpp>
 
-void legit::ProfilerWindow::Render() {
+void legit::ProfilerWindow::render() {
   this->fpsFramesCount++;
   auto curr_frame_time = std::chrono::system_clock::now();
   float fps_delta_time = std::chrono::duration<float>(curr_frame_time - this->prevFpsFrameTime).count();
@@ -30,8 +30,8 @@ void legit::ProfilerWindow::Render() {
   int graph_height = std::min(max_graph_height, available_graph_height);
   int legend_width = 235;
   int graph_width = int(canvas_size.x) - legend_width;
-  gpuGraph.RenderTimings(graph_width, legend_width, graph_height, this->frameOffset);
-  cpuGraph.RenderTimings(graph_width, legend_width, graph_height, this->frameOffset);
+  gpuGraph.renderTimings(graph_width, legend_width, graph_height, this->frameOffset);
+  cpuGraph.renderTimings(graph_width, legend_width, graph_height, this->frameOffset);
 
   ImGui::Columns(2);
   ImGui::Checkbox("Stop profiling", &this->stopProfiling);

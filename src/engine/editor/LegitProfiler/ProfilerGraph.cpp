@@ -29,7 +29,7 @@ legit::ProfilerGraph::ProfilerGraph(size_t frames_count) : stopProfiling(false) 
     this->useColoredLegendText = false;
 }
 
-void legit::ProfilerGraph::LoadFrameData(const legit::ProfilerTask *tasks, size_t count) {
+void legit::ProfilerGraph::loadFrameData(const legit::ProfilerTask *tasks, size_t count) {
   if (this->stopProfiling) {
     return;
   }
@@ -63,12 +63,12 @@ void legit::ProfilerGraph::LoadFrameData(const legit::ProfilerTask *tasks, size_
   }
   this->currFrameIndex = (this->currFrameIndex + 1) % this->frames.size();
 
-  RebuildTaskStats(this->currFrameIndex, 300);
+  rebuildTaskStats(this->currFrameIndex, 300);
 }
 
 using namespace legit;
 
-static void RenderTaskMarker(ImDrawList *draw_list, glm::vec2 left_min_point, glm::vec2 left_max_point,
+static void renderTaskMarker(ImDrawList *draw_list, glm::vec2 left_min_point, glm::vec2 left_max_point,
                               glm::vec2 right_min_point, glm::vec2 right_max_point, uint32_t col) {
   draw_list->AddRectFilled(to_im_vec(left_min_point), to_im_vec(left_max_point), col);
   draw_list->AddRectFilled(to_im_vec(right_min_point), to_im_vec(right_max_point), col);
@@ -78,16 +78,16 @@ static void RenderTaskMarker(ImDrawList *draw_list, glm::vec2 left_min_point, gl
   draw_list->AddConvexPolyFilled(points.data(), int(points.size()), col);
 }
 
-void legit::ProfilerGraph::RenderTimings(int graph_width, int legend_width, int height, int frame_index_offset) {
+void legit::ProfilerGraph::renderTimings(int graph_width, int legend_width, int height, int frame_index_offset) {
   ImDrawList *draw_list = ImGui::GetWindowDrawList();
   const glm::vec2 widgetPos = to_glm_vec(ImGui::GetCursorScreenPos());
-  this->RenderGraph(draw_list, widgetPos, glm::vec2(graph_width, height), frame_index_offset);
-  this->RenderLegend(draw_list, widgetPos + glm::vec2(graph_width, 0.0f), glm::vec2(legend_width, height),
+  this->renderGraph(draw_list, widgetPos, glm::vec2(graph_width, height), frame_index_offset);
+  this->renderLegend(draw_list, widgetPos + glm::vec2(graph_width, 0.0f), glm::vec2(legend_width, height),
                 frame_index_offset);
   ImGui::Dummy(ImVec2(float(graph_width + legend_width), float(height)));
 }
 
-void legit::ProfilerGraph::RebuildTaskStats(size_t end_frame, size_t frames_count) {
+void legit::ProfilerGraph::rebuildTaskStats(size_t end_frame, size_t frames_count) {
   for (auto &taskStat : this->taskStats) {
     taskStat.maxTime = -1.0f;
     taskStat.priorityOrder = -1;
@@ -117,7 +117,7 @@ void legit::ProfilerGraph::RebuildTaskStats(size_t end_frame, size_t frames_coun
   }
 }
 
-void legit::ProfilerGraph::RenderGraph(ImDrawList *draw_list, glm::vec2 graph_pos, glm::vec2 graph_size, size_t frame_index_offset) {
+void legit::ProfilerGraph::renderGraph(ImDrawList *draw_list, glm::vec2 graph_pos, glm::vec2 graph_size, size_t frame_index_offset) {
   draw_list->AddRect(to_im_vec(graph_pos), to_im_vec(graph_pos + graph_size), 0xffffffff);
   float heightThreshold = 1.0f;
 
@@ -144,7 +144,7 @@ void legit::ProfilerGraph::RenderGraph(ImDrawList *draw_list, glm::vec2 graph_po
   }
 }
 
-void legit::ProfilerGraph::RenderLegend(ImDrawList *draw_list, glm::vec2 legend_pos, glm::vec2 legend_size,
+void legit::ProfilerGraph::renderLegend(ImDrawList *draw_list, glm::vec2 legend_pos, glm::vec2 legend_size,
                   size_t frame_index_offset) {
   float marker_left_rect_margin = 3.0f;
   float marker_left_rect_width = 5.0f;
@@ -193,7 +193,7 @@ void legit::ProfilerGraph::RenderLegend(ImDrawList *draw_list, glm::vec2 legend_
                   );
     glm::vec2 marker_right_rect_max =
         marker_right_rect_min + glm::vec2(marker_right_rect_width, -marker_right_rect_height);
-    RenderTaskMarker(draw_list, marker_left_rect_min, marker_left_rect_max, marker_right_rect_min,
+    renderTaskMarker(draw_list, marker_left_rect_min, marker_left_rect_max, marker_right_rect_min,
                       marker_right_rect_max, task.color);
 
     uint32_t textColor =

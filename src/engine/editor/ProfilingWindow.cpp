@@ -129,9 +129,9 @@ void cevy::editor::ProfilingWindow::render(cevy::editor::Editor &, glWindow &, c
     auto &specs = o_specs->get();
     auto tasks = convert_to_profiler_task(specs, world.resource<ecs::ScheduleOrder>().order);
 
-    legitProfiler.cpuGraph.LoadFrameData(tasks.data(), tasks.size());
-    legitProfiler.gpuGraph.LoadFrameData({}, 0);
-    legitProfiler.Render();
+    legitProfiler.cpuGraph.loadFrameData(tasks.data(), tasks.size());
+    legitProfiler.gpuGraph.loadFrameData({}, 0);
+    legitProfiler.render();
   }
   this->last_call = now;
 

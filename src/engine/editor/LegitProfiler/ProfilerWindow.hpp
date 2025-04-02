@@ -26,7 +26,7 @@ class ProfilerWindow {
     avgFrameTime = 1.0f;
   }
 
-  void Render();
+  void render();
 
   bool stopProfiling;
   int frameOffset;

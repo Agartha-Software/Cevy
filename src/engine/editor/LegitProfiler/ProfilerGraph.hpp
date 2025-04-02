@@ -45,15 +45,15 @@ class ProfilerGraph {
 
   ProfilerGraph(size_t framesCount);
 
-  void LoadFrameData(const legit::ProfilerTask *tasks, size_t count);
-  void RenderTimings(int graphWidth, int legendWidth, int height, int frameIndexOffset);
+  void loadFrameData(const legit::ProfilerTask *tasks, size_t count);
+  void renderTimings(int graphWidth, int legendWidth, int height, int frameIndexOffset);
 
   private:
-  void RebuildTaskStats(size_t endFrame, size_t framesCount);
-  void RenderGraph(ImDrawList *drawList, glm::vec2 graphPos, glm::vec2 graphSize,
+  void rebuildTaskStats(size_t endFrame, size_t framesCount);
+  void renderGraph(ImDrawList *drawList, glm::vec2 graphPos, glm::vec2 graphSize,
                    size_t frameIndexOffset);
 
-  void RenderLegend(ImDrawList *drawList, glm::vec2 legendPos, glm::vec2 legendSize,
+  void renderLegend(ImDrawList *drawList, glm::vec2 legendPos, glm::vec2 legendSize,
                     size_t frameIndexOffset);
 };
 }

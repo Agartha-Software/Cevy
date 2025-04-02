@@ -5,12 +5,12 @@
 ** Deferred renderer
 */
 
-#include <cassert>
 #define GLM_FORCE_SWIZZLE
 
 #include "glx.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <cassert>
 
 #include "Atmosphere.hpp"
 #include "DeferredRenderer.hpp"
