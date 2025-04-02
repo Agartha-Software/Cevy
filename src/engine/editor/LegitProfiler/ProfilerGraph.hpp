@@ -43,17 +43,17 @@ class ProfilerGraph {
   float maxFrameTime = 1.0f / 30.0f;
   bool stopProfiling;
 
-  ProfilerGraph(size_t framesCount);
+  ProfilerGraph(size_t frames_count);
 
   void loadFrameData(const legit::ProfilerTask *tasks, size_t count);
-  void renderTimings(int graphWidth, int legendWidth, int height, int frameIndexOffset);
+  void renderTimings(int graph_width, int legend_width, int height, int frame_index_offset);
 
   private:
-  void rebuildTaskStats(size_t endFrame, size_t framesCount);
-  void renderGraph(ImDrawList *drawList, glm::vec2 graphPos, glm::vec2 graphSize,
-                   size_t frameIndexOffset);
+  void rebuildTaskStats(size_t end_frame, size_t frames_count);
+  void renderGraph(ImDrawList *draw_list, glm::vec2 graph_pos, glm::vec2 graph_size,
+                   size_t frame_index_offset);
 
-  void renderLegend(ImDrawList *drawList, glm::vec2 legendPos, glm::vec2 legendSize,
-                    size_t frameIndexOffset);
+  void renderLegend(ImDrawList *draw_list, glm::vec2 legend_pos, glm::vec2 legend_size,
+                    size_t frame_index_offset);
 };
 }

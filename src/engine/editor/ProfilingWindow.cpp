@@ -99,7 +99,7 @@ static std::vector<legit::ProfilerTask> convert_to_profiler_task(const cevy::ecs
 
 void cevy::editor::ProfilingWindow::render(cevy::editor::Editor &, glWindow &, cevy::ecs::World &world) {
   auto now = std::chrono::high_resolution_clock::now();
-  auto elapsed_time = now - this->last_call;
+  auto elapsed_time = now - this->lastCall;
   this->frames.push_back(
       1. /
       (std::chrono::duration_cast<std::chrono::microseconds>(elapsed_time).count() / 1000000.f));
@@ -133,6 +133,6 @@ void cevy::editor::ProfilingWindow::render(cevy::editor::Editor &, glWindow &, c
     legitProfiler.gpuGraph.loadFrameData({}, 0);
     legitProfiler.render();
   }
-  this->last_call = now;
+  this->lastCall = now;
 
 }
