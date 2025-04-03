@@ -14,35 +14,33 @@
 // clang-format on
 #include "Window.hpp"
 #include "cevy.hpp"
-#include <glm/fwd.hpp>
-#include <optional>
 #include "cursor.hpp"
 #include "glx.hpp"
+#include <glm/fwd.hpp>
+#include <optional>
 
 #include "App.hpp"
 #include "Camera.hpp"
 #include "Color.hpp"
-#include <GLFW/glfw3.h>
 #include "Handle.hpp"
 #include "Model.hpp"
 #include "PbrMaterial.hpp"
 #include "Plugin.hpp"
 #include "Query.hpp"
 #include "Scheduler.hpp"
-#include "state.hpp"
 #include "pipeline.hpp"
 #include "state.hpp"
+#include <GLFW/glfw3.h>
 
 class glWindow : public cevy::engine::Window::GenericWindow {
   public:
-
-  template<typename... Modules>
-  struct Builder ;
+  template <typename... Modules>
+  struct Builder;
 
   struct Module {
-    //virtual Module(glWindow&) = 0;
-    virtual void init(glWindow&) = 0;
-    virtual void deinit(glWindow&) = 0;
+    // virtual Module(glWindow&) = 0;
+    virtual void init(glWindow &) = 0;
+    virtual void deinit(glWindow &) = 0;
     virtual void build(cevy::ecs::App &app) = 0;
   };
 
@@ -78,33 +76,33 @@ class glWindow : public cevy::engine::Window::GenericWindow {
   glWindow(int width, int height);
 
   public:
-
-  template<typename... Mod>
-  glWindow& add_modules() {
+  template <typename... Mod>
+  glWindow &add_modules() {
     static_assert(all(std::is_base_of_v<Module, Mod>...),
-            "Given Modules do not derive from Module class");
-    ([this](){
-      this->module_keys.emplace(std::type_index(typeid(Mod)), this->modules.size());
-      this->modules.push_back(std::make_unique<Mod>(*this));
-      this->modules.back()->init(*this);
-    }(), ...);
+                  "Given Modules do not derive from Module class");
+    (
+        [this]() {
+          this->module_keys.emplace(std::type_index(typeid(Mod)), this->modules.size());
+          this->modules.push_back(std::make_unique<Mod>(*this));
+          this->modules.back()->init(*this);
+        }(),
+        ...);
     return *this;
   }
 
-  template<typename Mod>
-  glWindow& add_module() {
-    static_assert(std::is_base_of_v<Module, Mod>,
-            "Given Module does not derive from Module class");
+  template <typename Mod>
+  glWindow &add_module() {
+    static_assert(std::is_base_of_v<Module, Mod>, "Given Module does not derive from Module class");
     this->module_keys.emplace(std::type_index(typeid(Mod)), this->modules.size());
     this->modules.push_back(std::make_unique<Mod>(*this));
     this->modules.back()->init(*this);
     return *this;
   }
 
-  template<typename Mod>
-  Mod& get_module() {
+  template <typename Mod>
+  Mod &get_module() {
     auto key = this->module_keys.at(std::type_index(typeid(Mod)));
-    return dynamic_cast<Mod&>(*this->modules[key]);
+    return dynamic_cast<Mod &>(*this->modules[key]);
   }
 
   glWindow(glWindow &&rhs) noexcept;
@@ -128,7 +126,7 @@ class glWindow : public cevy::engine::Window::GenericWindow {
                           EventWriter<cevy::input::cursorLeft> cursor_left_writer);
 
   static void pre_render_system(Resource<cevy::engine::Window> win,
-                            EventWriter<cevy::ecs::AppExit> close);
+                                EventWriter<cevy::ecs::AppExit> close);
 
   static void post_render_system(Resource<cevy::engine::Window> win);
 
@@ -148,6 +146,7 @@ class glWindow : public cevy::engine::Window::GenericWindow {
   void setWindowSize(int width, int height) override;
   void setRenderSize(int width, int height) override;
   void setTargetSize(int width, int height);
+
   protected:
   void keyInput(int key, int /*scancode*/, int action, int /* mods */);
 
@@ -163,17 +162,12 @@ class glWindow : public cevy::engine::Window::GenericWindow {
 
   bool unload_context();
 
-
   public:
   static glWindow *getFromWin(GLFWwindow *glfWindow);
   GLFWwindow *getGLFWwindow() const;
-  GLuint getCurrentFrameBuffer() {
-    return framebuffer;
-  }
+  GLuint getCurrentFrameBuffer() { return framebuffer; }
 
-  GLuint getRenderTarget() const {
-    return this->render_target;
-  }
+  GLuint getRenderTarget() const { return this->render_target; }
 
   protected:
   glm::vec<2, int> targetSize;
@@ -185,15 +179,13 @@ class glWindow : public cevy::engine::Window::GenericWindow {
   std::unordered_map<std::type_index, size_t> module_keys;
 };
 
-template<typename... Mod>
+template <typename... Mod>
 struct glWindow::Builder : public glWindow {
-  Builder(int width, int height) : glWindow(width, height) {
-    this->add_modules<Mod...>();
-  }
+  Builder(int width, int height) : glWindow(width, height) { this->add_modules<Mod...>(); }
   struct Plugin : public cevy::ecs::Plugin {
-    void build(cevy::ecs::App& app) override {
+    void build(cevy::ecs::App &app) override {
       app.add_plugins(glWindow::Plugin());
-      for (auto& module : app.resource<cevy::engine::Window>().get_handler<glWindow>().modules) {
+      for (auto &module : app.resource<cevy::engine::Window>().get_handler<glWindow>().modules) {
         module->build(app);
       }
       // app.add_plugins(typename Mod::Plugin()...);

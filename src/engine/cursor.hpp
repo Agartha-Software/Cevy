@@ -7,7 +7,6 @@
 
 #pragma once
 
-
 #include "glx.hpp" // IWYU pragma: keep : glfw includes GL.h, which must be included only after the helpers in glx
 #include <GLFW/glfw3.h>
 

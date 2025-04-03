@@ -7,16 +7,16 @@
 
 #include "Editor.hpp"
 
-#include "Event.hpp"
 #include "EditorWindow.hpp"
+#include "Event.hpp"
 #include "Resource.hpp"
 #include "Window.hpp"
 #include "engine.hpp"
 #include "glWindow.hpp"
 #include "imgui.h"
-#include "imgui_internal.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "imgui_internal.h"
 #include "state.hpp"
 
 #include "glx.hpp"
@@ -27,7 +27,7 @@ void cevy::editor::Editor::init(glWindow &glwindow) {
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-  //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+  // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
@@ -35,14 +35,15 @@ void cevy::editor::Editor::init(glWindow &glwindow) {
 
   // Setup Platform/Renderer backends
   ImGui_ImplGlfw_InitForOpenGL(glwindow.getGLFWwindow(),
-                                true); // Second param install_callback=true will install GLFW
-                                    // callbacks and chain to existing ones.
+                               true); // Second param install_callback=true will install GLFW
+                                      // callbacks and chain to existing ones.
   ImGui_ImplOpenGL3_Init();
 
   glGenFramebuffers(1, &this->framebuffer);
   glGenTextures(1, &this->texture);
   glBindTexture(GL_TEXTURE_2D, this->texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, glwindow.windowSize.x, glwindow.windowSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, glwindow.windowSize.x, glwindow.windowSize.y, 0, GL_RGB,
+               GL_UNSIGNED_BYTE, NULL);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -57,7 +58,8 @@ void cevy::editor::Editor::deinit(glWindow &) {
   glDeleteFramebuffers(1, &this->framebuffer);
 }
 
-static void intercept_default_cursor_placement(cevy::ecs::Resource<cevy::input::cursorInWindow> inWindow) {
+static void
+intercept_default_cursor_placement(cevy::ecs::Resource<cevy::input::cursorInWindow> inWindow) {
   inWindow->inside = false;
 }
 
@@ -77,11 +79,11 @@ static void clean_gl_window_inputs(cevy::ecs::World &world) {
   }
 }
 
-static void intercept_inputs(
-  cevy::ecs::EventWriter<cevy::input::cursorMoved> cursor_moved,
-  cevy::ecs::EventWriter<cevy::input::cursorEntered> cursor_entered_writer,
-  cevy::ecs::EventWriter<cevy::input::cursorLeft> cursor_left_writer,
-  cevy::ecs::Resource<cevy::engine::Window> windower) {
+static void
+intercept_inputs(cevy::ecs::EventWriter<cevy::input::cursorMoved> cursor_moved,
+                 cevy::ecs::EventWriter<cevy::input::cursorEntered> cursor_entered_writer,
+                 cevy::ecs::EventWriter<cevy::input::cursorLeft> cursor_left_writer,
+                 cevy::ecs::Resource<cevy::engine::Window> windower) {
   auto &glwindow = windower->get_handler<glWindow>();
   auto &self = glwindow.get_module<cevy::editor::Editor>();
 
@@ -100,10 +102,13 @@ static void intercept_inputs(
 
     self.cursorInViewport = false;
   } else {
-    cursor_moved.send(cevy::input::cursorMoved { { screen_pos.x - self.viewportPos->x, screen_pos.y - self.viewportPos->y } });
+    cursor_moved.send(cevy::input::cursorMoved {
+        {screen_pos.x - self.viewportPos->x, screen_pos.y - self.viewportPos->y}});
 
-    // || !self.cursorInViewport.has_value() Is there to set the cursorInWindow to true as soon as possible if the cursor start in the viewport
-    if ((self.cursorInViewport.has_value() && !self.cursorInViewport.value()) || !self.cursorInViewport.has_value()) {
+    // || !self.cursorInViewport.has_value() Is there to set the cursorInWindow to true as soon as
+    // possible if the cursor start in the viewport
+    if ((self.cursorInViewport.has_value() && !self.cursorInViewport.value()) ||
+        !self.cursorInViewport.has_value()) {
       cursor_entered_writer.send(cevy::input::cursorEntered {});
     }
 
@@ -119,13 +124,14 @@ static void docking_window() {
   // because it would be confusing to have two docking targets within each others.
   ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 
-  ImGuiViewport* viewport = ImGui::GetMainViewport();
+  ImGuiViewport *viewport = ImGui::GetMainViewport();
   ImGui::SetNextWindowPos(viewport->Pos);
   ImGui::SetNextWindowSize(viewport->Size);
   ImGui::SetNextWindowViewport(viewport->ID);
   ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
   ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-  window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+  window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
   window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
   if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) {
@@ -135,8 +141,9 @@ static void docking_window() {
   // Important: note that we proceed even if Begin() returns false (aka window is collapsed).
   // This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
   // all active windows docked into it will lose their parent and become undocked.
-  // We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
-  // any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
+  // We cannot preserve the docking relationship between an active window and an inactive docking,
+  // otherwise any change of dockspace/settings would lead to windows being stuck in limbo and never
+  // being visible.
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
   ImGui::Begin("DockSpace", nullptr, window_flags);
   ImGui::PopStyleVar();
@@ -154,10 +161,14 @@ static void docking_window() {
       ImGui::DockBuilderAddNode(dockspace_id, dockspace_flags);
       ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
 
-      auto dock_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 1.f / 4.f, nullptr, &dockspace_id);
-      auto game_window_id = ImGui::DockBuilderSplitNode(dockspace_id,  ImGuiDir_Left, 2./3., nullptr, &dockspace_id);
-      auto dock_right = ImGui::DockBuilderSplitNode(dockspace_id,  ImGuiDir_Right, 1.f, nullptr, &dockspace_id);
-      auto dock_bottom = ImGui::DockBuilderSplitNode(game_window_id,  ImGuiDir_Down, 0.3f, nullptr, &game_window_id);
+      auto dock_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 1.f / 4.f, nullptr,
+                                                   &dockspace_id);
+      auto game_window_id =
+          ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 2. / 3., nullptr, &dockspace_id);
+      auto dock_right =
+          ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Right, 1.f, nullptr, &dockspace_id);
+      auto dock_bottom = ImGui::DockBuilderSplitNode(game_window_id, ImGuiDir_Down, 0.3f, nullptr,
+                                                     &game_window_id);
 
       // Window Names Hard coded for now
       ImGui::DockBuilderDockWindow("Profiling", dock_left);
@@ -176,24 +187,30 @@ static void main_menu() {
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Edit")) {
-      if (ImGui::MenuItem("Undo", "CTRL+Z")) {}
-      if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {} // Disabled item
+      if (ImGui::MenuItem("Undo", "CTRL+Z")) {
+      }
+      if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {
+      } // Disabled item
       ImGui::Separator();
-      if (ImGui::MenuItem("Cut", "CTRL+X")) {}
-      if (ImGui::MenuItem("Copy", "CTRL+C")) {}
-      if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+      if (ImGui::MenuItem("Cut", "CTRL+X")) {
+      }
+      if (ImGui::MenuItem("Copy", "CTRL+C")) {
+      }
+      if (ImGui::MenuItem("Paste", "CTRL+V")) {
+      }
       ImGui::EndMenu();
     }
     ImGui::EndMainMenuBar();
   }
 }
 
-static void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows, cevy::editor::EditorWindow &window) {
+static void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows,
+                 cevy::editor::EditorWindow &window) {
   ImGui::PushItemWidth(ImGui::GetFontSize() * -12);
 
   if (ImGui::BeginMenuBar()) {
     if (ImGui::BeginMenu("Windows")) {
-      for (auto &window: windows) {
+      for (auto &window : windows) {
         ImGui::MenuItem(window->id.c_str(), NULL, &window->open);
       }
       ImGui::EndMenu();
@@ -208,7 +225,8 @@ static void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windo
   }
 }
 
-void cevy::editor::Editor::pre_render(cevy::ecs::World &world, cevy::ecs::Resource<cevy::engine::Window> windower) {
+void cevy::editor::Editor::pre_render(cevy::ecs::World &world,
+                                      cevy::ecs::Resource<cevy::engine::Window> windower) {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
@@ -219,7 +237,7 @@ void cevy::editor::Editor::pre_render(cevy::ecs::World &world, cevy::ecs::Resour
   main_menu();
   docking_window();
 
-  for (auto &window: self.windows) {
+  for (auto &window : self.windows) {
     if (window->open) {
       int window_flags = ImGuiWindowFlags_MenuBar;
       window_flags |= window->background ? 0 : ImGuiWindowFlags_NoBackground;
@@ -246,7 +264,8 @@ void cevy::editor::Editor::render(cevy::ecs::Resource<cevy::engine::Window> wind
   glBindFramebuffer(GL_READ_FRAMEBUFFER, glwindow.getCurrentFrameBuffer());
 
   glBindTexture(GL_TEXTURE_2D, self.texture);
-  glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, glwindow.getTargetSize().x, glwindow.getTargetSize().y, 0);
+  glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, glwindow.getTargetSize().x,
+                   glwindow.getTargetSize().y, 0);
 
   ImGui::Render();
   glClearColor(0, 0, 0, 0);
@@ -254,10 +273,10 @@ void cevy::editor::Editor::render(cevy::ecs::Resource<cevy::engine::Window> wind
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   ImGuiIO &io = ImGui::GetIO();
   if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-      GLFWwindow* backup_current_context = glfwGetCurrentContext();
-      ImGui::UpdatePlatformWindows();
-      ImGui::RenderPlatformWindowsDefault();
-      glfwMakeContextCurrent(backup_current_context);
+    GLFWwindow *backup_current_context = glfwGetCurrentContext();
+    ImGui::UpdatePlatformWindows();
+    ImGui::RenderPlatformWindowsDefault();
+    glfwMakeContextCurrent(backup_current_context);
   }
 }
 

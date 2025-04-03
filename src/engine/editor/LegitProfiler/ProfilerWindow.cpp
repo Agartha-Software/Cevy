@@ -5,9 +5,9 @@ by Raikiri
 It's been heavily modified to fit our needs and follows our code guidelines.
 */
 
-#include "imgui.h"
-#include "ProfilerGraph.hpp"
 #include "ProfilerWindow.hpp"
+#include "ProfilerGraph.hpp"
+#include "imgui.h"
 #include <algorithm>
 #include <chrono>
 #include <glm/fwd.hpp>
@@ -16,7 +16,8 @@ It's been heavily modified to fit our needs and follows our code guidelines.
 void legit::ProfilerWindow::render() {
   this->fpsFramesCount++;
   auto curr_frame_time = std::chrono::system_clock::now();
-  float fps_delta_time = std::chrono::duration<float>(curr_frame_time - this->prevFpsFrameTime).count();
+  float fps_delta_time =
+      std::chrono::duration<float>(curr_frame_time - this->prevFpsFrameTime).count();
   if (fps_delta_time > 0.5f) {
     this->avgFrameTime = fps_delta_time / float(this->fpsFramesCount);
     this->fpsFramesCount = 0;
@@ -44,7 +45,7 @@ void legit::ProfilerWindow::render() {
   ImGui::SliderInt("Frame width", &this->frameWidth, 1, 4);
   ImGui::SliderInt("Frame spacing", &this->frameSpacing, 0, 2);
   ImGui::Columns(1);
-//    }
+  //    }
   if (!this->stopProfiling) {
     this->frameOffset = 0;
   }

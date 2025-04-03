@@ -8,5 +8,4 @@
 #include "LoggingWindow.hpp"
 #include "Editor.hpp"
 
-void cevy::editor::LoggingWindow::render(cevy::editor::Editor &, glWindow &, cevy::ecs::World &) {
-}
+void cevy::editor::LoggingWindow::render(cevy::editor::Editor &, glWindow &, cevy::ecs::World &) {}

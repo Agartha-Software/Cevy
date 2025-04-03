@@ -9,8 +9,8 @@
 
 #include "glx.hpp"
 
-#include <glm/gtc/type_ptr.hpp>
 #include <cassert>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "Atmosphere.hpp"
 #include "DeferredRenderer.hpp"
@@ -281,7 +281,6 @@ void cevy::engine::DeferredRenderer::render_system(
   glDisable(GL_BLEND);
   glCullFace(GL_BACK);
 
-
   self.compose_shader->use();
 
   // auto target_size = glWindow::getFromWin(self.glfWindow)->renderSize();
@@ -293,7 +292,7 @@ void cevy::engine::DeferredRenderer::render_system(
   // glUniform1f(self.compose_shader->uniform("height"), window_size.y);
 
   glUniformMatrix4fv(self.compose_shader->uniform("canvas"), 1, GL_FALSE,
-  glm::value_ptr(glm::mat4(1)));
+                     glm::value_ptr(glm::mat4(1)));
   glUniformMatrix4fv(self.compose_shader->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
   glUniformMatrix4fv(self.compose_shader->uniform("invView"), 1, GL_FALSE, glm::value_ptr(invView));
   glUniform3fv(self.compose_shader->uniform("ambientColor"), 1, glm::value_ptr(ambient));
@@ -312,7 +311,6 @@ void cevy::engine::DeferredRenderer::render_system(
   assert(window.getCurrentFrameBuffer() && "framebuffer non-zero");
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, window.getCurrentFrameBuffer());
 
-
   // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
   glBindFramebuffer(GL_READ_FRAMEBUFFER, self.gbuffer.getFramebuffer());
   // glBindFramebuffer(GL_READ_FRAMEBUFFER, window.getCurrentFrameBuffer());
@@ -325,26 +323,23 @@ void cevy::engine::DeferredRenderer::render_system(
   // auto bottom = (target_size.y - factor * self.height);
 
   auto factor = std::max(target_size.x / float(self.width), target_size.y / float(self.height));
-//
+  //
   auto left = (target_size.x - factor * self.width) / 2;
   auto bottom = (target_size.y - factor * self.height) / 2;
 
   // glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height,
   //                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
-
   // glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, window_size.x, window_size.y,
   //                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
   // glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, target_size.x, target_size.y,
   //                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
-
-
   // glBlitFramebuffer(0, 0, window_size.x, window_size.y, 0, 0,self.width, self.height,
   //                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
-  glBlitFramebuffer(0, 0, self.width, self.height, left, bottom, factor * self.width, factor * self.height,
-                  GL_COLOR_BUFFER_BIT, GL_LINEAR);
+  glBlitFramebuffer(0, 0, self.width, self.height, left, bottom, factor * self.width,
+                    factor * self.height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
   // glBindFramebuffer(GL_FRAMEBUFFER, 0);
   // glBindFramebuffer(GL_TEXTURE_2D, 0);

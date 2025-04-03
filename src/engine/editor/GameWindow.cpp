@@ -9,7 +9,8 @@
 #include "Editor.hpp"
 #include "imgui.h"
 
-void cevy::editor::GameWindow::render(cevy::editor::Editor &editor, glWindow &glwindow, cevy::ecs::World &) {
+void cevy::editor::GameWindow::render(cevy::editor::Editor &editor, glWindow &glwindow,
+                                      cevy::ecs::World &) {
   // Using a Child allow to fill all the space of the window.
   // It also alows customization
   ImGui::BeginChild("GameRender");
