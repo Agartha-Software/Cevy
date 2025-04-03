@@ -107,16 +107,20 @@ class cevy::ecs::App : public cevy::ecs::World {
    */
   template <typename S>
   void add_stage() {
-    auto &order = this->resource<std::conditional_t<std::is_same_v<typename S::is_repeat, std::true_type>, cevy::ecs::ScheduleOrder, cevy::ecs::StartupScheduleOrder>>().order;
+    auto &order =
+        this->resource<
+                std::conditional_t<std::is_same_v<typename S::is_repeat, std::true_type>,
+                                   cevy::ecs::ScheduleOrder, cevy::ecs::StartupScheduleOrder>>()
+
+            .order;
 
     if constexpr (!std::is_same_v<typename S::previous, std::nullopt_t>) {
-      auto it = std::find(order.begin(), order.end(),
-                          std::type_index(typeid(typename S::previous)));
+      auto it =
+          std::find(order.begin(), order.end(), std::type_index(typeid(typename S::previous)));
 
       order.insert(it, std::type_index(typeid(S)));
     } else if constexpr (!std::is_same_v<typename S::next, std::nullopt_t>) {
-      auto it =
-          std::find(order.begin(), order.end(), std::type_index(typeid(typename S::next)));
+      auto it = std::find(order.begin(), order.end(), std::type_index(typeid(typename S::next)));
 
       ++it;
       order.insert(it, std::type_index(typeid(S)));
@@ -128,7 +132,11 @@ class cevy::ecs::App : public cevy::ecs::World {
   private:
   template <typename S>
   bool is_stage_defined() {
-    auto &order = this->resource<std::conditional_t<std::is_same_v<typename S::is_repeat, std::true_type>, cevy::ecs::ScheduleOrder, cevy::ecs::StartupScheduleOrder>>().order;
+    auto &order =
+        this->resource<
+                std::conditional_t<std::is_same_v<typename S::is_repeat, std::true_type>,
+                                   cevy::ecs::ScheduleOrder, cevy::ecs::StartupScheduleOrder>>()
+            .order;
 
     auto it = std::find(order.begin(), order.end(), std::type_index(typeid(S)));
 
@@ -136,7 +144,6 @@ class cevy::ecs::App : public cevy::ecs::World {
   }
 
   public:
-
   /**
    * @brief Move one or multiple systems in this app’s \link cevy::ecs::Scheduler::Update
    * Update\endlink Scheduler.
@@ -148,11 +155,11 @@ class cevy::ecs::App : public cevy::ecs::World {
    */
   template <class... System>
   void add_systems(System &&...system) {
-    #ifdef DEBUG
+#ifdef DEBUG
     if (!is_stage_defined<core_stage::Update>()) {
       std::cerr << "WARNING/Cevy: Stage not yet added to ecs pipeline" << std::endl;
     }
-    #endif
+#endif
 
     (_scheduler.add_system<core_stage::Update>(std::forward<System>(system)), ...);
   }
@@ -168,17 +175,18 @@ class cevy::ecs::App : public cevy::ecs::World {
    */
   template <class Stage, class... System>
   void add_systems(System &&...system) {
-    #ifdef DEBUG
+#ifdef DEBUG
     if (!is_stage_defined<Stage>()) {
       std::cerr << "WARNING/Cevy: Stage not yet added to ecs pipeline" << std::endl;
     }
-    #endif
+#endif
     (_scheduler.add_system<Stage>(std::forward<System>(system)), ...);
   }
 
   template <class F, class S, class... Args>
   void add_class_system(const F &func) {
-    _scheduler.add_class_system<F, S, Args...>(func, this->resource<ScheduleOrder>(), this->resource<StartupScheduleOrder>());
+    _scheduler.add_class_system<F, S, Args...>(func, this->resource<ScheduleOrder>(),
+                                               this->resource<StartupScheduleOrder>());
   }
 
   /**

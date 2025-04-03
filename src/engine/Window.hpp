@@ -18,10 +18,11 @@ class Window {
   public:
   class GenericWindow {
     public:
-    glm::vec<2, int>  windowSize;
-    glm::vec<2, int>  renderSize;
+    glm::vec<2, int> windowSize;
+    glm::vec<2, int> renderSize;
     bool fullscreen;
-    GenericWindow(int width, int height, bool fullscreen) : windowSize(width, height), renderSize(width, height), fullscreen(fullscreen) {};
+    GenericWindow(int width, int height, bool fullscreen)
+        : windowSize(width, height), renderSize(width, height), fullscreen(fullscreen) {};
 
     virtual void setWindowSize(int width, int height) = 0;
     virtual void setRenderSize(int width, int height) = 0;

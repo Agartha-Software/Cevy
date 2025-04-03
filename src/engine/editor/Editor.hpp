@@ -47,8 +47,10 @@ class Editor : public glWindow::Module {
   std::optional<bool> cursorInViewport;
   std::optional<ImVec2> viewportPos;
   std::optional<ImVec2> viewportSize;
+
   private:
-  static void pre_render(cevy::ecs::World &world, cevy::ecs::Resource<cevy::engine::Window> windower);
+  static void pre_render(cevy::ecs::World &world,
+                         cevy::ecs::Resource<cevy::engine::Window> windower);
   static void render(cevy::ecs::Resource<cevy::engine::Window> windower);
 };
 

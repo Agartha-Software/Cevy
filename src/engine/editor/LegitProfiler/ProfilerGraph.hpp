@@ -14,7 +14,6 @@ It's been heavily modified to fit our needs and follows our code guidelines.
 #include <map>
 #include <vector>
 
-
 namespace legit {
 
 class ProfilerGraph {
@@ -56,4 +55,4 @@ class ProfilerGraph {
   void renderLegend(ImDrawList *draw_list, glm::vec2 legend_pos, glm::vec2 legend_size,
                     size_t frame_index_offset);
 };
-}
+} // namespace legit

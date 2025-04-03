@@ -8,15 +8,15 @@
 #define GLM_FORCE_SWIZZLE
 #define GLM_ENABLE_EXPERIMENTAL
 
-#include <string>
-#include <cstddef>
-#include <typeindex>
 #include "ProfilingWindow.hpp"
 #include "Editor.hpp"
 #include "ProfilerTask.hpp"
 #include "Scheduler.hpp"
 #include "imgui.h"
 #include <chrono>
+#include <cstddef>
+#include <string>
+#include <typeindex>
 
 #include <algorithm>
 #include <unordered_map>
@@ -38,31 +38,34 @@ static glm::vec3 hsv2rgb(glm::vec3 c) {
 //   glm::vec3 rgb = hsv2rgb({hash / ((double) UINT_MAX), 1., 1.});
 //   rgb *= 255;
 
-//   unsigned int hex = ((int(rgb.r) & 0xff) << 24) + ((int(rgb.g) & 0xff) << 16) + ((int(rgb.b) & 0xff) << 8) + (255 & 0xff);
+//   unsigned int hex = ((int(rgb.r) & 0xff) << 24) + ((int(rgb.g) & 0xff) << 16) + ((int(rgb.b) &
+//   0xff) << 8) + (255 & 0xff);
 
 //   return RGBA_LE(hex);
 // }
 
-
 static std::string get_stage_name(std::type_index index) {
-  #if defined(__clang__) || defined(__GNUC__)
-  char *demangled = abi::__cxa_demangle(index.name(),0,0,NULL);
+#if defined(__clang__) || defined(__GNUC__)
+  char *demangled = abi::__cxa_demangle(index.name(), 0, 0, NULL);
   std::string demangled_clean = std::string(demangled);
   free(demangled);
 
   return demangled_clean.substr(demangled_clean.find_last_of(':') + 1);
-  #else
+#else
   return index.name();
-  #endif
+#endif
 }
 
-static std::vector<legit::ProfilerTask> convert_to_profiler_task(const cevy::ecs::StageSpecs &specs, const std::list<cevy::ecs::StageTypeIndex> &indexes) {
+static std::vector<legit::ProfilerTask>
+convert_to_profiler_task(const cevy::ecs::StageSpecs &specs,
+                         const std::list<cevy::ecs::StageTypeIndex> &indexes) {
   if (specs.map.find(std::type_index(typeid(cevy::editor::EditorPreRender))) == specs.map.end()) {
     return {};
   }
 
   std::vector<legit::ProfilerTask> tasks;
-  auto current_stage = std::find(indexes.begin(), indexes.end(), std::type_index(typeid(cevy::editor::EditorPreRender)));
+  auto current_stage = std::find(indexes.begin(), indexes.end(),
+                                 std::type_index(typeid(cevy::editor::EditorPreRender)));
   auto last_start = specs.map.at(std::type_index(typeid(cevy::editor::EditorPreRender))).startTime;
 
   const float golden = 137.5f / 360.f;
@@ -75,15 +78,21 @@ static std::vector<legit::ProfilerTask> convert_to_profiler_task(const cevy::ecs
     auto color = hsv2rgb({hue, 0.7, 0.9});
 
     color *= 255;
-    unsigned int hex = ((int(color.r) & 0xff) << 24) | ((int(color.g) & 0xff) << 16) | ((int(color.b) & 0xff) << 8) | (255 & 0xff);
+    unsigned int hex = ((int(color.r) & 0xff) << 24) | ((int(color.g) & 0xff) << 16) |
+                       ((int(color.b) & 0xff) << 8) | (255 & 0xff);
     hex = RGBA_LE(hex);
 
     tasks.push_back(legit::ProfilerTask {
-      .startTime = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(spec.startTime - last_start).count() / 1000000,
-      .endTime = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(spec.endTime - last_start).count() / 1000000,
-      .name = get_stage_name(stage_index),
-      .color = hex
-    });
+        .startTime = (double)std::chrono::duration_cast<std::chrono::nanoseconds>(spec.startTime -
+                                                                                  last_start)
+                         .count() /
+                     1000000,
+        .endTime =
+            (double)std::chrono::duration_cast<std::chrono::nanoseconds>(spec.endTime - last_start)
+                .count() /
+            1000000,
+        .name = get_stage_name(stage_index),
+        .color = hex});
 
     hue = fmod(hue + golden, 1);
 
@@ -97,7 +106,8 @@ static std::vector<legit::ProfilerTask> convert_to_profiler_task(const cevy::ecs
   }
 }
 
-void cevy::editor::ProfilingWindow::render(cevy::editor::Editor &, glWindow &, cevy::ecs::World &world) {
+void cevy::editor::ProfilingWindow::render(cevy::editor::Editor &, glWindow &,
+                                           cevy::ecs::World &world) {
   auto now = std::chrono::high_resolution_clock::now();
   auto elapsed_time = now - this->lastCall;
   this->frames.push_back(
@@ -122,7 +132,6 @@ void cevy::editor::ProfilingWindow::render(cevy::editor::Editor &, glWindow &, c
                        0.0f, 140.0f, ImVec2(300, 100));
   ImGui::PopStyleColor();
 
-
   auto o_specs = world.get_resource<cevy::ecs::StageSpecs>();
 
   if (o_specs.has_value()) {
@@ -134,5 +143,4 @@ void cevy::editor::ProfilingWindow::render(cevy::editor::Editor &, glWindow &, c
     legitProfiler.render();
   }
   this->lastCall = now;
-
 }

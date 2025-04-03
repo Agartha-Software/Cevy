@@ -8,21 +8,23 @@
 // clang-format off
 #include "Event.hpp"
 // clang-format on
+#include "glWindow.hpp"
+#include "Scheduler.hpp"
 #include "Window.hpp"
+#include "cursor.hpp"
+#include "glx.hpp"
+#include "input/state.hpp"
 #include <optional>
 #include <stdexcept>
 #include <unordered_map>
-#include "glx.hpp"
-#include "cursor.hpp"
-#include "Scheduler.hpp"
-#include "input/state.hpp"
-#include "glWindow.hpp"
 
-glWindow::glWindow(int width, int height) : cevy::engine::Window::GenericWindow(width, height, false), targetSize(width, height) {
+glWindow::glWindow(int width, int height)
+    : cevy::engine::Window::GenericWindow(width, height, false), targetSize(width, height) {
   this->init_context();
 }
 
-glWindow::glWindow(glWindow &&rhs) noexcept : cevy::engine::Window::GenericWindow(rhs.windowSize.x, rhs.windowSize.y, rhs.fullscreen) {
+glWindow::glWindow(glWindow &&rhs) noexcept
+    : cevy::engine::Window::GenericWindow(rhs.windowSize.x, rhs.windowSize.y, rhs.fullscreen) {
   this->modules = std::move(rhs.modules);
   this->module_keys = std::move(rhs.module_keys);
   rhs.modules.clear();
@@ -63,18 +65,16 @@ glWindow::~glWindow() {
   }
 };
 
-bool glWindow::isFullscreen() const {
-  return fullscreen;
-}
+bool glWindow::isFullscreen() const { return fullscreen; }
 
 void glWindow::setFullscreen(bool fullscreen) {
   if (fullscreen && !this->fullscreen) {
     auto monitor = glfwGetPrimaryMonitor();
     auto mode = glfwGetVideoMode(monitor);
 
-    glfwSetWindowMonitor(glfWindow, monitor, 0, 0, mode->width, mode->height , 60);
-    this->targetSize = { mode->width, mode->height };
-    this->windowSize = { mode->width, mode->height };
+    glfwSetWindowMonitor(glfWindow, monitor, 0, 0, mode->width, mode->height, 60);
+    this->targetSize = {mode->width, mode->height};
+    this->windowSize = {mode->width, mode->height};
     this->fullscreen = true;
   } else if (!fullscreen && this->fullscreen) {
     glfwSetWindowMonitor(glfWindow, NULL, 0, 0, windowSize.x, windowSize.y, 60);
@@ -87,13 +87,13 @@ void glWindow::setCursorState(cevy::engine::CursorState state) {
 }
 
 void glWindow::init_system(Resource<cevy::engine::Window> win,
-                        Resource<cevy::input::cursorInWindow> cursorInWindow,
-                        EventWriter<cevy::input::keyboardInput> keyboardInputWriter,
-                        EventWriter<cevy::input::mouseInput> mouseInputWriter,
-                        EventWriter<cevy::input::cursorMoved> cursorMovedWriter,
-                        EventWriter<cevy::input::windowFocused> windowFocusedWriter,
-                        EventWriter<cevy::input::cursorEntered> cursor_entered_writer,
-                        EventWriter<cevy::input::cursorLeft> cursor_left_writer) {
+                           Resource<cevy::input::cursorInWindow> cursorInWindow,
+                           EventWriter<cevy::input::keyboardInput> keyboardInputWriter,
+                           EventWriter<cevy::input::mouseInput> mouseInputWriter,
+                           EventWriter<cevy::input::cursorMoved> cursorMovedWriter,
+                           EventWriter<cevy::input::windowFocused> windowFocusedWriter,
+                           EventWriter<cevy::input::cursorEntered> cursor_entered_writer,
+                           EventWriter<cevy::input::cursorLeft> cursor_left_writer) {
   glWindow &self = win->get_handler<glWindow>();
 
   cursorInWindow->inside = glfwGetWindowAttrib(self.glfWindow, GLFW_HOVERED);
@@ -105,12 +105,12 @@ void glWindow::init_system(Resource<cevy::engine::Window> win,
   self.cursor_entered_writer.emplace(cursor_entered_writer);
   self.cursor_left_writer.emplace(cursor_left_writer);
   if (cursorInWindow->inside) {
-    cursor_entered_writer.send(cevy::input::cursorEntered{});
+    cursor_entered_writer.send(cevy::input::cursorEntered {});
   }
 }
 
 void glWindow::pre_render_system(Resource<cevy::engine::Window> win,
-                              EventWriter<cevy::ecs::AppExit> close) {
+                                 EventWriter<cevy::ecs::AppExit> close) {
   win.get().get_handler<glWindow>().preRender(close);
 }
 
@@ -129,8 +129,8 @@ void glWindow::postRender() {
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
   glBindFramebuffer(GL_READ_FRAMEBUFFER, this->framebuffer);
 
-  glBlitFramebuffer(0, 0, this->windowSize.x, this->windowSize.y, 0, 0, this->windowSize.x, this->windowSize.y,
-                  GL_COLOR_BUFFER_BIT, GL_NEAREST);
+  glBlitFramebuffer(0, 0, this->windowSize.x, this->windowSize.y, 0, 0, this->windowSize.x,
+                    this->windowSize.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
   glfwSwapBuffers(this->glfWindow);
 
@@ -145,22 +145,22 @@ void glWindow::postRender() {
 }
 
 void glWindow::setWindowSize(int width, int height) {
-  this->windowSize = { width, height };
+  this->windowSize = {width, height};
   glBindTexture(GL_TEXTURE_2D, this->render_target);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, std::max(this->targetSize.x, width), std::max(this->targetSize.y, height), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, std::max(this->targetSize.x, width),
+               std::max(this->targetSize.y, height), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void glWindow::setTargetSize(int width, int height) {
-  this->targetSize = { width, height };
+  this->targetSize = {width, height};
   glBindTexture(GL_TEXTURE_2D, this->render_target);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, std::max(this->windowSize.x, width), std::max(this->windowSize.y, height), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, std::max(this->windowSize.x, width),
+               std::max(this->windowSize.y, height), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void glWindow::setRenderSize(int width, int height) {
-  this->renderSize = { width, height };
-}
+void glWindow::setRenderSize(int width, int height) { this->renderSize = {width, height}; }
 
 void glWindow::keyInput(int key, int /*scancode*/, int action, int /* mods */) {
   if (!this->keyboardInputWriter.has_value()) {
@@ -169,12 +169,12 @@ void glWindow::keyInput(int key, int /*scancode*/, int action, int /* mods */) {
 
   if (action == GLFW_PRESS) {
     this->keyboardInputWriter->send(
-        cevy::input::keyboardInput{static_cast<cevy::input::KeyCode>(key), true});
+        cevy::input::keyboardInput {static_cast<cevy::input::KeyCode>(key), true});
   }
 
   if (action == GLFW_RELEASE) {
     this->keyboardInputWriter->send(
-        cevy::input::keyboardInput{static_cast<cevy::input::KeyCode>(key), false});
+        cevy::input::keyboardInput {static_cast<cevy::input::KeyCode>(key), false});
   }
 }
 
@@ -182,14 +182,14 @@ void glWindow::cursor(double xpos, double ypos) {
   if (!this->cursorMovedWriter.has_value()) {
     throw std::runtime_error("callback access outside of poll");
   }
-  this->cursorMovedWriter->send(cevy::input::cursorMoved{{xpos, ypos}});
+  this->cursorMovedWriter->send(cevy::input::cursorMoved {{xpos, ypos}});
 }
 
 void glWindow::windowFocused(int focused) {
   if (!this->windowFocusedWriter.has_value()) {
     throw std::runtime_error("callback access outside of poll");
   }
-  this->windowFocusedWriter->send(cevy::input::windowFocused{bool(focused)});
+  this->windowFocusedWriter->send(cevy::input::windowFocused {bool(focused)});
 }
 
 void glWindow::mouseInput(int button, int action, int /* mods */) {
@@ -199,12 +199,12 @@ void glWindow::mouseInput(int button, int action, int /* mods */) {
 
   if (action == GLFW_PRESS) {
     this->mouseInputWriter->send(
-        cevy::input::mouseInput{static_cast<cevy::input::MouseButton>(button), true});
+        cevy::input::mouseInput {static_cast<cevy::input::MouseButton>(button), true});
   }
 
   if (action == GLFW_RELEASE) {
     this->mouseInputWriter->send(
-        cevy::input::mouseInput{static_cast<cevy::input::MouseButton>(button), false});
+        cevy::input::mouseInput {static_cast<cevy::input::MouseButton>(button), false});
   }
 }
 
@@ -214,9 +214,9 @@ void glWindow::cursorEnter(int entered) {
   }
 
   if (entered) {
-    this->cursor_entered_writer->send(cevy::input::cursorEntered{});
+    this->cursor_entered_writer->send(cevy::input::cursorEntered {});
   } else {
-    this->cursor_left_writer->send(cevy::input::cursorLeft{});
+    this->cursor_left_writer->send(cevy::input::cursorLeft {});
   }
 }
 
@@ -229,7 +229,8 @@ bool glWindow::init_context() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  this->glfWindow = glfwCreateWindow(this->windowSize.x, this->windowSize.y, "C++evy glWindow", NULL, NULL);
+  this->glfWindow =
+      glfwCreateWindow(this->windowSize.x, this->windowSize.y, "C++evy glWindow", NULL, NULL);
   if (!this->glfWindow) {
     glfwTerminate();
     throw std::runtime_error("failed to create window");
@@ -241,22 +242,21 @@ bool glWindow::init_context() {
     getFromWin(win)->setWindowSize(width, height);
   });
   glfwSetMouseButtonCallback(this->glfWindow,
-                              [](GLFWwindow *win, int button, int action, int mods) {
-                                getFromWin(win)->mouseInput(button, action, mods);
-                              });
+                             [](GLFWwindow *win, int button, int action, int mods) {
+                               getFromWin(win)->mouseInput(button, action, mods);
+                             });
   glfwSetCursorPosCallback(this->glfWindow, [](GLFWwindow *win, double xpos, double ypos) {
     getFromWin(win)->cursor(xpos, ypos);
   });
   glfwSetKeyCallback(this->glfWindow,
-                      [](GLFWwindow *win, int key, int scancode, int action, int mods) {
-                        getFromWin(win)->keyInput(key, scancode, action, mods);
-                      });
+                     [](GLFWwindow *win, int key, int scancode, int action, int mods) {
+                       getFromWin(win)->keyInput(key, scancode, action, mods);
+                     });
   glfwSetWindowFocusCallback(this->glfWindow, [](GLFWwindow *win, int focused) {
     getFromWin(win)->windowFocused(focused);
   });
-  glfwSetCursorEnterCallback(this->glfWindow, [](GLFWwindow *win, int entered) {
-    getFromWin(win)->cursorEnter(entered);
-  });
+  glfwSetCursorEnterCallback(
+      this->glfWindow, [](GLFWwindow *win, int entered) { getFromWin(win)->cursorEnter(entered); });
 #if _WIN32
   if (gl3wInit()) {
     fprintf(stderr, "failed to initialize OpenGL\n");
@@ -281,8 +281,7 @@ bool glWindow::init_context() {
   }
 #endif // _WIN32
 
-  printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION),
-          glGetString(GL_SHADING_LANGUAGE_VERSION));
+  printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION), glGetString(GL_SHADING_LANGUAGE_VERSION));
   glfwSwapInterval(0); // vsync disable
 
   glGenFramebuffers(1, &this->framebuffer);
@@ -290,12 +289,14 @@ bool glWindow::init_context() {
   glGenTextures(1, &this->render_target);
 
   glBindTexture(GL_TEXTURE_2D, this->render_target);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->windowSize.x, this->windowSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->windowSize.x, this->windowSize.y, 0, GL_RGB,
+               GL_UNSIGNED_BYTE, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
   glBindFramebuffer(GL_FRAMEBUFFER, this->framebuffer);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->render_target, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->render_target,
+                         0);
 
   return 0;
 }
@@ -309,6 +310,4 @@ glWindow *glWindow::getFromWin(GLFWwindow *glfWindow) {
   return static_cast<glWindow *>(glfwGetWindowUserPointer(glfWindow));
 }
 
-GLFWwindow *glWindow::getGLFWwindow() const {
-  return glfWindow;
-}
+GLFWwindow *glWindow::getGLFWwindow() const { return glfWindow; }

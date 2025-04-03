@@ -105,7 +105,7 @@ struct pipeline {
         inline static constexpr auto binding = 2;
       };
     }; // struct PbrMaterial
-  }; // struct uniforms
+  };   // struct uniforms
   struct layout {
     /// vertex position
     struct vertexPosition {
@@ -146,7 +146,7 @@ struct pipeline {
           glm::vec4(0, l.range, 0, 0), //
           glm::vec4(0, 0, l.range, 0), //
           glm::vec4(position, 1)       //
-      }; // collumn major, visually transposed
+      };                               // collumn major, visually transposed
       this->radius = l.radius;
       this->color = l.color;
     }
