@@ -7,9 +7,15 @@
 
 #pragma once
 
+#include "EnginePlugin.hpp"
 #include "engine.hpp"
 #include "glWindow.hpp"
-#include "EnginePlugin.hpp"
+
+namespace cevy {
+namespace engine {
 
 template <typename... Mod>
-using EngineBuilder = cevy::engine::Engine<glWindow::Builder<Mod...>>;
+using EngineBuilder = Engine<glWindow::Builder<Mod...>>;
+
+} // namespace engine
+}; // namespace cevy
