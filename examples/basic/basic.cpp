@@ -73,7 +73,7 @@ int initial_setup(Resource<Assets<Mesh>> mesh_manager,
   glm::vec3 pos = glm::vec3(0, ringRadius, 10 );
   glm::quat rot = glm::quatLookAt(-glm::normalize(pos), {0, 0, 1});
   Transform tm = Transform(pos, rot, glm::vec3(.5, .5, .5));
-  SunLight light = {{1.3, 1.2, 0.9}, 30, 5 };
+  SunLight light = {{1.3, 1.2, 0.9}, 30, 30 };
   auto entity = cmd.spawn(tm, light);
 
   return 0;
