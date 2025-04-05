@@ -30,15 +30,15 @@ class Window {
 
     using Plugin = ecs::NullPlugin;
   };
-  template <template <typename...> typename Windower, typename... Module>
-  Window(Windower<Module...> &&win) {
-    this->window = std::make_shared<Windower<Module...>>(std::forward<Windower<Module...>>(win));
+  template <typename Windower>
+  Window(Windower &&win) {
+    this->window = std::make_shared<Windower>(std::forward<Windower>(win));
   }
 
-  template <template <typename...> typename Windower, typename... Module,
-            std::enable_if_t<std::is_base_of_v<GenericWindow, Windower<Module...>>>>
+  template <typename Windower,
+            std::enable_if_t<std::is_base_of_v<GenericWindow, Windower>>>
   Window(int width, int height) {
-    this->window = std::make_shared<Windower<Module...>>(width, height);
+    this->window = std::make_shared<Windower>(width, height);
   }
 
   template <typename Windower>
