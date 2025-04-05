@@ -36,6 +36,7 @@ class glWindow : public cevy::engine::Window::GenericWindow {
 
   struct Module {
     //virtual Module(glWindow&) = 0;
+    virtual ~Module() {};
     virtual void init(glWindow&) = 0;
     virtual void deinit(glWindow&) = 0;
     virtual void build(cevy::ecs::App &app) = 0;

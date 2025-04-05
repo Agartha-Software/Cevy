@@ -104,7 +104,7 @@ class cevy::engine::DeferredRenderer : public glWindow::Module {
     this->shadowMap = std::move(rhs.shadowMap);
   }
 
-  ~DeferredRenderer() {
+  ~DeferredRenderer() override {
     std::cout << this->alive << std::endl;
     std::cout << " <<<< ~DeferredRenderer @" << this << "<<<<" << std::endl;
   }
