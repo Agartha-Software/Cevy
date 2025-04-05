@@ -21,6 +21,12 @@ void Scheduler::runStage(World &world, std::list<StageTypeIndex>::iterator &stag
   for (auto sys : curr_sys) {
     std::get<0>(sys.get())(world);
   }
+
+  while (!world._command_queue.empty()) {
+    std::function<void(World &)> func = world._command_queue.front();
+    world._command_queue.pop();
+    func(world);
+  }
 }
 
 void Scheduler::runStages(World &world, std::list<StageTypeIndex> stage_list) {
@@ -41,11 +47,6 @@ void Scheduler::run(World &world) {
   runStages(world, world.resource<StartupScheduleOrder>().order);
   while (!_stop) {
     runStages(world, world.resource<ScheduleOrder>().order);
-    while (!world._command_queue.empty()) {
-      std::function<void(World &)> func = world._command_queue.front();
-      world._command_queue.pop();
-      func(world);
-    }
     auto close = world.get_resource<Event<AppExit>>();
     if (close && close.value().get().event_queue.size() > 0) {
       _stop = true;
