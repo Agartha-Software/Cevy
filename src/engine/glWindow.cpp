@@ -146,9 +146,7 @@ void glWindow::postRender() {
 
 void glWindow::setWindowSize(int width, int height) {
   this->windowSize = { width, height };
-  glBindTexture(GL_TEXTURE_2D, this->render_target);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, std::max(this->targetSize.x, width), std::max(this->targetSize.y, height), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-  glBindTexture(GL_TEXTURE_2D, 0);
+  this->setTargetSize(width, height);
 }
 
 void glWindow::setTargetSize(int width, int height) {
@@ -221,9 +219,9 @@ void glWindow::cursorEnter(int entered) {
 }
 
 bool glWindow::init_context() {
-#if GLFW_HINT_X11
+// #if GLFW_HINT_X11
   glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
-#endif // GLFW_HINT_X11
+// #endif // GLFW_HINT_X11
   if (!glfwInit()) {
     throw std::runtime_error("failed to init glfw");
     // Initialization failed
@@ -287,7 +285,7 @@ bool glWindow::init_context() {
   glEnable(GL_DEBUG_OUTPUT);
   // typedef void APIENTRY _DEBUGPROC(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
 
-  auto debug_func = [](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) -> void {
+  auto debug_func = [](GLenum source, GLenum type, GLuint /* id */, GLenum /* severity */, GLsizei /* length */, const GLchar* message, const void* /* userParam */) -> void {
     std::cerr << "DBG::" << source << "::{" << type << "}" << std::endl << std::string(message) << std::endl << std::endl;
     // std::cerr << "DBG::" << "::{" << type << "}" << std::string(message) << std::endl;
   };
