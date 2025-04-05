@@ -49,7 +49,7 @@ class cevy::engine::ForwardRenderer {
   using Resource = ecs::Resource<T>;
 
   public:
-  template <typename Windower = cevy::engine::Window::generic_window>
+  template <typename Windower = cevy::engine::Window::GenericWindow>
   ForwardRenderer(const Windower & /* win */) {}
   void init();
   void static render_system(

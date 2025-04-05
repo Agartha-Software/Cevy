@@ -13,6 +13,8 @@ It's been heavily modified to fit our needs and follows our code guidelines.
 
 namespace legit {
 class ProfilerWindow {
+  using TimePoint = std::chrono::time_point<std::chrono::system_clock>;
+
   public:
   ProfilerWindow() : cpuGraph(300), gpuGraph(300) {
     stopProfiling = false;
@@ -25,18 +27,21 @@ class ProfilerWindow {
     avgFrameTime = 1.0f;
   }
 
-  void Render();
+  void render();
 
-  bool stopProfiling;
-  int frameOffset;
   ProfilerGraph cpuGraph;
   ProfilerGraph gpuGraph;
+
+  protected:
+  int frameOffset;
   int frameWidth;
   int frameSpacing;
-  bool useColoredLegendText;
-  using TimePoint = std::chrono::time_point<std::chrono::system_clock>;
+
   TimePoint prevFpsFrameTime;
   size_t fpsFramesCount;
   float avgFrameTime;
+  bool useColoredLegendText;
+
+  bool stopProfiling;
 };
 } // namespace legit

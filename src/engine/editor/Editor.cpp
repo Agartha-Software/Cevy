@@ -19,7 +19,7 @@
 #include "imgui_impl_opengl3.h"
 #include "state.hpp"
 
-#include <GL/gl.h>
+#include "glx.hpp"
 
 void cevy::editor::Editor::init(glWindow &glwindow) {
   // Setup Dear ImGui context
@@ -42,7 +42,7 @@ void cevy::editor::Editor::init(glWindow &glwindow) {
   glGenFramebuffers(1, &this->framebuffer);
   glGenTextures(1, &this->texture);
   glBindTexture(GL_TEXTURE_2D, this->texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, glwindow.windowSize().x, glwindow.windowSize().y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, glwindow.windowSize.x, glwindow.windowSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -57,11 +57,11 @@ void cevy::editor::Editor::deinit(glWindow &) {
   glDeleteFramebuffers(1, &this->framebuffer);
 }
 
-void intercept_default_cursor_placement(cevy::ecs::Resource<cevy::input::cursorInWindow> inWindow) {
+static void intercept_default_cursor_placement(cevy::ecs::Resource<cevy::input::cursorInWindow> inWindow) {
   inWindow->inside = false;
 }
 
-void clean_gl_window_inputs(cevy::ecs::World &world) {
+static void clean_gl_window_inputs(cevy::ecs::World &world) {
   auto o_cursor_moved = world.get_resource<cevy::ecs::Event<cevy::input::cursorMoved>>();
   auto o_cursor_entered = world.get_resource<cevy::ecs::Event<cevy::input::cursorEntered>>();
   auto o_cursor_left = world.get_resource<cevy::ecs::Event<cevy::input::cursorLeft>>();
@@ -77,7 +77,7 @@ void clean_gl_window_inputs(cevy::ecs::World &world) {
   }
 }
 
-void intercept_inputs(
+static void intercept_inputs(
   cevy::ecs::EventWriter<cevy::input::cursorMoved> cursor_moved,
   cevy::ecs::EventWriter<cevy::input::cursorEntered> cursor_entered_writer,
   cevy::ecs::EventWriter<cevy::input::cursorLeft> cursor_left_writer,
@@ -111,7 +111,7 @@ void intercept_inputs(
   }
 }
 
-void docking_window() {
+static void docking_window() {
   auto io = ImGui::GetIO();
   static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
 
@@ -163,14 +163,14 @@ void docking_window() {
       ImGui::DockBuilderDockWindow("Profiling", dock_left);
       ImGui::DockBuilderDockWindow("Game", game_window_id);
       ImGui::DockBuilderDockWindow("Logger", dock_right);
-      ImGui::DockBuilderDockWindow("bottom", dock_bottom);
+      ImGui::DockBuilderDockWindow("Basic", dock_bottom);
       ImGui::DockBuilderFinish(dockspace_id);
     }
   }
   ImGui::End();
 }
 
-void main_menu() {
+static void main_menu() {
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
       ImGui::EndMenu();
@@ -188,7 +188,7 @@ void main_menu() {
   }
 }
 
-void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows, std::unique_ptr<cevy::editor::EditorWindow> &window) {
+static void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows, cevy::editor::EditorWindow &window) {
   ImGui::PushItemWidth(ImGui::GetFontSize() * -12);
 
   if (ImGui::BeginMenuBar()) {
@@ -199,27 +199,27 @@ void menu(std::vector<std::unique_ptr<cevy::editor::EditorWindow>> &windows, std
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Settings")) {
-      ImGui::Checkbox("Background", &window->background);
-      ImGui::Checkbox("Resizable", &window->resizable);
-      ImGui::Checkbox("Draggable", &window->draggable);
+      ImGui::Checkbox("Background", &window.background);
+      ImGui::Checkbox("Resizable", &window.resizable);
+      ImGui::Checkbox("Draggable", &window.draggable);
       ImGui::EndMenu();
     }
     ImGui::EndMenuBar();
   }
 }
 
-void pre_render(cevy::ecs::World &world, cevy::ecs::Resource<cevy::engine::Window> windower) {
+void cevy::editor::Editor::pre_render(cevy::ecs::World &world, cevy::ecs::Resource<cevy::engine::Window> windower) {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
   auto &glwindow = windower->get_handler<glWindow>();
-  auto &editor = glwindow.get_module<cevy::editor::Editor>();
+  auto &self = glwindow.get_module<cevy::editor::Editor>();
   auto io = ImGui::GetIO();
 
   main_menu();
   docking_window();
 
-  for (auto &window: editor.windows) {
+  for (auto &window: self.windows) {
     if (window->open) {
       int window_flags = ImGuiWindowFlags_MenuBar;
       window_flags |= window->background ? 0 : ImGuiWindowFlags_NoBackground;
@@ -229,34 +229,31 @@ void pre_render(cevy::ecs::World &world, cevy::ecs::Resource<cevy::engine::Windo
       ImGui::Begin(window->id.c_str(), &window->open, window_flags);
 
       if (window->menuActive) {
-        menu(editor.windows, window);
+        menu(self.windows, *window);
       }
-      window->render(editor, glwindow, world);
+      window->render(self, glwindow, world);
 
       ImGui::End();
     }
   }
 }
 
-void render(cevy::ecs::Resource<cevy::engine::Window> windower) {
+void cevy::editor::Editor::render(cevy::ecs::Resource<cevy::engine::Window> windower) {
   auto &glwindow = windower->get_handler<glWindow>();
 
   auto &self = glwindow.get_module<cevy::editor::Editor>();
 
   glBindFramebuffer(GL_READ_FRAMEBUFFER, glwindow.getCurrentFrameBuffer());
-  glNamedFramebufferReadBuffer(glwindow.getCurrentFrameBuffer(), GL_BACK_LEFT);
 
-  glViewport(0, 0, INT_MAX, INT_MAX);
   glBindTexture(GL_TEXTURE_2D, self.texture);
-  glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, glwindow.targetSize().x, glwindow.targetSize().y, 0);
+  glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, glwindow.getTargetSize().x, glwindow.getTargetSize().y, 0);
 
   ImGui::Render();
   glClearColor(0, 0, 0, 0);
   glClear(GL_COLOR_BUFFER_BIT);
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   ImGuiIO &io = ImGui::GetIO();
-  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-  {
+  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
       GLFWwindow* backup_current_context = glfwGetCurrentContext();
       ImGui::UpdatePlatformWindows();
       ImGui::RenderPlatformWindowsDefault();

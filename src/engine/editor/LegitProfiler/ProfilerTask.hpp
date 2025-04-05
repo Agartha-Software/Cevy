@@ -46,6 +46,6 @@ struct ProfilerTask {
   double endTime;
   std::string name;
   uint32_t color;
-  double GetLength() { return endTime - startTime; }
+  double length() const { return endTime - startTime; }
 };
 } // namespace legit

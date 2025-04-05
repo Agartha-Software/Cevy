@@ -18,4 +18,4 @@ add_subdirectory(LegitProfiler)
 
 target_include_directories(editor PUBLIC .)
 
-target_link_libraries(editor PUBLIC engine ecs input legit imgui)
+target_link_libraries(editor PUBLIC engine ecs input legit PRIVATE imgui)

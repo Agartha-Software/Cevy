@@ -23,10 +23,10 @@ add_subdirectory(rendering)
 target_link_libraries(engine PUBLIC ecs math assets editor input rendering)
 
 if (WIN32)
-  target_link_libraries(engine PUBLIC unofficial::gl3w::gl3w glfw glm::glm)
+  target_link_libraries(engine PRIVATE unofficial::gl3w::gl3w glfw PUBLIC glm::glm)
 endif()
 if (UNIX)
-  target_link_libraries(engine PRIVATE GLEW::glew glfw glm::glm OpenGL::GL)
+  target_link_libraries(engine PRIVATE GLEW::glew glfw OpenGL::GL PUBLIC glm::glm)
 endif()
 
 target_include_directories(engine PUBLIC ./)

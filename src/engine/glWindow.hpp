@@ -7,34 +7,28 @@
 
 #pragma once
 
-// clang-format off
-#include "App.hpp"
-#include "Event.hpp"
-#include "Plugin.hpp"
-// clang-format on
-#include "Window.hpp"
-#include "cevy.hpp"
+#include "glx.hpp"
+#include <GLFW/glfw3.h>
 #include <glm/fwd.hpp>
 #include <optional>
-#include "cursor.hpp"
 
 #include "App.hpp"
 #include "Camera.hpp"
 #include "Color.hpp"
-#include <Event.hpp>
+#include "Event.hpp"
 #include "Handle.hpp"
 #include "Mesh.hpp"
 #include "PbrMaterial.hpp"
 #include "Plugin.hpp"
 #include "Query.hpp"
 #include "Scheduler.hpp"
-#include "state.hpp"
 #include "Window.hpp"
-#include "glx.hpp"
+#include "cevy.hpp"
+#include "cursor.hpp"
 #include "pipeline.hpp"
 #include "state.hpp"
 
-class glWindow : public cevy::engine::Window::generic_window {
+class glWindow : public cevy::engine::Window::GenericWindow {
   public:
 
   template<typename... Modules>
@@ -114,15 +108,11 @@ class glWindow : public cevy::engine::Window::generic_window {
 
   ~glWindow();
 
-  glm::vec<2, int> windowSize() const override;
-  glm::vec<2, int> renderSize() const override;
-  glm::vec<2, int> targetSize() const;
+  const glm::vec<2, int> &getTargetSize() const { return this->targetSize; };
 
-  bool isFullscreen() const override;
+  bool isFullscreen() const;
   void setFullscreen(bool fullscreen) override;
   void setCursorState(cevy::engine::CursorState state) override;
-
-  bool open() override;
 
   static void init_system(Resource<cevy::engine::Window> win,
                           Resource<cevy::input::cursorInWindow> cursorInWindow,
@@ -138,11 +128,9 @@ class glWindow : public cevy::engine::Window::generic_window {
 
   static void post_render_system(Resource<cevy::engine::Window> win);
 
-  void pre_render(EventWriter<cevy::ecs::AppExit> close);
+  void preRender(EventWriter<cevy::ecs::AppExit> close);
 
-  void post_render();
-
-  void pollEvents() override;
+  void postRender();
 
   std::optional<EventWriter<cevy::input::keyboardInput>> keyboardInputWriter;
   std::optional<EventWriter<cevy::input::mouseInput>> mouseInputWriter;
@@ -184,10 +172,7 @@ class glWindow : public cevy::engine::Window::generic_window {
   }
 
   protected:
-  glm::vec<2, int>  window_size;
-  glm::vec<2, int>  render_size;
-  glm::vec<2, int>  target_size;
-  bool fullscreen;
+  glm::vec<2, int> targetSize;
   GLFWwindow *glfWindow;
   GLuint framebuffer;
   GLuint render_target;

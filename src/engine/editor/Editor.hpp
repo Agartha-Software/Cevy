@@ -15,7 +15,6 @@
 #include "ecs.hpp"
 #include "engine.hpp"
 #include "glWindow.hpp"
-#include "imgui.h"
 #include "input.hpp"
 #include <memory>
 #include <optional>
@@ -34,13 +33,13 @@ class Editor : public glWindow::Module {
       : cursorInViewport(std::nullopt), viewportPos(std::nullopt), viewportSize(std::nullopt) {
     windows.push_back(std::make_unique<ProfilingWindow>());
     windows.push_back(std::make_unique<LoggingWindow>());
-    windows.push_back(std::make_unique<LogWindow>("bottom"));
+    windows.push_back(std::make_unique<BasicWindow>("Basic"));
     windows.push_back(std::make_unique<GameWindow>());
   }
 
-  void init(glWindow &glwindow);
-  void deinit(glWindow &);
-  void build(cevy::ecs::App &app);
+  void init(glWindow &glwindow) override;
+  void deinit(glWindow &) override;
+  void build(cevy::ecs::App &app) override;
 
   std::vector<std::unique_ptr<EditorWindow>> windows;
   GLuint texture;
@@ -48,6 +47,9 @@ class Editor : public glWindow::Module {
   std::optional<bool> cursorInViewport;
   std::optional<ImVec2> viewportPos;
   std::optional<ImVec2> viewportSize;
+  private:
+  static void pre_render(cevy::ecs::World &world, cevy::ecs::Resource<cevy::engine::Window> windower);
+  static void render(cevy::ecs::Resource<cevy::engine::Window> windower);
 };
 
 } // namespace editor

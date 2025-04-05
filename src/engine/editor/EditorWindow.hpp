@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "imgui.h"
 #include "glWindow.hpp"
 
 #include <string>
@@ -32,14 +31,11 @@ namespace cevy::editor {
       open(true), resizable(true), background(true), draggable(true), menuActive(menuActive), id(id), imGuiWindowFlags(imGuiWindowFlags) {}
   };
 
-  class LogWindow : public EditorWindow {
+  class BasicWindow : public EditorWindow {
     public:
-    LogWindow(const std::string id) : EditorWindow(true, id) {}
+    BasicWindow(const std::string id) : EditorWindow(true, id) {}
 
     void render(cevy::editor::Editor &, glWindow &, cevy::ecs::World &) override {
-      ImGui::Text("Test1");
-      ImGui::Text("Test2");
-      ImGui::Text("Test3");
     }
   };
 };

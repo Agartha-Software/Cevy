@@ -81,7 +81,7 @@ class cevy::engine::DeferredRenderer : public glWindow::Module {
   };
 
   DeferredRenderer(const glWindow &win)
-      : glfWindow(win.getGLFWwindow()), width(win.renderSize().x), height(win.renderSize().y), gbuffer(width, height), shadowMap() {
+      : glfWindow(win.getGLFWwindow()), width(win.renderSize.x), height(win.renderSize.y), gbuffer(width, height), shadowMap()  {
     this->aspect = float(width) / float(height);
     std::cout << " <<<< DeferredRenderer(win) @" << this << " <<<<" << std::endl;
   }

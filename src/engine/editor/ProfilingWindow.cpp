@@ -5,12 +5,12 @@
 ** Editor Profiling Windows
 */
 
-#include <cstddef>
-#include <ostream>
-#include <typeindex>
 #define GLM_FORCE_SWIZZLE
 #define GLM_ENABLE_EXPERIMENTAL
 
+#include <string>
+#include <cstddef>
+#include <typeindex>
 #include "ProfilingWindow.hpp"
 #include "Editor.hpp"
 #include "ProfilerTask.hpp"
@@ -20,6 +20,9 @@
 
 #include <algorithm>
 #include <unordered_map>
+#if defined(__clang__) || defined(__GNUC__)
+#include <cxxabi.h>
+#endif
 
 static glm::vec3 hsv2rgb(glm::vec3 c) {
   glm::vec4 K = glm::vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -40,7 +43,20 @@ static glm::vec3 hsv2rgb(glm::vec3 c) {
 //   return RGBA_LE(hex);
 // }
 
-std::vector<legit::ProfilerTask> convert_to_profiler_task(const cevy::ecs::StageSpecs &specs, const std::list<cevy::ecs::StageTypeIndex> &indexes) {
+
+static std::string get_stage_name(std::type_index index) {
+  #if defined(__clang__) || defined(__GNUC__)
+  char *demangled = abi::__cxa_demangle(index.name(),0,0,NULL);
+  std::string demangled_clean = std::string(demangled);
+  free(demangled);
+
+  return demangled_clean.substr(demangled_clean.find_last_of(':') + 1);
+  #else
+  return index.name();
+  #endif
+}
+
+static std::vector<legit::ProfilerTask> convert_to_profiler_task(const cevy::ecs::StageSpecs &specs, const std::list<cevy::ecs::StageTypeIndex> &indexes) {
   if (specs.map.find(std::type_index(typeid(cevy::editor::EditorPreRender))) == specs.map.end()) {
     return {};
   }
@@ -65,7 +81,7 @@ std::vector<legit::ProfilerTask> convert_to_profiler_task(const cevy::ecs::Stage
     tasks.push_back(legit::ProfilerTask {
       .startTime = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(spec.startTime - last_start).count() / 1000000,
       .endTime = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(spec.endTime - last_start).count() / 1000000,
-      .name = stage_index.name(),
+      .name = get_stage_name(stage_index),
       .color = hex
     });
 
@@ -83,7 +99,7 @@ std::vector<legit::ProfilerTask> convert_to_profiler_task(const cevy::ecs::Stage
 
 void cevy::editor::ProfilingWindow::render(cevy::editor::Editor &, glWindow &, cevy::ecs::World &world) {
   auto now = std::chrono::high_resolution_clock::now();
-  auto elapsed_time = now - this->last_call;
+  auto elapsed_time = now - this->lastCall;
   this->frames.push_back(
       1. /
       (std::chrono::duration_cast<std::chrono::microseconds>(elapsed_time).count() / 1000000.f));
@@ -96,7 +112,7 @@ void cevy::editor::ProfilingWindow::render(cevy::editor::Editor &, glWindow &, c
   }
   ImGui::Text("Elapsed time since last frame: %.3f ms",
               std::chrono::duration_cast<std::chrono::microseconds>(elapsed_time).count() / 1000.f);
-  ImGui::Text("Current FPS %.3f", ImGui::GetIO().Framerate);
+  ImGui::Text("Current FPS: %.3f", ImGui::GetIO().Framerate);
   ImGui::Text("Framerate");
   ImGui::PlotHistogram("##Framerate", &frames[0], frames.size(), 0, NULL, 0.0f, 140.0f,
                        ImVec2(300, 100));
@@ -113,10 +129,10 @@ void cevy::editor::ProfilingWindow::render(cevy::editor::Editor &, glWindow &, c
     auto &specs = o_specs->get();
     auto tasks = convert_to_profiler_task(specs, world.resource<ecs::ScheduleOrder>().order);
 
-    legitProfiler.cpuGraph.LoadFrameData(tasks.data(), tasks.size());
-    legitProfiler.gpuGraph.LoadFrameData({}, 0);
-    legitProfiler.Render();
+    legitProfiler.cpuGraph.loadFrameData(tasks.data(), tasks.size());
+    legitProfiler.gpuGraph.loadFrameData({}, 0);
+    legitProfiler.render();
   }
-  this->last_call = now;
+  this->lastCall = now;
 
 }

@@ -5,7 +5,6 @@
 ** Deferred renderer
 */
 
-#include <cassert>
 #define GLM_FORCE_SWIZZLE
 
 #include "glx.hpp"
@@ -18,6 +17,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/matrix.hpp>
 #include <stdexcept>
+#include <cassert>
 
 #include "Atmosphere.hpp"
 #include "DeferredRenderer.hpp"
@@ -185,8 +185,7 @@ void cevy::engine::DeferredRenderer::render_system(
         lights,
     const ecs::World &world) {
   auto &window = win->get_handler<glWindow>();
-  auto window_size = window.windowSize();
-  auto target_size = window.targetSize();
+  auto target_size = window.getTargetSize();
 
   DeferredRenderer &self = window.get_module<DeferredRenderer>();
 
