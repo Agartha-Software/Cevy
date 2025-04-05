@@ -44,23 +44,6 @@ using eval_cond_t = typename eval_cond<test, Z, X, Else>::type;
 template <typename T, typename Find, typename Replace>
 using replace = std::conditional<std::is_same_v<T, Find>, Replace, T>;
 
-/// @brief True if all parameter pack is true
-template <typename... Args>
-constexpr bool all(Args... args) {
-  return (... && args);
-}
-
-/// @brief True if any element in the parameter pack is true
-template <typename... Args>
-constexpr bool any() {
-  return (... || Args::value);
-};
-
-template <typename... Args>
-constexpr size_t sum(Args... args) {
-  return (0 + ... + args);
-};
-
 template <typename R, typename... Args>
 constexpr std::function<R(Args...)> make_function(R (&&func)(Args...)) {
   return std::function<R(Args...)>(func);

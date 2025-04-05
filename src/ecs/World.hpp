@@ -1,6 +1,6 @@
 /*
-** Agartha-Software, 2023
-** C++evy
+** Agartha-Software, 2025
+** Cevy
 ** File description:
 ** World
 */
@@ -15,13 +15,7 @@
  * World. Holds the actual components and entities
  */
 
-#include "Entity.hpp"
-#include "Event.hpp"
-#include "Resource.hpp"
-#include "SparseVector.hpp"
-#include "cevy.hpp"
-
-#include <any>
+#include <algorithm>
 #include <cstddef>
 #include <functional>
 #include <optional>
@@ -31,9 +25,15 @@
 #include <typeindex>
 #include <unordered_map>
 
+#include "Entity.hpp"
+#include "Event.hpp"
 #include "Query.hpp"
+#include "Resource.hpp"
+#include "SparseVector.hpp"
+#include "cevy.hpp"
 #include "ecs.hpp"
 
+namespace cevy::ecs {
 template <class T>
 struct is_world : public std::false_type {};
 
@@ -43,18 +43,18 @@ struct is_world<cevy::ecs::World &> : public std::true_type {};
 template <>
 struct is_world<const cevy::ecs::World &> : public std::true_type {};
 
-template <typename... T>
-struct Or : std::integral_constant<bool, any<T...>()> {};
-
-namespace cevy::ecs {
 class Commands;
-} // namespace cevy::ecs
-
 template <class T>
 struct is_commands : public std::false_type {};
 
 template <>
 struct is_commands<cevy::ecs::Commands> : public std::true_type {};
+
+template <typename P>
+struct is_system_param
+    : public std::disjunction<is_query<P>, is_world<P>, is_resource<P>, is_commands<P>,
+                              is_event_reader<P>, is_event_writer<P>> {};
+} // namespace cevy::ecs
 
 /**
  * Stores Entities, Components (and resources), and exposes operations
@@ -91,7 +91,7 @@ class cevy::ecs::World {
 
   using erase_access = std::function<void(World &, Entity const &)>;
   using command = std::function<void(World &)>;
-  using component_data = std::tuple<std::any, erase_access>;
+  using component_data = std::tuple<cevy::any, erase_access>;
 
   friend class cevy::ecs::Scheduler;
   friend class cevy::ecs::Commands;
@@ -150,9 +150,9 @@ class cevy::ecs::World {
   // emplace a resource to the world by calling the contructor
   template <typename R, typename... Params>
   void init_resource(Params &&...p) {
-    static_assert(std::is_constructible<R, Params &&...>::value,
-                  "Resource must be constructible from Params");
-    _resource_manager.emplace_resource<R>(std::forward<Params &&>(p)...);
+    // static_assert(std::is_constructible<R, Params &&...>::value,
+    //               "Resource must be constructible from Params");
+    _resource_manager.emplace_resource<R>(std::forward<Params>(p)...);
   }
 
   // emplace a resource to the world by calling the move contructor
@@ -213,20 +213,24 @@ class cevy::ecs::World {
   /// register a component to the world
   template <typename T>
   ComponentId init_component() {
+    auto id = std::type_index(typeid(std::remove_cv_t<std::remove_cv_t<T>>));
     erase_access f_e = [](World &reg, Entity const &Entity) {
       auto &cmpnts = reg.get_components<T>();
       if (Entity < cmpnts.size())
         cmpnts[Entity] = std::nullopt;
     };
-    std::any a = std::make_any<SparseVector<T>>();
+    cevy::any &&a = cevy::make_any<SparseVector<std::remove_cv_t<T>>>();
 
-    _components_arrays.insert({std::type_index(typeid(T)), std::make_tuple(a, f_e)});
+    /* auto [it, insert] = */ _components_arrays.insert({id, std::make_tuple(std::move(a), f_e)});
+    // std::cout << "init_component() &: " << id.name() << " = " <<
+    // _components_arrays.begin()._M_cur - it._M_cur << std::endl ;
 
-    return std::type_index(typeid(T));
+    return id;
   };
 
   template <typename Component>
   std::optional<Component> &add_component(Entity const &to, const Component &c) {
+    std::cout << "add_component " << reflect<Component>(c) << std::endl;
     auto &array = get_components<Component>();
 
     return array.insert_at(to, c);
@@ -240,24 +244,33 @@ class cevy::ecs::World {
   }
 
   template <class Component>
-  SparseVector<Component> &get_components() {
-    auto id = std::type_index(typeid(Component));
+  SparseVector<std::remove_cv_t<remove_optional<Component>>> &get_components() {
+    auto id =
+        std::type_index(typeid(std::remove_cv_t<std::remove_cv_t<remove_optional<Component>>>));
     auto it = _components_arrays.find(id);
 
+    // std::cout << "get_components() &: " << typeid(Component).name() << " = " <<
+    // _components_arrays.begin()._M_cur - it._M_cur << std::endl ;
+
     if (it != _components_arrays.end()) {
-      return std::any_cast<SparseVector<Component> &>(std::get<0>(_components_arrays[id]));
+      return std::any_cast<SparseVector<std::remove_cv_t<remove_optional<Component>>> &>(
+          std::get<0>(it->second));
     }
     throw(std::runtime_error(
         std::string("Cevy/Ecs: Get unregisted component! ID: ").append(typeid(Component).name())));
   }
 
   template <class Component>
-  SparseVector<Component> const &get_components() const {
-    auto id = std::type_index(typeid(Component));
+  const SparseVector<std::remove_cv_t<remove_optional<Component>>> &get_components() const {
+    auto id =
+        std::type_index(typeid(std::remove_cv_t<std::remove_cv_t<remove_optional<Component>>>));
     auto it = _components_arrays.find(id);
+    // std::cout << "get_components() const&: " << typeid(Component).name() << " = " <<
+    // _components_arrays.begin()._M_cur - it._M_cur << std::endl ;
 
     if (it != _components_arrays.end()) {
-      return std::any_cast<SparseVector<Component> &>(std::get<0>(_components_arrays.at(id)));
+      return std::any_cast<SparseVector<std::remove_cv_t<remove_optional<Component>>> &>(
+          std::get<0>(it->second));
     }
     throw(std::runtime_error(
         std::string("Cevy/Ecs: Get unregisted component! ID: ").append(typeid(Component).name())));
@@ -303,9 +316,9 @@ class cevy::ecs::World {
   /// Component
   /// TODO: Add Consts
   template <typename T>
-  bool entity_contains(Entity entity) {
+  bool entity_contains(Entity entity) const {
     SparseVector<T> &v = get_components<T>();
-    std::optional<T> optional = v[entity];
+    const std::optional<T> &optional = v[entity];
 
     return optional.has_value();
   }
@@ -369,8 +382,7 @@ class cevy::ecs::World {
   template <class R, class... Args>
   R run_system(R (&&func)(Args...)) {
     static_assert(
-        all(Or<is_query<Args>, is_world<Args>, is_resource<Args>, is_commands<Args>,
-               is_event_reader<Args>, is_event_writer<Args>>()...),
+        std::conjunction_v<is_system_param<Args>...>,
         "type must be reference to query, world, commands, event reader, event writer or resource");
     auto sys = [&func, this]() mutable -> R { return func(get_super<Args>(0)...); };
     return sys();
@@ -390,8 +402,7 @@ class cevy::ecs::World {
   template <class R, class... Args>
   R run_system(std::function<R(Args...)> func) {
     static_assert(
-        all(Or<is_query<Args>, is_world<Args>, is_resource<Args>, is_commands<Args>,
-               is_event_reader<Args>, is_event_writer<Args>>()...),
+        std::conjunction_v<is_system_param<Args>...>,
         "type must be reference to query, world, commands, event reader, event writer or resource");
     auto sys = [&func, this]() mutable -> R { return func(get_super<Args>(0)...); };
     return sys();
@@ -411,8 +422,7 @@ class cevy::ecs::World {
   template <class GivenArgs, class R, class... Args>
   R run_system_with(R (&&func)(GivenArgs, Args...), GivenArgs &&given) {
     static_assert(
-        all(Or<is_query<Args>, is_world<Args>, is_resource<Args>, is_commands<Args>,
-               is_event_reader<Args>, is_event_writer<Args>>()...),
+        std::conjunction_v<is_system_param<Args>...>,
         "type must be reference to query, world, commands, event reader, event writer or resource");
     auto sys = [&func, this, &given]() mutable -> R {
       return func(std::forward<GivenArgs>(given), get_super<Args>(0)...);
@@ -436,8 +446,7 @@ class cevy::ecs::World {
   template <class GivenArgs, class R, class... Args>
   R run_system_with(std::function<R(GivenArgs, Args...)> func, GivenArgs &&given) {
     static_assert(
-        all(Or<is_query<Args>, is_world<Args>, is_resource<Args>, is_commands<Args>,
-               is_event_reader<Args>, is_event_writer<Args>>()...),
+        std::conjunction_v<is_system_param<Args>...>,
         "type must be reference to query, world, commands, event reader, event writer or resource");
     auto sys = [&func, this, given]() mutable -> R {
       return func(std::forward<GivenArgs>(given), get_super<Args>(0)...);
@@ -483,27 +492,30 @@ bool cevy::ecs::World::EntityWorldRef::contains() {
 
 template <typename... T>
 cevy::ecs::iterator<T...> cevy::ecs::iterator<T...>::begin(World &w, size_t size) {
-  return iterator<T...>(std::make_tuple(w.get_components<remove_optional<T>>().begin()...), size);
+  return iterator<T...>(
+      std::make_tuple(w.get_components<std::remove_cv_t<remove_optional<T>>>().begin()...), size);
 }
 
 template <typename... T>
 cevy::ecs::iterator<T...> cevy::ecs::iterator<T...>::end(World &w, size_t size) {
-  return iterator<T...>(std::make_tuple(w.get_components<remove_optional<T>>().end()...), size,
-                        size);
+  return iterator<T...>(
+      std::make_tuple(w.get_components<std::remove_cv_t<remove_optional<T>>>().end()...), size,
+      size);
 }
 
 template <typename... T>
 cevy::ecs::iterator<cevy::ecs::Entity, T...>
 cevy::ecs::iterator<cevy::ecs::Entity, T...>::begin(World &w, size_t size) {
   return iterator<cevy::ecs::Entity, T...>(
-      std::make_tuple(w.get_components<remove_optional<T>>().begin()...), size);
+      std::make_tuple(w.get_components<std::remove_cv_t<remove_optional<T>>>().begin()...), size);
 }
 
 template <typename... T>
 cevy::ecs::iterator<cevy::ecs::Entity, T...>
 cevy::ecs::iterator<cevy::ecs::Entity, T...>::end(World &w, size_t size) {
   return iterator<cevy::ecs::Entity, T...>(
-      std::make_tuple(w.get_components<remove_optional<T>>().end()...), size, size);
+      std::make_tuple(w.get_components<std::remove_cv_t<remove_optional<T>>>().end()...), size,
+      size);
 }
 
 template <typename... T>
@@ -513,20 +525,18 @@ cevy::ecs::Query<T...>::Query(cevy::ecs::World &w)
 
 template <typename... T>
 size_t cevy::ecs::iterator<T...>::_compute_size(World &w, size_t nb_e) {
-  size_t current_size = 0;
+  size_t current_size = SIZE_MAX;
   if ((... && is_optional<T>::value)) {
     current_size = nb_e;
   } else {
-    std::bitset<sizeof...(T)> are_optional;
-    size_t idx = 0;
-    bool is_first = true;
+    // std::bitset<sizeof...(T)> are_optional;
+    // size_t idx = 0;
+    // bool is_first = true;
 
-    (are_optional.set(idx++, is_optional<T>::value), ...);
-    idx = 0;
-    (_compute_a_size(w.get_components<remove_optional<T>>(), current_size, is_first, idx,
-                     are_optional),
-     ...);
+    // (are_optional.set(idx++, is_optional<T>::value), ...);
+    // idx = 0;
+    current_size = std::min({nb_e, _compute_a_size<T>(w.get_components<T>())...});
   }
-  (resize_optional<T>(w.get_components<remove_optional<T>>(), current_size), ...);
+  (resize_optional<T>(w.get_components<T>(), current_size), ...);
   return current_size;
 }

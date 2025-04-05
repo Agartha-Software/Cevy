@@ -299,7 +299,7 @@ void cevy::engine::DeferredRenderer::render_system(
   for (const auto &[o_tm, o_point, o_spot, o_sun] : lights) {
     const auto &tm = o_tm.has_value() ? o_tm->get_world() : Transform();
 
-    if (all(!o_point.has_value(), !o_spot.has_value(), !o_sun.has_value()))
+    if (!o_point.has_value() && !o_spot.has_value() && !o_sun.has_value())
       continue;
 
     pipeline::Light gl_light = o_point.has_value() ? pipeline::Light(o_point.value(), tm) :       //

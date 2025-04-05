@@ -55,9 +55,8 @@ class Scheduler {
 
   template <class F, class S, class... Args>
   void add_class_system(const F &func) {
-    static_assert(
-        all(Or<is_query<Args>, is_world<Args>, is_resource<Args>, is_commands<Args>>()...),
-        "type must be reference to query, world, commands or resource");
+    static_assert(std::conjunction_v<is_system_param<Args>...>,
+      "type must be reference to query, world, commands, event reader, event writer or resource");
 
     system_function sys = [id = this->last_id, &func](World &reg) mutable {
       func(reg.get_super<Args>(id)...);
@@ -67,9 +66,8 @@ class Scheduler {
 
   template <class S, class R, class... Args>
   void add_system(const std::function<R(Args...)> &func) {
-    static_assert(
-        all(Or<is_query<Args>, is_world<Args>, is_resource<Args>, is_commands<Args>>()...),
-        "type must be reference to query, world, commands or resource");
+    static_assert(std::conjunction_v<is_system_param<Args>...>,
+      "type must be reference to query, world, commands, event reader, event writer or resource");
 
     system_function sys = [id = this->last_id, &func](World &reg) { func(reg.get_super<Args>(id)...); };
     this->last_id += 1;
@@ -78,9 +76,7 @@ class Scheduler {
 
   template <class S, class R, class... Args>
   void add_system(R(func)(Args...)) {
-    static_assert(
-        all(Or<is_query<Args>, is_world<Args>, is_resource<Args>, is_commands<Args>,
-               is_event_reader<Args>, is_event_writer<Args>>()...),
+    static_assert(std::conjunction_v<is_system_param<Args>...>,
         "type must be reference to query, world, commands, event reader, event writer or resource");
 
     system_function sys = [id = this->last_id, func](World &reg) {
