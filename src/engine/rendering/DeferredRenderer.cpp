@@ -11,6 +11,7 @@
 #include "glx.hpp"
 #include <cmath>
 #include <memory>
+#include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/geometric.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -180,7 +181,7 @@ void cevy::engine::DeferredRenderer::deinit(glWindow &) {}
 void cevy::engine::DeferredRenderer::render_system(
     Resource<Window> win, Query<Camera> cams,
     Query<option<Transform>, Handle<Mesh>, option<Handle<PbrMaterial>>, option<Color>> models,
-    Query<option<Transform>, option<cevy::engine::PointLight>, option<cevy::engine::SpotLight>>
+    Query<option<Transform>, option<cevy::engine::PointLight>, option<cevy::engine::SpotLight>,  option<cevy::engine::SunLight>>
         lights,
     const ecs::World &world) {
   auto &window = win->get_handler<glWindow>();
@@ -210,7 +211,7 @@ void cevy::engine::DeferredRenderer::render_system(
   if (cams.size() == 0) {
     return;
   }
-  auto &camera = std::get<Camera &>(*cams.get_single());
+  auto &camera = std::get<Camera &>(cams.single());
 
   self.gbuffer.write();
   glDepthMask(GL_TRUE);
@@ -296,15 +297,16 @@ void cevy::engine::DeferredRenderer::render_system(
     }
   };
 
-  for (const auto &[o_tm, o_point, o_spot] : lights) {
+  for (const auto &[o_tm, o_point, o_spot, o_sun] : lights) {
     const auto &tm = o_tm.has_value() ? o_tm->get_world() : Transform();
 
-    if (all(!o_point.has_value(), !o_spot.has_value()))
+    if (all(!o_point.has_value(), !o_spot.has_value(), !o_sun.has_value()))
       continue;
 
-    pipeline::Light gl_light = o_point.has_value() ? pipeline::Light(o_point.value(), tm) :    //
-                                   (o_spot.has_value() ? pipeline::Light(o_spot.value(), tm) : //
-                                        throw std::runtime_error(""));
+    pipeline::Light gl_light = o_point.has_value() ? pipeline::Light(o_point.value(), tm) :       //
+                                   (o_spot.has_value() ? pipeline::Light(o_spot.value(), tm) :    //
+                                        (o_sun.has_value() ? pipeline::Light(o_sun.value(), tm) : //
+                                             throw std::runtime_error("")));
     self.light_pass(gl_light);
   }
 
@@ -380,6 +382,11 @@ void cevy::engine::DeferredRenderer::light_pass(const pipeline::Light &light) {
     squash = squash / squash[3][3];
     squash = squash * glm::vec3(-1);
     // squash[3][3] = -1;
+  } else if (light.type == pipeline::Light::Type::Sun) {
+    persp = glm::ortho(-light.radius, light.radius, -light.radius, light.radius, -light.range, light.range);
+    squash = glm::inverse(-persp);
+    squash = squash / squash[3][3];
+    squash = squash * glm::vec3(-1);
   } else {
     squash = glm::mat4(1) * glm::vec3(light.range);
   }

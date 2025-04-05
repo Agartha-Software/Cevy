@@ -129,7 +129,8 @@ class cevy::engine::DeferredRenderer : public glWindow::Module {
   static void render_system(
       Resource<Window> win, Query<Camera> cams,
       Query<option<Transform>, Handle<Mesh>, option<Handle<PbrMaterial>>, option<Color>> models,
-      Query<option<Transform>, option<cevy::engine::PointLight>, option<cevy::engine::SpotLight>>
+      Query<option<Transform>, option<cevy::engine::PointLight>, option<cevy::engine::SpotLight>,
+            option<cevy::engine::SunLight>>
           lights,
       const ecs::World &world);
 

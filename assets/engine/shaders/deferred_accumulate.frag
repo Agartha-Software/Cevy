@@ -121,6 +121,43 @@ void shade_light_spot(
     specular_light = light * phong;
 }
 
+
+void shade_light_sun(
+    inout vec3 diffuse_light,
+    inout vec3 specular_light,
+    vec3 normal,
+    float dnv,
+    vec3 energy,
+    vec3 projectedCoords,
+    vec3 viewVec,
+    float roughness,
+    float halflambert) {
+
+    vec3 light = max(energy, vec3(0));
+
+    float depth = texture(shadowMap, projectedCoords.xy).x;
+    float depth_delta = depth - projectedCoords.z;
+
+    depth_delta = clamp(depth_delta * 10 + 0.5, 0, 1);
+
+    light *= depth_delta;
+
+    float lambert = dot(normal, -lightDirection);
+
+    vec3 halfway = normalize(-lightDirection - viewVec);
+
+    float phong;
+
+    float exponent = 1 + 1 / roughness;
+    phong = max(0, lambert) * pow(max(0, dot(normal, halfway)), exponent * 2) * exponent / 2;
+    // phong = max(0, lambert) * pow(max(0, dot(reflect(-ray, normal), -viewVec)), exponent) * exponent / 4;
+
+    float hl = halflambert * 0.5;
+    // lambert = lambert * (1 - hl) + hl;
+    diffuse_light = light * max(0, lambert);
+    specular_light = light * phong;
+}
+
 void main() {
     vec2 screenCoord;
     // screenCoord = texCoord.xy;
@@ -167,6 +204,16 @@ void main() {
             ray,
             lightDist,
             lightRadius,
+            viewVec,
+            roughness * roughness,
+            halflambert);
+    } else if (lightType == TYPE_SUN) {
+        shade_light_sun(diffuse_light,
+            specular_light,
+            normal,
+            dnv,
+            lightEnergy,
+            projected.xyz,
             viewVec,
             roughness * roughness,
             halflambert);

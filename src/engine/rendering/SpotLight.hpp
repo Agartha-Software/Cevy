@@ -24,6 +24,7 @@ class SunLight {
   public:
   glm::vec3 color;
   float range = 32;
+  float radius = 32;
   uint16_t viewlayer_bits;
   uint16_t shadow_viewlayer_bits;
 };

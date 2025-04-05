@@ -209,7 +209,7 @@ struct pipeline {
 
       this->model = glm::translate(glm::mat4(1), tm.position) * glm::mat4(tm.rotation);
 
-      this->radius = l.softness;
+      this->radius = std::max(l.softness, 0.001f);
       this->angle = l.angle;
       this->range = l.range;
       this->falloff = 2;
@@ -219,12 +219,12 @@ struct pipeline {
     Light(const SunLight &l, const Transform &tm) {
       this->model = glm::translate(glm::mat4(1), tm.position) * glm::mat4(tm.rotation);
 
-      this->radius = 0;
+      this->radius = l.radius;
       this->angle = 0;
       this->range = l.range;
       this->falloff = 2;
       this->color = l.color;
-      this->type = Type::Spot;
+      this->type = Type::Sun;
     }
     Light(glm::mat4 model, glm::vec3 color, float radius)
         : model(model), color(color), radius(radius) {};
