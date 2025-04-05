@@ -232,7 +232,7 @@ Create an abstraction layer
 
 impl Plugin for HelloPlugin {
   fn build(&self, app: &mut App) {
-    app.add_systems(Start, spawn_camera)
+    app.add_systems(Startup, spawn_camera)
       .add_systems(Update, move_camera)
       .add_systems(PostUpdate, destroy_camera)
       .add_event<CameraDestroyed>::new()
@@ -251,9 +251,9 @@ app.add_plugins<HelloPlugin, GoodbyePlugin>();
 class HelloPlugin : public Plugin {
     void build(App& app) override
     {
-        app.add_systems(STAGE::start, spawn_camera);
-        app.add_systems(STAGE::update, move_camera);
-        app.add_systems(STAGE::postUpdate, destroy_camera);
+        app.add_systems<core_stage::Startup>(spawn_camera);
+        app.add_systems<core_stage::Update>(move_camera);
+        app.add_systems<core_stage::PostUpdate>(destroy_camera);
         app.add_event(CameraDestroyed());
     }
 }
