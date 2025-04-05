@@ -256,7 +256,7 @@ class HelloPlugin : public Plugin {
         app.add_systems<core_stage::PostUpdate>(destroy_camera);
         app.add_event(CameraDestroyed());
     }
-}
+};
 ```
 ## EventWriter
 
