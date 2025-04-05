@@ -336,38 +336,14 @@ void cevy::engine::DeferredRenderer::render_system(
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, window.getCurrentFrameBuffer());
 
   glBindFramebuffer(GL_READ_FRAMEBUFFER, self.gbuffer.getFramebuffer());
-  // glBindFramebuffer(GL_READ_FRAMEBUFFER, window.getCurrentFrameBuffer());
-
-  // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, window.getCurrentFrameBuffer());
-
-  // auto factor = std::min(target_size.x / float(self.width), target_size.y / float(self.height));
-
-  // auto left = (target_size.x - factor * self.width);
-  // auto bottom = (target_size.y - factor * self.height);
 
   auto factor = std::max(target_size.x / float(self.width), target_size.y / float(self.height));
-   auto left = (target_size.x - factor * self.width) / 2;
-  auto bottom = (target_size.y - factor * self.height) / 2;
-
-  // glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height,
-  //                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
+  auto left = std::max(0.f, self.width - target_size.x / factor) / 2;
+  auto bottom = std::max(0.f, self.height - target_size.y / factor) / 2;
 
 
-  // glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, window_size.x, window_size.y,
-  //                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
-  // glBlitFramebuffer(0, 0, self.width, self.height, 0, 0, target_size.x, target_size.y,
-  //                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-
-
-  // glBlitFramebuffer(0, 0, window_size.x, window_size.y, 0, 0,self.width, self.height,
-  //                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-  glBlitFramebuffer(0, 0, self.width, self.height, left, bottom, factor * self.width, factor * self.height,
+  glBlitFramebuffer(left, bottom, self.width - left, self.height - bottom, 0, 0, target_size.x, target_size.y,
                   GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-  // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  // glBindFramebuffer(GL_TEXTURE_2D, 0);
 }
 
 void cevy::engine::DeferredRenderer::light_pass(const pipeline::Light &light) {
