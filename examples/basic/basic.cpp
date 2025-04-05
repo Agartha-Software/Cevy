@@ -118,7 +118,7 @@ void rotate_camera(Query<Camera, Transform> cam_q,
 int main() {
   App app;
   app.init_resource<AssetManager>();
-  app.add_plugins(Engine<glWindow, DeferredRenderer>());
+  app.add_plugins(EngineBuilder<DeferredRenderer>());
   app.add_systems<core_stage::PostStartup>(initial_setup);
   app.add_systems<core_stage::Update>(rotate_camera);
   app.add_systems<core_stage::Update>(move_camera);

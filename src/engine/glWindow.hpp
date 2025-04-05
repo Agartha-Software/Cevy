@@ -192,3 +192,6 @@ struct glWindow::Builder : public glWindow {
     }
   };
 };
+
+template <typename... Mod>
+using EngineBuilder = cevy::engine::Engine<glWindow::Builder<Mod...>>;
