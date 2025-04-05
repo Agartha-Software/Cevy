@@ -8,21 +8,18 @@
 #define GLM_FORCE_SWIZZLE
 #define GLM_ENABLE_EXPERIMENTAL
 
-#include <string>
+#include <algorithm>
+#include <chrono>
 #include <cstddef>
 #include <typeindex>
-#include "ProfilingWindow.hpp"
+#include <unordered_map>
+
+#include "imgui.h"
+
 #include "Editor.hpp"
 #include "ProfilerTask.hpp"
+#include "ProfilingWindow.hpp"
 #include "Scheduler.hpp"
-#include "imgui.h"
-#include <chrono>
-
-#include <algorithm>
-#include <unordered_map>
-#if defined(__clang__) || defined(__GNUC__)
-#include <cxxabi.h>
-#endif
 
 static glm::vec3 hsv2rgb(glm::vec3 c) {
   glm::vec4 K = glm::vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -42,19 +39,6 @@ static glm::vec3 hsv2rgb(glm::vec3 c) {
 
 //   return RGBA_LE(hex);
 // }
-
-
-static std::string get_stage_name(std::type_index index) {
-  #if defined(__clang__) || defined(__GNUC__)
-  char *demangled = abi::__cxa_demangle(index.name(),0,0,NULL);
-  std::string demangled_clean = std::string(demangled);
-  free(demangled);
-
-  return demangled_clean.substr(demangled_clean.find_last_of(':') + 1);
-  #else
-  return index.name();
-  #endif
-}
 
 static std::vector<legit::ProfilerTask> convert_to_profiler_task(const cevy::ecs::StageSpecs &specs, const std::list<cevy::ecs::StageTypeIndex> &indexes) {
   if (specs.map.find(std::type_index(typeid(cevy::editor::EditorPreRender))) == specs.map.end()) {
@@ -81,7 +65,7 @@ static std::vector<legit::ProfilerTask> convert_to_profiler_task(const cevy::ecs
     tasks.push_back(legit::ProfilerTask {
       .startTime = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(spec.startTime - last_start).count() / 1000000,
       .endTime = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(spec.endTime - last_start).count() / 1000000,
-      .name = get_stage_name(stage_index),
+      .name = cevy::pretty_type_name(stage_index),
       .color = hex
     });
 

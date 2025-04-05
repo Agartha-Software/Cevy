@@ -8,11 +8,18 @@
 #pragma once
 
 #include "any_nc.hpp"
+#include <cstring>
 #include <functional>
 #include <optional>
+#include <sstream>
 #include <string>
+#include <typeindex>
 #include <typeinfo>
 #include <utility>
+
+#if defined(__clang__) || defined(__GNUC__)
+#include <cxxabi.h>
+#endif
 
 template <typename T>
 using ref = std::reference_wrapper<T>;
@@ -170,11 +177,72 @@ auto make_any(Args &&...args) -> decltype(std::make_any_nc<T>(std::forward<Args>
   return std::make_any_nc<T>(std::forward<Args>(args)...);
 }
 
+namespace detail {
+template <bool StripScope = true>
+inline std::string demangle(const char *cstr) {
+#if defined(__clang__) || defined(__GNUC__) && !defined(NO_DEMANGLE)
+  char *demangled = abi::__cxa_demangle(cstr, 0, 0, NULL);
+  char *stripped = nullptr;
+  if constexpr (StripScope) {
+    stripped = strrchr(demangled, ':');
+    stripped += (stripped != nullptr);
+  }
+  std::string demangled_clean = std::string(stripped ? stripped : demangled);
+  free(demangled);
+
+  return demangled_clean;
+#else
+  const char *stripped = nullptr;
+  if constexpr (StripScope) {
+    stripped = strrchr(cstr, ':');
+    stripped += (stripped != nullptr);
+  } else {
+    stripped = strrchr(cstr, ' ');
+    stripped += (stripped != nullptr);
+  }
+  return std::string(stripped ? stripped : cstr);
+#endif
+}
+} // namespace detail
+
+inline std::string pretty_type_name(const std::type_index& type) {
+  return detail::demangle(type.name());
+}
+
+inline std::string pretty_type_name(const std::type_info& type) {
+  return detail::demangle(type.name());
+}
+
 template<typename T>
 std::string reflect() {
-  // todo!: demangle
-  return typeid(T).name();
+  return pretty_type_name(typeid(T));
 }
+
+template<typename T>
+std::string reflect(const T&) {
+  return reflect<T>() + "::<content not implemented>";
+}
+
+template<>
+inline std::string reflect<unsigned long>(const unsigned long &i) {
+  return (std::stringstream() << i).str();
+}
+
+template<>
+inline std::string reflect<signed long>(const signed long &i) {
+  return (std::stringstream() << i).str();
+}
+
+template<>
+inline std::string reflect<double>(const double &i) {
+  return (std::stringstream() << i).str();
+}
+
+template<>
+inline std::string reflect<float>(const float &i) {
+  return (std::stringstream() << i).str();
+}
+
 
 } // namespace cevy
 
