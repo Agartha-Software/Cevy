@@ -11,13 +11,12 @@
 #include "AssetManager.hpp"
 #include "Color.hpp"
 #include "DeferredRenderer.hpp"
-#include "EnginePlugin.hpp"
 #include "Model.hpp"
 #include "PbrMaterial.hpp"
 #include "Transform.hpp"
 #include "Velocity.hpp"
 #include "EntityCommands.hpp"
-#include "glWindow.hpp"
+#include "EngineBuilder.hpp"
 
 using namespace cevy;
 using namespace ecs;
