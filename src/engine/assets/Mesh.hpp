@@ -12,21 +12,24 @@
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/quaternion_geometric.hpp>
 #include <limits>
+#include <string>
 #include <vector>
 
 typedef uint32_t index_t;
 
 namespace cevy::engine {
-class Model {
+class Mesh {
   public:
-  Model();
-  Model(Model &&other);
-  Model(Model &other);
+  Mesh();
+  Mesh(Mesh &&other);
+  Mesh(const Mesh &other);
 
-  ~Model();
+  ~Mesh();
 
-  Model &operator=(Model &&other);
-  Model &operator=(Model &other);
+  Mesh &operator=(Mesh &&other);
+  Mesh &operator=(const Mesh &other);
+
+  static Mesh load(const std::string &filename);
 
   void load(const std::vector<glm::vec3> &vertices, const std::vector<glm::vec3> &normals,
             const std::vector<uint32_t> &indices);
@@ -70,6 +73,9 @@ class Model {
   std::vector<glm::vec2> tex_coordinates;
   std::vector<index_t> indices;
 
+  bool hasTangeants() const { return this->has_tangeants; }
+  // bool hasTangeants() const { return true; }
+
   protected:
   glm::mat4 modelMatrix_;
   glm::mat3 t_normalMatrix;
@@ -84,10 +90,11 @@ class Model {
   uint32_t elements;
 
   bool initialized;
+  bool has_tangeants;
 };
 
 template <typename... T>
-void Model::trim_geometry(std::vector<glm::vec3> &vertices, std::vector<index_t> &indices,
+void Mesh::trim_geometry(std::vector<glm::vec3> &vertices, std::vector<index_t> &indices,
                           std::vector<T> &...cleanups) {
   std::vector<bool> unused; //[index_t];
   unused.resize(vertices.size(), true);
@@ -126,7 +133,7 @@ void Model::trim_geometry(std::vector<glm::vec3> &vertices, std::vector<index_t>
 }
 
 template <typename... T>
-void Model::merge_by_distance(std::vector<glm::vec3> &vertices, std::vector<uint32_t> &indices,
+void Mesh::merge_by_distance(std::vector<glm::vec3> &vertices, std::vector<uint32_t> &indices,
                               float merge_distance, std::vector<T> &...cleanups) {
   std::vector<std::vector<float>> distances =
       std::vector<std::vector<float>>(vertices.size(), std::vector<float>(vertices.size(), 0.));
@@ -158,12 +165,12 @@ void Model::merge_by_distance(std::vector<glm::vec3> &vertices, std::vector<uint
     indices[i] = redirect[indices[i]];
   }
 
-  Model::trim_geometry(vertices, indices, cleanups...);
+  Mesh::trim_geometry(vertices, indices, cleanups...);
 }
 namespace primitives {
-Model cube(float size);
-// inline Model cube(float size) { return cube({size, size, size}); };
-Model plane(float size, uint32_t subu, uint32_t subv);
-Model sphere(float size, uint32_t slices, uint32_t stacks);
+Mesh cube(float size);
+// inline Mesh cube(float size) { return cube({size, size, size}); };
+Mesh plane(float size, uint32_t subu, uint32_t subv);
+Mesh sphere(float size, uint32_t slices, uint32_t stacks);
 } // namespace primitives
 } // namespace cevy::engine

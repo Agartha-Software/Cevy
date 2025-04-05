@@ -11,7 +11,7 @@ It's been heavily modified to fit our needs and follows our code guidelines.
 #include <algorithm>
 #include <chrono>
 #include <glm/fwd.hpp>
-#include <glm/gtx/string_cast.hpp>
+// #include <glm/gtx/string_cast.hpp>
 
 void legit::ProfilerWindow::render() {
   this->fpsFramesCount++;

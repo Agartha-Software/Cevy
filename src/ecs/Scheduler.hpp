@@ -59,7 +59,9 @@ class Scheduler {
         all(Or<is_query<Args>, is_world<Args>, is_resource<Args>, is_commands<Args>>()...),
         "type must be reference to query, world, commands or resource");
 
-    system_function sys = [id = this->last_id, &func](World &reg) mutable { func(reg.get_super<Args>(id)...); };
+    system_function sys = [id = this->last_id, &func](World &reg) mutable {
+      func(reg.get_super<Args>(id)...);
+    };
     _systems.push_back(std::make_tuple(sys, std::type_index(typeid(S))));
   }
 

@@ -15,5 +15,4 @@ target_include_directories(legit PUBLIC
   .
 )
 
-target_link_libraries(legit PUBLIC imgui)
-
+target_link_libraries(legit PRIVATE imgui)

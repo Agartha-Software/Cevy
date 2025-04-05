@@ -28,6 +28,6 @@ void Time::update_with_instant(
   _last_update = instant;
 }
 
-std::chrono::duration<double, std::ratio<1>> Time::delta() { return _last_update_delta; }
+std::chrono::duration<double, std::ratio<1>> Time::delta() const { return _last_update_delta; }
 
-double Time::delta_seconds() { return _last_update_delta.count(); }
+double Time::delta_seconds() const { return _last_update_delta.count(); }

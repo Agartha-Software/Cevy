@@ -23,9 +23,9 @@ class Time {
 
   void update_with_instant(std::chrono::time_point<std::chrono::high_resolution_clock> &&instant);
 
-  std::chrono::duration<double, std::ratio<1>> delta();
+  std::chrono::duration<double, std::ratio<1>> delta() const;
 
-  double delta_seconds();
+  double delta_seconds() const;
 
   Time();
 };

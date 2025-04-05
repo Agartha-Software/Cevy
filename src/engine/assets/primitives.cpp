@@ -5,13 +5,14 @@
 ** primitive generators
 */
 
-#include "Model.hpp"
+#include "Mesh.hpp"
+#include "cevy.hpp"
 #include <glm/gtc/constants.hpp>
 #include <random>
 #include <vector>
 
 namespace cevy::engine::primitives {
-Model cube(float size) {
+Mesh cube(float size) {
   const std::vector<glm::vec3> vertices = {
       {-size, -size, -size}, {-size, -size, +size}, {-size, +size, +size}, {-size, +size, -size},
       {+size, +size, +size}, {+size, -size, +size}, {+size, -size, -size}, {+size, +size, -size},
@@ -26,15 +27,15 @@ Model cube(float size) {
       12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23,
   };
 
-  const auto normals = Model::generate_normals(vertices, indices);
+  const auto normals = Mesh::generate_normals(vertices, indices);
 
-  Model model;
+  Mesh model;
   model.load(vertices, normals, indices);
 
   return model;
 }
 
-Model plane(float size, uint32_t subu, uint32_t subv) {
+Mesh plane(float size, uint32_t subu, uint32_t subv) {
   std::vector<glm::vec4> vertices;
   std::vector<glm::vec3> colors;
   std::vector<glm::vec3> normals;
@@ -88,20 +89,22 @@ Model plane(float size, uint32_t subu, uint32_t subv) {
     }
   }
 
-  // const auto normals = Model::generate_normals(vertices, indices);
+  // const auto normals = Mesh::generate_normals(vertices, indices);
 
-  Model model;
-  model.indices = indices;
-  model.vertices = vertices;
-  model.normals = normals;
+  Mesh model;
+  model.tex_coordinates =
+      cevy::map(vertices, [](const glm::vec3 &v) { return glm::vec2 {v.x, v.y}; });
+  model.indices = std::move(indices);
+  model.vertices = std::move(vertices);
+  model.normals = std::move(normals);
   // model.load(vertices, normals, indices);
-  model.colors = colors;
+  model.colors = std::move(colors);
   model.gl_init();
 
   return model;
 }
 
-Model sphere(float size, uint32_t slices, uint32_t stacks) {
+Mesh sphere(float size, uint32_t slices, uint32_t stacks) {
   uint32_t nVerts = (slices + 1) * (stacks + 1);
   uint32_t nIndices = (slices * 2 * (stacks - 1)) * 3;
 
@@ -166,7 +169,7 @@ Model sphere(float size, uint32_t slices, uint32_t stacks) {
     }
   }
 
-  Model model;
+  Mesh model;
   model.load(vertices, normals, indices);
   model.gl_init();
 

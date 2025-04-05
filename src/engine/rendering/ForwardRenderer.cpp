@@ -71,7 +71,7 @@ void cevy::engine::ForwardRenderer::init() {
 
 void cevy::engine::ForwardRenderer::render_system(
     ForwardRenderer &self, Query<Camera> cams,
-    Query<option<Transform>, Handle<Model>, option<Handle<PbrMaterial>>, option<Color>> models,
+    Query<option<Transform>, Handle<Mesh>, option<Handle<PbrMaterial>>, option<Color>> models,
     Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world) {
 
   auto r_atmo = world.get_resource<const Atmosphere>();
@@ -107,7 +107,7 @@ void cevy::engine::ForwardRenderer::render_system(
     // light_buffer.push_back(pipeline::Light(light, o_tm.has_value() ? o_tm->position :
     // glm::vec3()));
     light_buffer.push_back(
-        pipeline::Light(light, o_tm.has_value() ? o_tm->get_world().position : glm::vec3()));
+        pipeline::Light(light, o_tm.has_value() ? o_tm->get_world() : Transform()));
   }
 
   glBindBuffer(GL_UNIFORM_BUFFER, self.uboLights);
@@ -143,7 +143,7 @@ void cevy::engine::ForwardRenderer::render_system(
                  glm::value_ptr(material.diffuse * color.xyz()));
     glUniform3fv(self.shaderProgram->uniform("specular_tint"), 1,
                  glm::value_ptr(material.specular_tint));
-    glUniform1f(self.shaderProgram->uniform("phong_exponent"), material.phong_exponent);
+    glUniform1f(self.shaderProgram->uniform("phong_exponent"), 1 + 1 / material.roughness);
     glUniform1i(self.shaderProgram->uniform("halflambert"), true);
     glUniformMatrix4fv(self.shaderProgram->uniform("model"), 1, GL_FALSE,
                        glm::value_ptr(tm * model->modelMatrix()));

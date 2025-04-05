@@ -7,12 +7,12 @@
 #include <glm/gtx/string_cast.hpp>
 
 #include "App.hpp"
-#include "Asset.hpp"
+#include "Assets.hpp"
 #include "AssetManager.hpp"
 #include "Color.hpp"
 #include "DeferredRenderer.hpp"
 #include "EnginePlugin.hpp"
-#include "Model.hpp"
+#include "Mesh.hpp"
 #include "PbrMaterial.hpp"
 #include "Transform.hpp"
 #include "Velocity.hpp"
@@ -31,36 +31,50 @@ static glm::vec3 hsv2rgb(glm::vec3 c) {
   return c.z * mix(K.xxx(), clamp(p - K.xxx(), 0.0f, 1.0f), c.y);
 }
 
-int initial_setup(Resource<Asset<Model>> mesh_manager,
-                  Resource<Asset<PbrMaterial>> material_manager, Commands cmd) {
-  auto plane_handle = mesh_manager->load(primitives::plane(7, 4, 4));
-  auto sphere = primitives::sphere(1, 32, 16);
-  sphere.setModelMatrix(glm::mat4(Transform(0, 0, 0.5)));
+int initial_setup(Resource<Assets<Mesh>> mesh_manager,
+                  Resource<Assets<PbrMaterial>> material_manager,
+                  Resource<Atmosphere> atmosphere,
+                  Resource<Time> time,
+                  Commands cmd) {
+  atmosphere->ambiant = {atmosphere->ambiant.r * 2, atmosphere->ambiant.g * 2, atmosphere->ambiant.b * 2};
+  atmosphere->fog = {atmosphere->fog.r * 2, atmosphere->fog.g * 2, atmosphere->fog.b * 2};
 
-  auto sphere_handle = mesh_manager->load(std::move(sphere));
-  auto mat_white = material_manager->load(PbrMaterial());
-  auto mat_sphere = material_manager->load(PbrMaterial(glm::vec3(0.1, .1, .1), glm::vec3(1), 12));
+  auto plane_handle = mesh_manager->add(primitives::plane(32, 4, 4));
+  auto sphere = primitives::sphere(1, 32, 16);
+  sphere.setModelMatrix(glm::mat4(Transform(0, 0, 1)));
+
+  auto sphere_handle = mesh_manager->add(std::move(sphere));
+  auto mat_white = material_manager->add(PbrMaterial());
+  mat_white->roughness = 0.002;
+  auto mat_sphere = material_manager->add(PbrMaterial(glm::vec3(0.1, .1, .1), glm::vec3(1), 12));
   cmd.spawn(Camera(), Transform(glm::vec3(0, -10, 5),
                                 glm::quat({glm::half_pi<float>() * 0.8, 0, 0}), glm::vec3(1)));
 
-  auto rotator = cmd.spawn(sphere_handle, mat_sphere, Color(0, 0, 1), Transform(),
+  auto rotator = cmd.spawn(sphere_handle, mat_sphere, Color(1, 0.7, 1), Transform(),
                            TransformVelocity(glm::quat({0, 0, DEG2RAD * 90})));
 
   cmd.spawn(plane_handle, mat_white, Color(0.8, 0.8, 1), Transform());
 
-  const int ringCount = 9;
-  const float ringRadius = 5;
+  const int ringCount = 3;
+  const float ringRadius = 10;
   for (int i = 0; i < ringCount; i++) {
-    glm::vec3 rgb = 10.f * hsv2rgb({float(i) / ringCount, 0.9, 1.0f});
-    auto mat_light = material_manager->load(PbrMaterial(glm::vec3(), glm::vec3(), 1));
+    glm::vec3 rgb = 1000.f * hsv2rgb({float(i) / ringCount, 0.9, 1.0f});
+    auto mat_light = material_manager->add(PbrMaterial(glm::vec3(), glm::vec3(), 1));
     mat_light->emit = rgb;
-    Transform tm = Transform(
-        glm::vec3(ringRadius * std::cos(glm::two_pi<float>() * float(i) / ringCount),
-                  ringRadius * std::sin(glm::two_pi<float>() * float(i) / ringCount), 3.0f),
-        glm::quat(), glm::vec3(.5, .5, .5));
-    PointLight light = {rgb, 1.0f};
+    glm::vec3 pos = glm::vec3(ringRadius * std::cos(glm::two_pi<float>() * float(i) / ringCount),
+    ringRadius * std::sin(glm::two_pi<float>() * float(i) / ringCount), 15 + 0 *float(i) / ringCount);
+    glm::quat rot = glm::quatLookAt(-glm::normalize(pos), {0, 0, 1});
+    Transform tm = Transform(pos, rot, glm::vec3(.5, .5, .5));
+    SpotLight light = {rgb, 0.8, 0.5};
+    // PointLight light = {rgb, 1.0f};
     auto entity = cmd.spawn(Parent {rotator.id()}, tm, light, sphere_handle, mat_light);
   }
+
+  glm::vec3 pos = glm::vec3(0, ringRadius, 10 );
+  glm::quat rot = glm::quatLookAt(-glm::normalize(pos), {0, 0, 1});
+  Transform tm = Transform(pos, rot, glm::vec3(.5, .5, .5));
+  SunLight light = {{1.3, 1.2, 0.9}, 30, 30 };
+  auto entity = cmd.spawn(tm, light);
 
   return 0;
 }
@@ -117,8 +131,7 @@ void rotate_camera(Query<Camera, Transform> cam_q,
 
 int main() {
   App app;
-  app.init_resource<AssetManager>();
-  app.add_plugins(Engine<glWindow, DeferredRenderer>());
+  app.add_plugins(Engine<glWindow::Builder<cevy::engine::DeferredRenderer>>());
   app.add_systems<core_stage::PostStartup>(initial_setup);
   app.add_systems<core_stage::Update>(rotate_camera);
   app.add_systems<core_stage::Update>(move_camera);

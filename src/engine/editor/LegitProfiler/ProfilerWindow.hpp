@@ -10,7 +10,6 @@ It's been heavily modified to fit our needs and follows our code guidelines.
 #include "ProfilerGraph.hpp"
 #include <chrono>
 #include <glm/fwd.hpp>
-#include <glm/gtx/string_cast.hpp>
 
 namespace legit {
 class ProfilerWindow {

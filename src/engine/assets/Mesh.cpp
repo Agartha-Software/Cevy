@@ -5,38 +5,41 @@
 ** mesh geometry
 */
 
-#define STB_IMAGE_IMPLEMENTATION
 #define GLM_ENABLE_EXPERIMENTAL
+#define TINYOBJLOADER_IMPLEMENTATION
 
 #include "glx.hpp"
 
-#include "Model.hpp"
-#include "stb_image.h"
+#include "tinyobj_loader_opt.h"
+#include <stdexcept>
+
+#include "Mesh.hpp"
 #include <cstdint>
 #include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/string_cast.hpp>
+#include <unordered_map>
+// #include <glm/gtx/string_cast.hpp>
 #include <iostream>
 #include <vector>
 
-using cevy::engine::Model;
+using cevy::engine::Mesh;
 
-Model::Model() {
+Mesh::Mesh() {
   this->modelMatrix_ = glm::identity<glm::mat4>();
   this->t_normalMatrix = glm::identity<glm::mat3>();
   this->initialized = false;
 }
 
-cevy::engine::Model::Model(Model &&other) : Model() { *this = std::move(other); }
+cevy::engine::Mesh::Mesh(Mesh &&other) : Mesh() { *this = std::move(other); }
 
-cevy::engine::Model::Model(Model &other) : Model() { *this = other; }
+cevy::engine::Mesh::Mesh(const Mesh &other) : Mesh() { *this = other; }
 
-cevy::engine::Model::~Model() {
+cevy::engine::Mesh::~Mesh() {
   if (this->initialized) {
     this->gl_deinit();
   }
 }
 
-Model &cevy::engine::Model::operator=(Model &&other) {
+Mesh &cevy::engine::Mesh::operator=(Mesh &&other) {
   if (this->initialized) {
     gl_deinit();
   }
@@ -68,10 +71,12 @@ Model &cevy::engine::Model::operator=(Model &&other) {
 
   this->initialized = other.initialized;
   other.initialized = false;
+  this->has_tangeants = other.has_tangeants;
+  other.has_tangeants = false;
   return *this;
 }
 
-Model &cevy::engine::Model::operator=(Model &other) {
+Mesh &cevy::engine::Mesh::operator=(const Mesh &other) {
   if (this->initialized) {
     gl_deinit();
   }
@@ -90,7 +95,89 @@ Model &cevy::engine::Model::operator=(Model &other) {
   return *this;
 }
 
-void Model::load(const std::vector<glm::vec3> &vertices, const std::vector<glm::vec3> &normals,
+class tiny_index_t_impl : public tinyobj::index_t {
+  public:
+  constexpr tiny_index_t_impl(const tinyobj::index_t i) : tinyobj::index_t(i) {};
+  bool operator==(const tiny_index_t_impl b) const {
+    return this->normal_index == b.normal_index && this->texcoord_index == b.texcoord_index &&
+           this->vertex_index == b.vertex_index;
+  }
+};
+
+template <>
+struct std::hash<tiny_index_t_impl> {
+  std::size_t operator()(const tiny_index_t_impl &i) const noexcept {
+    size_t dw1 = i.vertex_index;
+    size_t dw2 = i.normal_index;
+    size_t qw = dw1 + (dw2 << 32);
+    std::size_t h1 = std::hash<size_t> {}(qw);
+    std::size_t h2 = std::hash<size_t> {}(i.texcoord_index);
+    return h1 ^ (h2 << 1);
+  }
+};
+
+cevy::engine::Mesh cevy::engine::Mesh::load(const std::string &filename) {
+  if (filename.substr(filename.find_last_of(".")) == ".obj") {
+    tinyobj::ObjReader reader;
+
+    reader.ParseFromFile(filename);
+
+    if (reader.Valid()) {
+      Mesh model;
+
+      model.indices.clear();
+      std::unordered_map<tiny_index_t_impl, size_t> index_map;
+      const auto &source_vertices = reader.GetAttrib().vertices;
+      const auto &source_normals = reader.GetAttrib().normals;
+      const auto &source_texcoords = reader.GetAttrib().texcoords;
+
+      for (auto &shape : reader.GetShapes()) {
+
+        for (auto &index : shape.mesh.indices) {
+          auto found = index_map.find(tiny_index_t_impl(index));
+          if (found != index_map.end()) {
+            model.indices.push_back(found->second);
+          } else {
+            auto new_idx = index_map.size();
+            index_map[index] = new_idx;
+            model.indices.push_back(new_idx);
+          }
+        }
+      }
+
+      size_t size = model.indices.size();
+
+      model.vertices.resize(size);
+      model.normals.resize(size);
+      model.colors.resize(size, {1, 1, 1});
+      model.tex_coordinates.resize(size);
+
+      for (auto &[source_i, actual_i] : index_map) {
+        if (source_i.vertex_index != -1)
+          model.vertices[actual_i] = {source_vertices[source_i.vertex_index * 3],
+                                      source_vertices[source_i.vertex_index * 3 + 1],
+                                      source_vertices[source_i.vertex_index * 3 + 2], 1};
+
+        if (source_i.normal_index != -1)
+          model.normals[actual_i] = {source_normals[source_i.normal_index * 3],
+                                     source_normals[source_i.normal_index * 3 + 1],
+                                     source_normals[source_i.normal_index * 3 + 2]};
+
+        if (source_i.texcoord_index != -1)
+          model.tex_coordinates[actual_i] = {
+              source_texcoords[source_i.texcoord_index * 2],
+              source_texcoords[source_i.texcoord_index * 2 + 1],
+          };
+      }
+      model.gl_init();
+      return model;
+    }
+    throw std::runtime_error("failed to load obj '" + filename + "': " + reader.Error());
+  }
+  throw std::runtime_error("invalid file type to load:" + filename);
+}
+
+void Mesh::load(const std::vector<glm::vec3> &vertices, const std::vector<glm::vec3> &normals,
                  const std::vector<uint32_t> &indices) {
   this->vertices.clear();
   this->vertices.reserve(vertices.size());
@@ -109,7 +196,7 @@ void Model::load(const std::vector<glm::vec3> &vertices, const std::vector<glm::
   this->gl_init();
 }
 
-void Model::load(const std::vector<glm::vec4> &vertices, const std::vector<glm::vec3> &normals,
+void Mesh::load(const std::vector<glm::vec4> &vertices, const std::vector<glm::vec3> &normals,
                  const std::vector<uint32_t> &indices) {
   this->vertices = vertices;
   this->indices = indices;
@@ -122,7 +209,7 @@ void Model::load(const std::vector<glm::vec4> &vertices, const std::vector<glm::
   this->gl_init();
 }
 
-void Model::load(const std::vector<float> &vertices, const std::vector<float> &normals,
+void Mesh::load(const std::vector<float> &vertices, const std::vector<float> &normals,
                  const std::vector<uint32_t> &indices) {
   this->vertices.clear();
   this->vertices.reserve(vertices.size() * 4);
@@ -142,7 +229,7 @@ void Model::load(const std::vector<float> &vertices, const std::vector<float> &n
   this->gl_init();
 }
 
-void Model::draw() const {
+void Mesh::draw() const {
   if (!initialized)
     return;
 
@@ -156,7 +243,7 @@ void Model::draw() const {
   glDrawElements(GL_TRIANGLES, this->elements, GL_UNSIGNED_INT, 0);
 }
 
-// void Model::calculate_normals()
+// void Mesh::calculate_normals()
 // {
 // 	this->normals.resize(this->vertices.size());
 
@@ -176,7 +263,7 @@ void Model::draw() const {
 // 	}
 // }
 
-std::vector<glm::vec3> Model::generate_normals(const std::vector<glm::vec3> &vertices,
+std::vector<glm::vec3> Mesh::generate_normals(const std::vector<glm::vec3> &vertices,
                                                const std::vector<uint32_t> &indices) {
   std::vector<glm::vec3> normals(vertices.size());
   // this->normals.resize(this->vertices.size());
@@ -192,15 +279,15 @@ std::vector<glm::vec3> Model::generate_normals(const std::vector<glm::vec3> &ver
     normals[indices[i * 3 + 2]] += n;
   }
 
-  for (size_t i = 0; i < normals.size(); ++i) {
-    normals[i] = glm::normalize(normals[i]);
-    std::cout << glm::to_string(normals[i]) << std::endl;
-  }
+  // for (size_t i = 0; i < normals.size(); ++i) {
+  //   normals[i] = glm::normalize(normals[i]);
+  //   std::cout << glm::to_string(normals[i]) << std::endl;
+  // }
 
   return normals;
 }
 
-void Model::gl_init() {
+void Mesh::gl_init() {
   // create VAO : 1 : # of buffer, vaoHandler: pointer for the handler
   glGenVertexArrays(1, &this->vaoHandle);
   glBindVertexArray(this->vaoHandle);
@@ -243,6 +330,7 @@ void Model::gl_init() {
   );
   glEnableVertexAttribArray(2);
 
+  this->has_tangeants = false;
   if (this->tex_coordinates.size() != 0) {
     glGenBuffers(1, &this->vbo_tex_coordinates);
     glBindBuffer(GL_ARRAY_BUFFER, this->vbo_tex_coordinates);
@@ -255,6 +343,8 @@ void Model::gl_init() {
                           0  // stride
     );
     glEnableVertexAttribArray(3);
+    this->has_tangeants = true;
+  } else {
   }
 
   glGenBuffers(1, &this->ibo);
@@ -271,7 +361,7 @@ void Model::gl_init() {
   initialized = true;
 }
 
-void cevy::engine::Model::gl_deinit() {
+void cevy::engine::Mesh::gl_deinit() {
   glDeleteBuffers(1, &this->vbo_positions);
   glDeleteBuffers(1, &this->vbo_colors);
   glDeleteBuffers(1, &this->vbo_normals);

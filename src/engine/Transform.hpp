@@ -326,14 +326,15 @@ class Transform {
   static int children_system(ecs::Query<cevy::ecs::Entity, Parent, Transform> children,
                              ecs::Query<ecs::Entity, Transform> all) {
     std::map<size_t, std::tuple<Transform *, size_t>> storage;
+    for (auto [_, tm] : all) {
+      tm.reset_world();
+    }
     for (auto [c_en, parent, c_tm] : children) {
-      c_tm.reset_world();
       storage[c_en] = std::make_tuple(&c_tm, size_t(parent.entity));
       if (storage.find(parent.entity) == storage.end()) {
         auto q_parent = all.get(parent.entity);
         if (q_parent) {
           auto [_, p_tm] = q_parent.value();
-          p_tm.reset_world();
           storage[parent.entity] = std::make_tuple(&p_tm, size_t(-1));
         }
       }

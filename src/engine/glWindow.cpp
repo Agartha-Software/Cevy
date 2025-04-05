@@ -221,6 +221,9 @@ void glWindow::cursorEnter(int entered) {
 }
 
 bool glWindow::init_context() {
+#if GLFW_HINT_X11
+  glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+#endif // GLFW_HINT_X11
   if (!glfwInit()) {
     throw std::runtime_error("failed to init glfw");
     // Initialization failed
@@ -279,7 +282,17 @@ bool glWindow::init_context() {
     // fprintf(stderr, "OpenGL 4.2 not supported\n");
     return -1;
   }
-#endif // _WIN32
+#endif // _WIN32 | __linux__
+
+  glEnable(GL_DEBUG_OUTPUT);
+  // typedef void APIENTRY _DEBUGPROC(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
+
+  auto debug_func = [](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) -> void {
+    std::cerr << "DBG::" << source << "::{" << type << "}" << std::endl << std::string(message) << std::endl << std::endl;
+    // std::cerr << "DBG::" << "::{" << type << "}" << std::string(message) << std::endl;
+  };
+
+  glDebugMessageCallback(debug_func, nullptr);
 
   printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION),
           glGetString(GL_SHADING_LANGUAGE_VERSION));

@@ -7,29 +7,24 @@
 
 #pragma once
 
-// clang-format off
-#include "App.hpp"
-#include "Event.hpp"
-#include "Plugin.hpp"
-// clang-format on
-#include "Window.hpp"
-#include "cevy.hpp"
+#include "glx.hpp"
+#include <GLFW/glfw3.h>
 #include <glm/fwd.hpp>
 #include <optional>
-#include "cursor.hpp"
-#include "glx.hpp"
 
 #include "App.hpp"
 #include "Camera.hpp"
 #include "Color.hpp"
-#include <GLFW/glfw3.h>
+#include "Event.hpp"
 #include "Handle.hpp"
-#include "Model.hpp"
+#include "Mesh.hpp"
 #include "PbrMaterial.hpp"
 #include "Plugin.hpp"
 #include "Query.hpp"
 #include "Scheduler.hpp"
-#include "state.hpp"
+#include "Window.hpp"
+#include "cevy.hpp"
+#include "cursor.hpp"
 #include "pipeline.hpp"
 #include "state.hpp"
 
@@ -61,10 +56,11 @@ class glWindow : public cevy::engine::Window::GenericWindow {
   using Transform = cevy::engine::Transform;
   using PbrMaterial = cevy::engine::PbrMaterial;
   using Color = cevy::engine::Color;
-  using Model = cevy::engine::Model;
+  using Mesh = cevy::engine::Mesh;
   using glLight = cevy::engine::pipeline::Light;
 
   public:
+  using pipeline = cevy::engine::pipeline;
   class Plugin : public cevy::ecs::Plugin {
     public:
     void build(cevy::ecs::App &app) override {

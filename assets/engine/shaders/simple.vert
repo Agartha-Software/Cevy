@@ -9,8 +9,6 @@ uniform mat4 view;
 uniform mat4 model;
 uniform mat3 model_normal;
 
-uniform bool has_texture;
-
 out vec3 color;
 out vec4 position;
 out vec3 normal;
@@ -22,7 +20,7 @@ void main() {
     position = pos;
     pos = view * pos;
     position.w = pos.w;
-    texCoord = has_texture ? vertexTexCoord : vec2(0.);
+    texCoord = vertexTexCoord;
 
     color = vertexColor;
     normal = normalize(model_normal * vertexNormal);

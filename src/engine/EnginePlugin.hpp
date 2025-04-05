@@ -17,6 +17,7 @@
 #include "PhysicsProps.hpp"
 #include "Plugin.hpp"
 #include "PointLight.hpp"
+#include "SpotLight.hpp"
 #include "Stage.hpp"
 #include "Target.hpp"
 #include "Transform.hpp"
@@ -44,7 +45,7 @@ class Engine : public cevy::ecs::Plugin {
     app.init_resource<cevy::engine::DebugWindow>(cevy::engine::DebugWindow {.open = true});
 #endif
     app.init_resource<cevy::engine::Atmosphere>();
-    app.init_resource<cevy::engine::Window>(Windower(1600, 900));
+    app.init_resource<cevy::engine::Window>(Windower(1280, 720));
     app.init_component<cevy::engine::Camera>();
     app.init_component<cevy::engine::Velocity>();
     app.init_component<cevy::engine::PhysicsProps>();
@@ -54,9 +55,12 @@ class Engine : public cevy::ecs::Plugin {
     app.init_component<cevy::engine::Transform>();
     app.init_component<cevy::engine::TransformVelocity>();
     app.init_component<cevy::engine::PointLight>();
+    app.init_component<cevy::engine::SpotLight>();
+    app.init_component<cevy::engine::SunLight>();
     app.init_component<cevy::engine::Color>();
     // app.init_component<cevy::engine::Atmosphere>();
     app.add_plugins(cevy::engine::AssetManagerPlugin());
+
     app.add_plugins(cevy::input::InputPlugin());
     app.add_plugins(typename Windower::Plugin());
     app.add_systems<cevy::engine::PreRenderStage>(update_camera);
