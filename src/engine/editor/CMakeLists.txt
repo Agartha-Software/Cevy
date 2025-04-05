@@ -1,5 +1,5 @@
 ##
-## Agartha-Software, 2023
+## Agartha-Software, 2025
 ## Cevy
 ## File description:
 ## editor-cmake

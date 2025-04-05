@@ -25,6 +25,7 @@
 #include "ecs.hpp"
 #include "engine.hpp"
 #include "input.hpp"
+#include "AudioPlugin.hpp"
 
 namespace cevy::engine {
 template <typename Windower>
@@ -58,6 +59,7 @@ class Engine : public cevy::ecs::Plugin {
     // app.init_component<cevy::engine::Atmosphere>();
     app.add_plugins(cevy::engine::AssetManagerPlugin());
     app.add_plugins(cevy::input::InputPlugin());
+    app.add_plugins(cevy::audio::AudioPlugin());
     app.add_plugins(typename Windower::Plugin());
     app.add_systems<cevy::engine::PreRenderStage>(update_camera);
     app.add_systems<ecs::core_stage::PostUpdate>(TransformVelocity::system);

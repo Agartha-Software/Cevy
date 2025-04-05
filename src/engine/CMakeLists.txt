@@ -14,13 +14,14 @@ add_library(engine
     glWindow.cpp
 )
 
+add_subdirectory(audio)
 add_subdirectory(math)
 add_subdirectory(assets)
 add_subdirectory(input)
 add_subdirectory(editor)
 add_subdirectory(rendering)
 
-target_link_libraries(engine PUBLIC ecs math assets editor input rendering)
+target_link_libraries(engine PUBLIC ecs math assets editor input rendering audio)
 
 if (WIN32)
   target_link_libraries(engine PRIVATE unofficial::gl3w::gl3w glfw PUBLIC glm::glm)
