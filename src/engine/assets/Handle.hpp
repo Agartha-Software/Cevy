@@ -8,11 +8,10 @@
 
 #include "cevy.hpp"
 #include <any>
+#include <functional>
 #include <memory>
 #include <optional>
-#include <stdexcept>
 #include <typeindex>
-#include <typeinfo>
 
 namespace cevy::engine {
 struct AssetId {
@@ -92,18 +91,39 @@ class Handle : protected std::shared_ptr<std::optional<A>> {
   }
 };
 
-struct ErasedHandle {
+class ErasedHandle {
   cevy::any handle;
+  std::function<cevy::any(const cevy::any&)> copy;
+
+  public:
   std::type_index type;
   AssetId id;
   template<typename A>
-  ErasedHandle(Handle<A> &&handle) : handle(cevy::make_any<Handle<A>>(handle)), type(typeid(A)), id(handle) {};
+  ErasedHandle(Handle<A> &&handle) : handle(cevy::make_any<Handle<A>>(handle)), type(typeid(A)), id(handle) {
+    this->copy = [](const cevy::any &erased) {
+      return cevy::make_any<Handle<A>>(std::any_cast<const Handle<A>&>(erased));
+    };
+  };
+  ErasedHandle(ErasedHandle &&rhs) : handle(std::forward<cevy::any>(rhs.handle)), copy(rhs.copy), type(rhs.type), id(rhs.id) {};
+
+  ErasedHandle(const ErasedHandle &rhs) : copy(rhs.copy), type(rhs.type), id(rhs.id) {
+    this->handle = this->copy(rhs.handle);
+  }
   template<typename A>
   operator Handle<A>&&() && {
-    if (type != typeid(A)) {
-      throw std::runtime_error("ErasedHandled::Handle<" + reflect<A>() + ">() when type is " + this->type.name());
-    }
+    return std::move(*this).cast<A>();
+  }
+  template<typename A>
+  Handle<A> &&cast() && {
     return std::any_cast<Handle<A>&&>(std::move(this->handle));
+  }
+  template<typename A>
+  Handle<A> &cast() & {
+    return std::any_cast<Handle<A>&>(this->handle);
+  }
+  template<typename A>
+  const Handle<A> &cast() const& {
+    return std::any_cast<const Handle<A>&>(this->handle);
   }
 };
 

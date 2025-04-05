@@ -13,8 +13,8 @@
 #include <optional>
 
 using cevy::engine::Assets;
-using cevy::engine::AssetManager;
-using cevy::engine::AssetManagerPlugin;
+using cevy::engine::asset::AssetManager;
+using cevy::engine::asset::AssetManagerPlugin;
 using cevy::engine::Handle;
 using cevy::engine::Mesh;
 using cevy::engine::PbrMaterial;

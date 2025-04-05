@@ -14,7 +14,6 @@
 
 #include "Handle.hpp"
 #include "Texture.hpp"
-#include "engine.hpp"
 
 namespace cevy::engine {
 class PbrMaterial {
@@ -48,7 +47,7 @@ class PbrMaterial {
   public:
   PbrMaterial() { halflambert = true; };
 
-  PbrMaterial(AssetManager &mngr, const definition &def);
+  PbrMaterial(asset::AssetManager &mngr, const definition &def);
 
   PbrMaterial(glm::vec3 &&diffuse, glm::vec3 &&specular, float roughness)
       : diffuse(diffuse), specular_tint(specular), roughness(roughness) {

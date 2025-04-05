@@ -7,6 +7,8 @@
 
 #pragma once
 
+
+#include "AssetManager.hpp"
 #include "Camera.hpp"
 #include "Color.hpp"
 #include "Handle.hpp"
@@ -111,13 +113,13 @@ class cevy::engine::DeferredRenderer : public glWindow::Module {
 
   void build(ecs::App &app) override {
     app.add_systems<RenderStage>(DeferredRenderer::render_system);
-    app.resource<AssetManager>().add_factory<Shader>(
+    app.resource<asset::AssetManager>().add_factory<Shader>(
       "gbuffer_generic", std::function([]() {
         return ShaderBuilder<pipeline>::build_from_files(
             "assets/engine/shaders/simple.vert", "assets/engine/shaders/gbuffer_generic.frag");
       }));
 
-    app.resource<AssetManager>().add_factory<Shader>(
+    app.resource<asset::AssetManager>().add_factory<Shader>(
       "gbuffer_pbr", std::function([]() {
         return ShaderBuilder<pipeline>::build_from_files(
             "assets/engine/shaders/simple.vert", "assets/engine/shaders/gbuffer_pbr.frag");

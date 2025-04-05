@@ -59,7 +59,7 @@ class Engine : public cevy::ecs::Plugin {
     app.init_component<cevy::engine::SunLight>();
     app.init_component<cevy::engine::Color>();
     // app.init_component<cevy::engine::Atmosphere>();
-    app.add_plugins(cevy::engine::AssetManagerPlugin());
+    app.add_plugins(cevy::engine::asset::AssetManagerPlugin());
 
     app.add_plugins(cevy::input::InputPlugin());
     app.add_plugins(typename Windower::Plugin());
