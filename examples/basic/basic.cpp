@@ -103,7 +103,7 @@ void move_camera(Resource<input::ButtonInput<input::KeyCode>> keyboard,
     if (keyboard->is_pressed(input::KeyCode::S)) {
       direction.z += 1;
     }
-    float delta_time = time->delta().count();
+    float delta_time = time->raw().count();
 
     if (glm::length(direction) != 0) {
       transform.translateXYZ(transform.rotation * glm::normalize(direction) * speed * delta_time);

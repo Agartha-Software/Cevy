@@ -58,7 +58,7 @@ class TransformVelocity : public engine::Transform {
   static void
   system(ecs::Query<engine::Transform, TransformVelocity, option<cevy::engine::PhysicsProps>> q,
          ecs::Resource<cevy::ecs::Time> time) {
-    float delta_t = time.get().delta_seconds();
+    float delta_t = time->delta_seconds();
     for (auto [tm, vel, phys] : q) {
       auto scaled = vel * delta_t;
       tm.position += scaled.position;
