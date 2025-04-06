@@ -526,15 +526,9 @@ cevy::ecs::Query<T...>::Query(cevy::ecs::World &w)
 template <typename... T>
 size_t cevy::ecs::iterator<T...>::_compute_size(World &w, size_t nb_e) {
   size_t current_size = SIZE_MAX;
-  if ((... && is_optional<T>::value)) {
+  if (std::conjunction_v<is_optional<T>...>) {
     current_size = nb_e;
   } else {
-    // std::bitset<sizeof...(T)> are_optional;
-    // size_t idx = 0;
-    // bool is_first = true;
-
-    // (are_optional.set(idx++, is_optional<T>::value), ...);
-    // idx = 0;
     current_size = std::min({nb_e, _compute_a_size<T>(w.get_components<T>())...});
   }
   (resize_optional<T>(w.get_components<T>(), current_size), ...);
