@@ -15,15 +15,8 @@
 #include <glm/ext/quaternion_geometric.hpp>
 #include <glm/ext/vector_float3.hpp>
 
-namespace cevy::engine {
-class Velocity : public glm::vec3 {
-  public:
-  Velocity() {};
-  ~Velocity() {};
-
-  protected:
-  private:
-};
+namespace cevy {
+namespace engine {
 
 inline static glm::vec3 lerp(const glm::vec3 &A, const glm::vec3 &B, float t) {
   return A * t + B * (1.f - t);
@@ -62,7 +55,7 @@ class TransformVelocity : public engine::Transform {
     for (auto [tm, vel, phys] : q) {
       auto scaled = vel * delta_t;
       tm.position += scaled.position;
-      tm.rotation *= scaled.rotation;
+      tm.rotation = glm::normalize(scaled.rotation * tm.rotation);
       tm.scale *= scaled.scale;
       float decay = 1;
       if (phys.has_value()) {
@@ -74,4 +67,11 @@ class TransformVelocity : public engine::Transform {
 
   private:
 };
-} // namespace cevy::engine
+} // namespace engine
+template <>
+inline std::string
+reflect<cevy::engine::TransformVelocity>(const cevy::engine::TransformVelocity &t) {
+  return reflect<engine::TransformVelocity>() + "::{\n" + "linear=" + reflect(t.position) + "\n" +
+         "rotational=" + reflect(t.rotation) + "\n" + "scaling=" + reflect(t.scale) + "\n" + "}";
+};
+} // namespace cevy
