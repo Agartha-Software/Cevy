@@ -219,9 +219,9 @@ void glWindow::cursorEnter(int entered) {
 }
 
 bool glWindow::init_context() {
-// #if GLFW_HINT_X11
+#if GLFW_HINT_X11
   glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
-// #endif // GLFW_HINT_X11
+#endif // GLFW_HINT_X11
   if (!glfwInit()) {
     throw std::runtime_error("failed to init glfw");
     // Initialization failed
