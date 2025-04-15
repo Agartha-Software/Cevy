@@ -150,8 +150,8 @@ class cevy::ecs::World {
   // emplace a resource to the world by calling the contructor
   template <typename R, typename... Params>
   void init_resource(Params &&...p) {
-    // static_assert(std::is_constructible<R, Params &&...>::value,
-    //               "Resource must be constructible from Params");
+    static_assert(std::is_constructible<R, Params &&...>::value,
+                  "Resource must be constructible from Params");
     _resource_manager.emplace_resource<R>(std::forward<Params>(p)...);
   }
 
@@ -219,12 +219,8 @@ class cevy::ecs::World {
       if (Entity < cmpnts.size())
         cmpnts[Entity] = std::nullopt;
     };
-    cevy::any &&a = cevy::make_any<SparseVector<std::remove_cv_t<T>>>();
 
-    /* auto [it, insert] = */ _components_arrays.insert({id, std::make_tuple(std::move(a), f_e)});
-    // std::cout << "init_component() &: " << id.name() << " = " <<
-    // _components_arrays.begin()._M_cur - it._M_cur << std::endl ;
-
+    _components_arrays.insert({id, std::make_tuple(cevy::make_any<SparseVector<std::remove_cv_t<T>>>(), f_e)});
     return id;
   };
 
