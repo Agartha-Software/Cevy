@@ -42,6 +42,7 @@ class Editor : public glWindow::Module {
   void build(cevy::ecs::App &app) override;
 
   std::vector<std::unique_ptr<EditorWindow>> windows;
+  glm::vec<2, uint> textureSize;
   GLuint texture;
   GLuint framebuffer;
   std::optional<bool> cursorInViewport;

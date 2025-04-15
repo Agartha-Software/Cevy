@@ -9,11 +9,13 @@
 
 #include <algorithm>
 #include <array>
-#include <bitset>
+#include <climits>
 #include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <optional>
 #include <type_traits>
+#include <utility>
 
 #include "Entity.hpp"
 #include "SparseVector.hpp"
@@ -40,15 +42,16 @@ using inner_optional = typename X::value_type;
 template <typename Type>
 using remove_optional = eval_cond_t<is_optional<Type>::value, inner_optional, Type, Type>;
 
+template <typename T, typename V>
+struct same_const : std::conditional<std::is_const_v<T>, const V, V> {};
+
+template <typename T, typename V>
+using same_const_t = typename same_const<T, V>::type;
+
 template <class... T>
 class iterator {
-  static_assert(all(std::negation<std::is_same<T, Entity>>::value...),
+  static_assert(std::conjunction_v<std::negation<std::is_same<T, Entity>>...>,
                 "Entity must only be first in a request");
-  template <class Container>
-  using iterator_t = typename Container::iterator;
-
-  template <class Container>
-  using it_reference_t = typename iterator_t<Container>::reference;
 
   friend class Entity;
   template <class...>
@@ -60,7 +63,12 @@ class iterator {
   using pointer = void;
   using difference_type = size_t;
   using iterator_category = std::forward_iterator_tag;
-  using iterator_tuple = std::tuple<iterator_t<SparseVector<remove_optional<T>>>...>;
+  template <typename _T>
+  using iterator_for_t = std::conditional_t<
+      std::is_const_v<_T>,
+      typename SparseVector<std::remove_cv_t<remove_optional<_T>>>::const_iterator,
+      typename SparseVector<std::remove_cv_t<remove_optional<_T>>>::iterator>;
+  using iterator_tuple = std::tuple<iterator_for_t<T>...>;
 
   iterator(iterator_tuple const &it_tuple, size_t max, size_t idx = 0)
       : current(it_tuple), _max(max), _idx(idx), _entity(_idx) {
@@ -72,21 +80,21 @@ class iterator {
   static iterator end(World &w, size_t size);
 
   template <typename Current>
-  static void resize_optional(SparseVector<remove_optional<Current>> &c, size_t n) {
+  static void resize_optional(SparseVector<std::remove_cv_t<remove_optional<Current>>> &c,
+                              size_t n) {
     if constexpr (is_optional<Current>::value) {
-      c.resize(std::max(c.size(), n + 1));
+      c.resize(std::max(c.size(), n));
     }
   }
 
   template <typename Current>
-  static void _compute_a_size(SparseVector<Current> &container, size_t &current_size,
-                              bool &is_first, size_t &idx, std::bitset<sizeof...(T)> &opts) {
-    if (is_first) {
-      is_first = false;
-      current_size = container.size();
-    } else if (!opts[idx])
-      current_size = std::min(current_size, container.size());
-    idx += 1;
+  static size_t
+  _compute_a_size(const SparseVector<std::remove_cv_t<remove_optional<Current>>> &container) {
+    if (is_optional<Current>::value) {
+      return SIZE_MAX;
+    } else {
+      return container.size();
+    }
   }
 
   static size_t _compute_size(World &w, size_t nb_e);
@@ -121,42 +129,50 @@ class iterator {
 
   protected:
   void incr_all(size_t n = 1) {
-    if (_idx == _max)
+    if (_idx >= _max)
       return;
-    do {
-      _idx += n;
-      ((std::get<iterator_t<SparseVector<remove_optional<T>>>>(current) += n), ...);
-    } while (_idx < _max && !all_set()); // NOTE - check to choose <= or <
+    _idx += n;
+    ((std::get<iterator_for_t<T>>(current) += n), ...);
+    sync();
+  }
+
+  void incr_exact(size_t n = 1) {
+    if (_idx >= _max)
+      return;
+    _idx += n;
+    ((std::get<iterator_for_t<T>>(current) += n), ...);
   }
 
   void sync() {
-    if (_idx == _max)
+    if (_idx >= _max)
       return;
     while (_idx < _max && !all_set()) { // NOTE - check to choose <= or <
-      _idx++;
-      ((std::get<iterator_t<SparseVector<remove_optional<T>>>>(current)++), ...);
+      _idx += 1;
+      ((std::get<iterator_for_t<T>>(current) += 1), ...);
     }
   }
 
   template <typename Current>
   bool is_set() {
+    if (_idx >= _max)
+      return false;
     if constexpr (is_optional<Current>::value) {
       return true;
     } else {
-      return std::get<iterator_t<SparseVector<Current>>>(current)->has_value();
+      return std::get<iterator_for_t<Current>>(current)->has_value();
     }
   }
 
-  bool all_set() { return (is_set<T>() && ...); }
+  bool all_set() { return (true && ... && is_set<T>()); }
 
   template <typename Current>
   Current &a_value() {
     if constexpr (std::is_same<Current, Entity>::value) {
       return Entity(_idx);
     } else if constexpr (is_optional<Current>::value) {
-      return *std::get<iterator_t<SparseVector<typename Current::value_type>>>(current);
+      return *std::get<iterator_for_t<Current>>(current);
     } else {
-      return std::get<iterator_t<SparseVector<Current>>>(current)->value();
+      return std::get<iterator_for_t<Current>>(current)->value();
     }
   }
 
@@ -171,18 +187,21 @@ class iterator {
 
 template <typename... T>
 class iterator<Entity, T...> : public iterator<T...> {
-  static_assert(all(std::negation<std::is_same<T, Entity>>::value...),
+  static_assert(std::conjunction_v<std::negation<std::is_same<T, Entity>>...>,
                 "Entity must only be first in a request");
 
   public:
-  template <class Container>
-  using iterator_t = typename Container::iterator;
-
   using value_type = std::tuple<Entity, T &...>;
-  using iterator_tuple = std::tuple<iterator_t<SparseVector<remove_optional<T>>>...>;
+  template <typename _T>
+  using iterator_for_t = std::conditional_t<
+      std::is_const_v<_T>,
+      typename SparseVector<std::remove_cv_t<remove_optional<_T>>>::const_iterator,
+      typename SparseVector<std::remove_cv_t<remove_optional<_T>>>::iterator>;
+  using iterator_tuple = std::tuple<iterator_for_t<T>...>;
 
   iterator(iterator_tuple const &it_tuple, size_t max, size_t idx = 0)
       : iterator<T...>(it_tuple, max, idx) {};
+
   const value_type to_value() {
     return value_type {Entity(iterator<T...>::_idx), iterator::template a_value<T>()...};
   }
@@ -202,13 +221,11 @@ class iterator<Entity, T...> : public iterator<T...> {
 
   value_type operator*() { return to_value(); };
   value_type operator->() { return to_value(); };
-  // protected:
-  // iterator(iterator<T...> const &z) : iterator<T...>(z) {};
 };
 
 template <class... T>
 class Query {
-  using Containers = std::tuple<SparseVector<remove_optional<T>>...>;
+  using Containers = std::tuple<SparseVector<std::remove_cv_t<remove_optional<T>>>...>;
 
   public:
   using iterator_t = iterator<T...>;
@@ -228,17 +245,27 @@ class Query {
   public:
   size_t size() { return _size; }
 
-  typename iterator_t::value_type single() { return *begin(); }
+  typename iterator_t::value_type single() {
+    auto it = begin();
+    it.sync();
+    return *it;
+  }
 
   std::optional<typename iterator_t::value_type> get_single() {
-    if (_size <= 0) {
+    auto it = begin();
+    it.sync();
+    if (it.all_set()) {
+      return *it;
+    } else {
       return std::nullopt;
     }
-    return single();
   }
 
   std::optional<typename iterator_t::value_type> get(const Entity &id) {
-    auto at = begin() + id._id;
+    auto at = begin();
+    while (at._idx != id && at != _end) {
+      at += 1;
+    }
     if (at.all_set()) {
       return std::make_optional(at.to_value());
     } else {

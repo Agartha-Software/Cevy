@@ -47,7 +47,6 @@ class Engine : public cevy::ecs::Plugin {
     app.init_resource<cevy::engine::Atmosphere>();
     app.init_resource<cevy::engine::Window>(Windower(1280, 720));
     app.init_component<cevy::engine::Camera>();
-    app.init_component<cevy::engine::Velocity>();
     app.init_component<cevy::engine::PhysicsProps>();
     app.init_component<cevy::engine::Target>();
     app.init_component<cevy::engine::Line>();
@@ -59,13 +58,13 @@ class Engine : public cevy::ecs::Plugin {
     app.init_component<cevy::engine::SunLight>();
     app.init_component<cevy::engine::Color>();
     // app.init_component<cevy::engine::Atmosphere>();
-    app.add_plugins(cevy::engine::AssetManagerPlugin());
+    app.add_plugins(cevy::engine::asset::AssetManagerPlugin());
 
     app.add_plugins(cevy::input::InputPlugin());
     app.add_plugins(typename Windower::Plugin());
     app.add_systems<cevy::engine::PreRenderStage>(update_camera);
-    app.add_systems<ecs::core_stage::PostUpdate>(TransformVelocity::system);
     app.add_systems<cevy::ecs::core_stage::PreUpdate>(Transform::children_system);
+    app.add_systems<ecs::core_stage::PostUpdate>(TransformVelocity::system);
   };
 };
 } // namespace cevy::engine

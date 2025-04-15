@@ -27,6 +27,7 @@ void cevy::ecs::DefaultPlugin::build(App &app) {
   init_default_schedules(app);
   app.add_event<AppExit>();
   app.init_resource<StageSpecs>();
-  app.add_systems<core_stage::PostStartup>(init_timer);
-  app.add_systems<core_stage::First>(update_timer);
+  app.add_systems<core_stage::PreStartup>(Time::init_timer);
+  app.add_systems<core_stage::PostStartup>(Time::start_timer);
+  app.add_systems<core_stage::First>(Time::update_timer);
 }

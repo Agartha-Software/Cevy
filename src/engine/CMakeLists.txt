@@ -9,7 +9,6 @@ set(IMGUI_FOLDER ${CMAKE_BINARY_DIR}/_deps/imgui)
 
 add_library(engine
   STATIC
-    Transform.hpp
     Camera.cpp
     glWindow.cpp
 )

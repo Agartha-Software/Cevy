@@ -60,6 +60,11 @@
 
 #include <any>
 #include <stdexcept>
+
+#if defined(__clang__) || defined(__GNUC__)
+#include <cxxabi.h>
+#endif
+
 #include <typeindex>
 
 #ifndef _CUSTOM_ANY_NC
@@ -418,8 +423,21 @@ class any_nc {
 
   public:
   struct bad_any_cast : public std::runtime_error {
-    bad_any_cast(const std::type_index& from, const std::type_index& to) :
-      std::runtime_error(std::string("bad any cast: from <") + from.name() + "> to <" + to.name() + ">") {};
+#if (defined(__clang__) || defined(__GNUC__))
+    bad_any_cast(const std::type_index &from, const std::type_index &to) : std::runtime_error("") {
+      char *from_cstr = __cxxabiv1::__cxa_demangle(from.name(), nullptr, nullptr, nullptr);
+      char *to_cstr = __cxxabiv1::__cxa_demangle(to.name(), nullptr, nullptr, nullptr);
+      std::runtime_error::operator=(std::runtime_error(std::string("bad any cast: from <") +
+                                                       std::string(from_cstr) + "> to <" +
+                                                       std::string(to_cstr) + ">"));
+      std::free(from_cstr);
+      std::free(to_cstr);
+    };
+#else
+    bad_any_cast(const std::type_index &from, const std::type_index &to)
+        : std::runtime_error("bad any cast: from <" + std::string(from.name()) + "> to <" +
+                             std::string(to.name()) + ">") {};
+#endif
   };
 };
 

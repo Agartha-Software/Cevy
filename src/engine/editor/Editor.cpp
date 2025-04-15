@@ -42,7 +42,8 @@ void cevy::editor::Editor::init(glWindow &glwindow) {
   glGenFramebuffers(1, &this->framebuffer);
   glGenTextures(1, &this->texture);
   glBindTexture(GL_TEXTURE_2D, this->texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, glwindow.windowSize.x, glwindow.windowSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  this->textureSize = glwindow.windowSize;
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->textureSize.x, this->textureSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

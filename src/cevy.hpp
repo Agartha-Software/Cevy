@@ -8,11 +8,19 @@
 #pragma once
 
 #include "any_nc.hpp"
+#include <cstdint>
+#include <cstring>
 #include <functional>
 #include <optional>
+#include <sstream>
 #include <string>
+#include <typeindex>
 #include <typeinfo>
 #include <utility>
+
+#if defined(__clang__) || defined(__GNUC__)
+#include <cxxabi.h>
+#endif
 
 template <typename T>
 using ref = std::reference_wrapper<T>;
@@ -36,23 +44,6 @@ using eval_cond_t = typename eval_cond<test, Z, X, Else>::type;
 
 template <typename T, typename Find, typename Replace>
 using replace = std::conditional<std::is_same_v<T, Find>, Replace, T>;
-
-/// @brief True if all parameter pack is true
-template <typename... Args>
-constexpr bool all(Args... args) {
-  return (... && args);
-}
-
-/// @brief True if any element in the parameter pack is true
-template <typename... Args>
-constexpr bool any() {
-  return (... || Args::value);
-};
-
-template <typename... Args>
-constexpr size_t sum(Args... args) {
-  return (0 + ... + args);
-};
 
 template <typename R, typename... Args>
 constexpr std::function<R(Args...)> make_function(R (&&func)(Args...)) {
@@ -170,11 +161,102 @@ auto make_any(Args &&...args) -> decltype(std::make_any_nc<T>(std::forward<Args>
   return std::make_any_nc<T>(std::forward<Args>(args)...);
 }
 
+namespace detail {
+template <bool StripScope = true>
+inline std::string demangle(const char *cstr) {
+#if defined(__clang__) || defined(__GNUC__) && !defined(NO_DEMANGLE)
+  char *demangled = abi::__cxa_demangle(cstr, 0, 0, NULL);
+  char *stripped = nullptr;
+  if constexpr (StripScope) {
+    stripped = strrchr(demangled, ':');
+    stripped += (stripped != nullptr);
+  }
+  std::string demangled_clean = std::string(stripped ? stripped : demangled);
+  free(demangled);
+
+  return demangled_clean;
+#else
+  const char *stripped = nullptr;
+  if constexpr (StripScope) {
+    stripped = strrchr(cstr, ':');
+    stripped += (stripped != nullptr);
+  } else {
+    stripped = strrchr(cstr, ' ');
+    stripped += (stripped != nullptr);
+  }
+  return std::string(stripped ? stripped : cstr);
+#endif
+}
+} // namespace detail
+
+inline std::string pretty_type_name(const std::type_index& type) {
+  return detail::demangle(type.name());
+}
+
+inline std::string pretty_type_name(const std::type_info& type) {
+  return detail::demangle(type.name());
+}
+
 template<typename T>
 std::string reflect() {
-  // todo!: demangle
-  return typeid(T).name();
+  return pretty_type_name(typeid(T));
 }
+
+template<typename T>
+std::string reflect(const T&) {
+  return reflect<T>() + "::<content not implemented>";
+}
+
+template<>
+inline std::string reflect<uint64_t>(const uint64_t &i) {
+  return (std::stringstream() << i << "ul").str();
+}
+
+template<>
+inline std::string reflect<int64_t>(const int64_t &i) {
+  return (std::stringstream() << i << "il").str();
+}
+
+template<>
+inline std::string reflect<uint32_t>(const uint32_t &i) {
+  return (std::stringstream() << i << "u").str();
+}
+
+template<>
+inline std::string reflect<int32_t>(const int32_t &i) {
+  return (std::stringstream() << i << "i").str();
+}
+
+template<>
+inline std::string reflect<uint16_t>(const uint16_t &i) {
+  return (std::stringstream() << i << "us").str();
+}
+
+template<>
+inline std::string reflect<int16_t>(const int16_t &i) {
+  return (std::stringstream() << i << "is").str();
+}
+
+template<>
+inline std::string reflect<uint8_t>(const uint8_t &i) {
+  return (std::stringstream() << i << "uc").str();
+}
+
+template<>
+inline std::string reflect<int8_t>(const int8_t &i) {
+  return (std::stringstream() << i << "ic").str();
+}
+
+template<>
+inline std::string reflect<double>(const double &i) {
+  return (std::stringstream() << i << "d").str();
+}
+
+template<>
+inline std::string reflect<float>(const float &i) {
+  return (std::stringstream() << i << "f").str();
+}
+
 
 } // namespace cevy
 

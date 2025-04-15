@@ -7,11 +7,14 @@
 
 #pragma once
 
-#include "Entity.hpp"
-#include "Query.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+
 #include <map>
+#include "cevy.hpp"
+#include "engine.hpp"
+#include "Entity.hpp"
+#include "Query.hpp"
 
 namespace cevy {
 namespace engine {
@@ -37,7 +40,7 @@ class Transform {
         world_position(position), world_rotation(rotation), world_scale(scale) {}
 
   Transform(const glm::quat &quat)
-      : position(0, 0, 0), rotation(quat), scale(1, 1, 1), world_position(position),
+      : position(0, 0, 0), rotation(glm::normalize(quat)), scale(1, 1, 1), world_position(position),
         world_rotation(rotation), world_scale(scale) {}
 
   Transform(const glm::vec3 &vec, const glm::quat &quat, const glm::vec3 scale)
@@ -346,5 +349,15 @@ class Transform {
     return 0;
   }
 };
+
+
 } // namespace engine
+template<>
+inline std::string reflect<cevy::engine::Transform>(const cevy::engine::Transform &t) {
+  return reflect<engine::Transform>() + "::{\n"
+  + "position=" + reflect(t.position) + "\n"
+  + "rotation=" + reflect(t.rotation) + "\n"
+  + "scale=" + reflect(t.scale) + "\n"
+  + "}";
+};
 } // namespace cevy

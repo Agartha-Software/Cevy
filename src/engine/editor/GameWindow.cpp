@@ -17,8 +17,9 @@ void cevy::editor::GameWindow::render(cevy::editor::Editor &editor, glWindow &gl
   editor.viewportPos = ImGui::GetWindowPos();
   editor.viewportSize = ImGui::GetWindowSize();
   ImVec2 wsize = ImGui::GetWindowSize();
-  if (wsize.x != glwindow.getTargetSize().x || wsize.y != glwindow.getTargetSize().y) {
+  if (editor.textureSize.x != wsize.x || editor.textureSize.y != wsize.y) {
     glwindow.setTargetSize(wsize.x, wsize.y);
+    editor.textureSize = {wsize.x, wsize.y};
     glBindTexture(GL_TEXTURE_2D, editor.texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wsize.x, wsize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
   }

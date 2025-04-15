@@ -36,6 +36,7 @@ class glWindow : public cevy::engine::Window::GenericWindow {
 
   struct Module {
     //virtual Module(glWindow&) = 0;
+    virtual ~Module() {};
     virtual void init(glWindow&) = 0;
     virtual void deinit(glWindow&) = 0;
     virtual void build(cevy::ecs::App &app) = 0;
@@ -77,8 +78,8 @@ class glWindow : public cevy::engine::Window::GenericWindow {
 
   template<typename... Mod>
   glWindow& add_modules() {
-    static_assert(all(std::is_base_of_v<Module, Mod>...),
-            "Given Modules do not derive from Module class");
+    static_assert(std::conjunction_v<std::is_base_of<Module, Mod>...>,
+            "Given Modules must derive from Module class");
     ([this](){
       this->module_keys.emplace(std::type_index(typeid(Mod)), this->modules.size());
       this->modules.push_back(std::make_unique<Mod>(*this));

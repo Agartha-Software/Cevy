@@ -16,7 +16,7 @@ using cevy::engine::TextureBuilder;
 template <typename T>
 using Handle = cevy::engine::Handle<T>;
 
-PbrMaterial::PbrMaterial(AssetManager &mngr, const definition &def) : PbrMaterial() {
+PbrMaterial::PbrMaterial(asset::AssetManager &mngr, const definition &def) : PbrMaterial() {
   TextureBuilder diffuse_builder;
   TextureBuilder specular_builder;
   TextureBuilder metallic_builder;

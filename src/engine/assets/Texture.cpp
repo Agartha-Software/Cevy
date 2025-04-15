@@ -5,6 +5,7 @@
 ** textures implementation
 */
 
+#ifndef DEBUG
 #define STBI_MALLOC(sz) ((void *)(new char[sz]))
 #define STBI_REALLOC_SIZED(p, oldsz, newsz)                                                        \
   (size_t(newsz) <= size_t(oldsz) ? (void *)(p)                                                    \
@@ -15,6 +16,7 @@
     return (void *)n;                                                                              \
   }(p, oldsz, newsz))
 #define STBI_FREE(p) (delete[] (char *)(p))
+#endif // DEBUG
 
 #define STB_IMAGE_IMPLEMENTATION
 
@@ -67,8 +69,8 @@ std::optional<Texture> Texture::from_tinyobj(const std::string &file_name,
 
 TextureBuilder::~TextureBuilder() {
   if (this->data)
-    stbi_image_free(data);
-  data = nullptr;
+    stbi_image_free(this->data);
+  this->data = nullptr;
 }
 
 Texture TextureBuilder::from(const glm::vec4u8 &pixel, int width, int height) {
@@ -253,7 +255,7 @@ Texture TextureBuilder::build() {
   throw std::runtime_error("TextureBuilder failed at this->data (without load):" + name_full);
 }
 
-Handle<Texture> TextureBuilder::build(AssetManager &manager) {
+Handle<Texture> TextureBuilder::build(asset::AssetManager &manager) {
   std::string name_full = this->rgb_file_name;
   if (this->alpha_file_name != "") {
     name_full += "_" + this->alpha_file_name;

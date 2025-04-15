@@ -23,14 +23,14 @@ class cevy::ecs::EntityCommands {
   template <typename... Components>
   cevy::ecs::EntityCommands &insert(const Components &...c) {
     _commands.add(
-        [c..., e = _entity](cevy::ecs::World &w) mutable { (w.add_component(e, c), ...); });
+        [c..., e = _entity](cevy::ecs::World &w) { (w.add_component(e, c), ...); });
     return *this;
   }
 
   template <typename... Components>
   cevy::ecs::EntityCommands &remove() {
     _commands.add(
-        [e = _entity](cevy::ecs::World &w) mutable { (w.remove_component<Components>(e), ...); });
+        [e = _entity](cevy::ecs::World &w) { (w.remove_component<Components>(e), ...); });
     return *this;
   }
 

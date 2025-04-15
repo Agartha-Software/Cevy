@@ -89,6 +89,7 @@ struct TextureBuilder {
     flags.initted = false;
     flags.has_alpha = false;
     flags.has_rgb = false;
+    this->data = nullptr;
   };
   ~TextureBuilder();
   TextureBuilder(const TextureBuilder &) = delete;
@@ -108,7 +109,7 @@ struct TextureBuilder {
     return this->data != nullptr || this->rgb_file_name != "" || this->alpha_file_name != "";
   }
   cevy::engine::Texture build();
-  Handle<cevy::engine::Texture> build(AssetManager &manager);
+  Handle<cevy::engine::Texture> build(asset::AssetManager &manager);
 };
 
 } // namespace cevy::engine
