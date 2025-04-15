@@ -11,7 +11,6 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include <map>
-#include "engine.inl"
 #include "cevy.hpp"
 #include "engine.hpp"
 #include "Entity.hpp"

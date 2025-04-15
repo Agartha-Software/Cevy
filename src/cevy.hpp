@@ -8,6 +8,7 @@
 #pragma once
 
 #include "any_nc.hpp"
+#include <cstdint>
 #include <cstring>
 #include <functional>
 #include <optional>
@@ -207,23 +208,53 @@ std::string reflect(const T&) {
 }
 
 template<>
-inline std::string reflect<unsigned long>(const unsigned long &i) {
-  return (std::stringstream() << i).str();
+inline std::string reflect<uint64_t>(const uint64_t &i) {
+  return (std::stringstream() << i << "ul").str();
 }
 
 template<>
-inline std::string reflect<signed long>(const signed long &i) {
-  return (std::stringstream() << i).str();
+inline std::string reflect<int64_t>(const int64_t &i) {
+  return (std::stringstream() << i << "il").str();
+}
+
+template<>
+inline std::string reflect<uint32_t>(const uint32_t &i) {
+  return (std::stringstream() << i << "u").str();
+}
+
+template<>
+inline std::string reflect<int32_t>(const int32_t &i) {
+  return (std::stringstream() << i << "i").str();
+}
+
+template<>
+inline std::string reflect<uint16_t>(const uint16_t &i) {
+  return (std::stringstream() << i << "us").str();
+}
+
+template<>
+inline std::string reflect<int16_t>(const int16_t &i) {
+  return (std::stringstream() << i << "is").str();
+}
+
+template<>
+inline std::string reflect<uint8_t>(const uint8_t &i) {
+  return (std::stringstream() << i << "uc").str();
+}
+
+template<>
+inline std::string reflect<int8_t>(const int8_t &i) {
+  return (std::stringstream() << i << "ic").str();
 }
 
 template<>
 inline std::string reflect<double>(const double &i) {
-  return (std::stringstream() << i).str();
+  return (std::stringstream() << i << "d").str();
 }
 
 template<>
 inline std::string reflect<float>(const float &i) {
-  return (std::stringstream() << i).str();
+  return (std::stringstream() << i << "f").str();
 }
 
 
