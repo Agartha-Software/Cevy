@@ -1,5 +1,5 @@
 /*
-** Agartha-Software, 2023
+** Agartha-Software, 2025
 ** C++evy
 ** File description:
 ** Asset Manager
@@ -108,7 +108,7 @@ class LoadContext {
   ErasedHandle handle;
 
   public:
-  const std::type_index &assetType() const { return handle.type; }
+  const std::type_index &assetType() const { return this->handle.type; }
   AssetPath &getPath() { return this->path; }
   template<typename A>
   Handle<A> addLabeledAsset(const std::string &label, A&& asset);
@@ -171,7 +171,6 @@ class AssetManager {
     auto handle = Handle<A>(this->asset_datas.at(std::type_index(typeid(A))).add(std::forward<A>(asset)));
 
     this->paths.emplace(path, ErasedAssetId(handle));
-    // handle.replace(std::forward<A>(asset));
     return handle;
   }
 
@@ -215,7 +214,9 @@ class AssetManager {
     this->loadInternal(path, main_handle, loader_index);
     const auto &erased_id = this->paths.at(path);
     if (erased_id.type != typeid(A)) {
-      throw std::runtime_error("AssetManager::load: Asset [" + path.pretty() + "] is not of type '" + reflect<A>() + "' (is of type '" + erased_id.type.name() + "')");
+      throw std::runtime_error("AssetManager::load: Asset [" + path.pretty() +
+                               "] is not of type '" + reflect<A>() + "' (is of type '" +
+                               cevy::pretty_type_name(erased_id.type) + "')");
     }
     return this->asset_datas.at(erased_id.type).get(erased_id).cast<A>();
   }
@@ -300,28 +301,22 @@ inline Handle<A> cevy::engine::asset::LoadContext::addLabeledAsset(const std::st
   this->manager.add(std::forward<A>(asset), this->path.labeled(label));
 }
 
+/// Out-of-line for LoadContext
+
 template<typename A>
-inline LoadedAsset cevy::engine::asset::LoadContext::finish(A&& asset) {
+LoadedAsset cevy::engine::asset::LoadContext::finish(A&& asset) {
   this->handle.cast<A>().replace(std::move(asset));
   return LoadedAsset(this->path, std::move(this->handle));
 }
 
 template<typename A>
-inline Handle<A> cevy::engine::asset::LoadContext::getAsset(const AssetPath &path) {
+Handle<A> cevy::engine::asset::LoadContext::getAsset(const AssetPath &path) {
   return this->manager.get<A>(path);
 }
 
 template<typename A>
-inline Handle<A> cevy::engine::asset::LoadContext::load(const AssetPath &path) {
+Handle<A> cevy::engine::asset::LoadContext::load(const AssetPath &path) {
   return this->manager.load<A>(path);
 }
 
 } // namespace cevy::engine
-
-// template <>
-// cevy::engine::Handle<cevy::engine::Mesh>
-// cevy::engine::AssetManager::load(cevy::engine::Mesh &&model, std::string name);
-
-// template <>
-// std::optional<cevy::engine::Handle<cevy::engine::Mesh>>
-// cevy::engine::AssetManager::get<cevy::engine::Mesh>(std::string name);
