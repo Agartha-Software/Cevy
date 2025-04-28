@@ -24,6 +24,7 @@ inline static glm::vec3 lerp(const glm::vec3 &A, const glm::vec3 &B, float t) {
 
 class TransformVelocity : public engine::Transform {
   public:
+  bool animated = false;
   TransformVelocity() : engine::Transform() {};
   TransformVelocity(const Transform &tm) : engine::Transform(tm) {};
   ~TransformVelocity() {};
@@ -53,6 +54,8 @@ class TransformVelocity : public engine::Transform {
          ecs::Resource<cevy::ecs::Time> time) {
     float delta_t = time->delta_seconds();
     for (auto [tm, vel, phys] : q) {
+      if (vel.animated)
+        continue;
       auto scaled = vel * delta_t;
       tm.position += scaled.position;
       tm.rotation = glm::normalize(scaled.rotation * tm.rotation);

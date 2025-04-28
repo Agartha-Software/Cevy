@@ -6,13 +6,12 @@
 ##
 
 add_library(physics
-    SHARED
-    Physics.hpp
+    STATIC
     Physics.cpp
   )
 
-set(IMGUI_FOLDER ${CMAKE_BINARY_DIR}/_deps/imgui)
+# add_subdirectory(collision)
 
-add_subdirectory(collision)
+target_include_directories(physics PUBLIC .)
 
-target_link_libraries(physics PUBLIC ecs engine collision)
+target_link_libraries(physics PUBLIC ecs engine)

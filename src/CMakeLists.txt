@@ -17,10 +17,10 @@ add_subdirectory(ecs)
 add_subdirectory(engine)
 
 ## IN DEVELOPPEMENT:
-## add_subdirectory(physics)
+add_subdirectory(physics)
 
 add_library(cevy SHARED cevy.cpp)
-target_link_libraries(cevy PUBLIC ecs engine) # physics)
+target_link_libraries(cevy PUBLIC ecs engine physics)
 set_target_properties(cevy PROPERTIES LINKER_LANGUAGE CXX)
 
 
