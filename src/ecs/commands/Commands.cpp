@@ -17,4 +17,7 @@ void cevy::ecs::Commands::add(std::function<void(cevy::ecs::World &w)> &&f) {
 }
 
 EntityCommands Commands::entity(const cevy::ecs::Entity &e) { return EntityCommands(*this, e); }
-void cevy::ecs::Commands::despawn(Entity e) { _world_access.despawn(e); }
+
+void cevy::ecs::Commands::despawn(Entity e) {
+  this->add([e](cevy::ecs::World &w) { w.despawn(e); });
+}

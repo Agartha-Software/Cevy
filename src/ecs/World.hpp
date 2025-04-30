@@ -226,16 +226,20 @@ class cevy::ecs::World {
 
   template <typename Component>
   std::optional<Component> &add_component(Entity const &to, const Component &c) {
-    std::cout << "add_component " << reflect<Component>(c) << std::endl;
     auto &array = get_components<Component>();
 
+    if (!this->_entities[to].has_value()) {
+      return array[to];
+    }
     return array.insert_at(to, c);
   }
 
   template <typename Component, typename... Params>
   std::optional<Component> &emplace_component(Entity const &to, Params &&...p) {
-
     auto &array = get_components<Component>();
+    if (!this->_entities[to].has_value()) {
+      return array[to];
+    }
     return array.emplace_at(to, p...);
   }
 
