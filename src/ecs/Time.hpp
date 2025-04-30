@@ -13,20 +13,28 @@
 
 namespace cevy::ecs {
 class Time {
+  public:
+  using duration = std::chrono::duration<double, std::ratio<1, 1>>;
+  using time_point = std::chrono::time_point<std::chrono::high_resolution_clock, duration>;
   private:
-  std::chrono::time_point<std::chrono::high_resolution_clock> _first_update;
-  std::chrono::time_point<std::chrono::high_resolution_clock> _last_update;
-  std::chrono::duration<double, std::ratio<1>> _last_update_delta;
+
+  time_point _first_update;
+  time_point _last_update;
+  duration _last_update_delta;
   double currentTimescale = 1;
   double nextTimescale = 1;
   size_t frameCount = 0;
 
   public:
-  std::chrono::duration<double, std::ratio<1>> uptime() const {
+  duration uptime() const {
     return this->_last_update - this->_first_update;
   }
 
-  void update_with_instant(std::chrono::time_point<std::chrono::high_resolution_clock> &&instant);
+  time_point now() const {
+    return this->_last_update;
+  }
+
+  void update_with_instant(time_point &&instant);
 
   std::chrono::duration<double, std::ratio<1>> raw() const { return this->_last_update_delta; }
 

@@ -31,8 +31,7 @@ void Time::update_timer(cevy::ecs::Resource<Time> time) {
   time->frameCount += 1;
 }
 
-void Time::update_with_instant(
-    std::chrono::time_point<std::chrono::high_resolution_clock> &&instant) {
+void Time::update_with_instant(time_point &&instant) {
   _last_update_delta = instant - _last_update;
   _last_update = instant;
 }
