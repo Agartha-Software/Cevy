@@ -10,6 +10,7 @@
 #include "Velocity.hpp"
 #include "collision/Collider.hpp"
 #include <cmath>
+#include <glm/geometric.hpp>
 #include <glm/vec3.hpp>
 
 namespace cevy::physics {

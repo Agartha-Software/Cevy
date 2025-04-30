@@ -269,12 +269,12 @@ class Shape {
 
   static Collision collide_sphere_plane(const glm::vec4 (&data_a)[4], const glm::mat4 &tm_a,
                                         const glm::vec4 (&data_b)[4], const glm::mat4 &tm_b) {
-      glm::vec3 p_center = (tm_b * data_b[0]).xyz();
-      glm::vec3 p_normal = (tm_b * data_b[1]).xyz();
-      glm::vec3 s_center = (tm_a * data_a[0]).xyz();
-      glm::vec3 s_size = (tm_a * data_a[1]).xyz();
-      auto distance = dot(p_center - s_center, -p_normal);
-      auto radius = std::abs(dot((tm_b * data_b[1]).xyz(), s_size));
+      const glm::vec3 p_center = (tm_b * data_b[0]).xyz();
+      const glm::vec3 p_normal = (tm_b * data_b[1]).xyz();
+      const glm::vec3 s_center = (tm_a * data_a[0]).xyz();
+      const glm::vec3 s_size = (tm_a * data_a[1]).xyz();
+      const auto distance = dot(p_center - s_center, -p_normal);
+      const auto radius = std::abs(dot(glm::abs(p_normal), s_size));
       auto intersection = std::abs(distance) - radius;
       if (intersection <= 0) {
         auto direction = p_normal * detail::signum<float>(distance);
@@ -294,11 +294,16 @@ class Collider {
   private:
   public:
   std::vector<Shape> shapes;
+  uint32_t layers = -1;
   float dragCoefficient = 2; /// dimensionless c_d (defaulted to a cube) : ()
   float area = 1; /// projected area : m²
 
   Collider();
   template<typename ...S>
+  Collider(uint32_t layers, S&& ...shapes) : Collider(std::forward<S>(shapes)...) {
+    this->layers = layers;
+  };
+  template<typename ...S, class = std::enable_if_t<std::conjunction_v<std::is_same<S, Shape>...>>>
   Collider(S ...shapes) {
     this->dragCoefficient = (shapes.drag() + ...);
     this->shapes = {std::forward<S>(shapes)...};

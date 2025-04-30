@@ -33,7 +33,7 @@ class Gravity {
 
 class RigidBodyWorld {
   friend class PhysicsPlugin;
-  static void system(Query<RigidBody, engine::TransformVelocity, engine::Transform, Collider> query, Resource<Time> time, Resource<RigidBodyWorld> world);
+  static void system(Query<RigidBody, engine::TransformVelocity, engine::Transform, option<Collider>> query, Resource<Time> time, Resource<RigidBodyWorld> world);
   public:
   float dragDensity = 1.204; /// mass density of the fluid: kg/m³
 };
