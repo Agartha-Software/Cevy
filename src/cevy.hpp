@@ -59,7 +59,10 @@ struct hash_pack_impl;
 
 template<typename T, typename ...Ts>
 struct hash_pack_impl<T, Ts...> {
-  __attribute__((flatten)) inline size_t operator()(const T &t, const Ts&... ts) const {
+  #if defined(__clang__) || defined(__GNU__)
+  __attribute__((flatten))
+  #endif
+  inline size_t operator()(const T &t, const Ts&... ts) const {
     size_t h = hash_pack_impl<Ts...>()(ts...);
     return 0x9e3779b9 + ::std::hash<T>()(t) + ((h << 5) + (h >> 3));
   }
