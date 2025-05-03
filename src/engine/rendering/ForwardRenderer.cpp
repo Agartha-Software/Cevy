@@ -26,12 +26,12 @@ static glm::vec3 filmicToneMapping(const glm::vec3 &in) {
   return color;
 }
 
-void cevy::engine::ForwardRenderer::init() {
+void cevy::engine::ForwardRenderer::init(glWindow &) {
   this->defaultMaterial = PbrMaterial();
 
   std::cout << "loading shaderProgram" << std::endl;
 
-  this->shaderProgram = new ShaderProgram();
+  this->shaderProgram = std::make_unique<ShaderProgram>();
 
   std::cout << "allocated shaderProgram" << std::endl;
 
@@ -48,6 +48,7 @@ void cevy::engine::ForwardRenderer::init() {
   this->shaderProgram->addUniform("fog");
   this->shaderProgram->addUniform("fog_far");
   this->shaderProgram->addUniform("albedo");
+  this->shaderProgram->addUniform("emit");
   this->shaderProgram->addUniform("specular_tint");
   this->shaderProgram->addUniform("phong_exponent");
   this->shaderProgram->addUniform("halflambert");
@@ -70,9 +71,12 @@ void cevy::engine::ForwardRenderer::init() {
 }
 
 void cevy::engine::ForwardRenderer::render_system(
-    ForwardRenderer &self, Query<Camera> cams,
+    Resource<Window> win, Query<Camera> cams,
     Query<option<Transform>, Handle<Mesh>, option<Handle<PbrMaterial>>, option<Color>> models,
     Query<option<Transform>, cevy::engine::PointLight> lights, const ecs::World &world) {
+  auto &window = win->get_handler<glWindow>();
+  ForwardRenderer &self = window.get_module<ForwardRenderer>();
+
 
   auto r_atmo = world.get_resource<const Atmosphere>();
   const auto &atmosphere = r_atmo.has_value() ? r_atmo->get() : cevy::engine::Atmosphere();
@@ -81,6 +85,8 @@ void cevy::engine::ForwardRenderer::render_system(
   auto fog_tonemapped = filmicToneMapping(fog);
   auto ambient = atmosphere.ambiant.as_vec().rgb();
   auto fog_dist = atmosphere.fog_distance;
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, window.getCurrentFrameBuffer());
+  glBindFramebuffer(GL_FRAMEBUFFER, window.getCurrentFrameBuffer());
   glClearColor(fog_tonemapped.r, fog_tonemapped.g, fog_tonemapped.b, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
@@ -126,7 +132,7 @@ void cevy::engine::ForwardRenderer::render_system(
   glUniformMatrix4fv(self.shaderProgram->uniform("view"), 1, GL_FALSE, glm::value_ptr(view));
 
   auto invView = glm::inverse(camera.view);
-  invView = invView / invView[3][3];
+  // invView = invView / invView[3][3];
 
   glUniformMatrix4fv(self.shaderProgram->uniform("invView"), 1, GL_FALSE, glm::value_ptr(invView));
 
@@ -141,6 +147,8 @@ void cevy::engine::ForwardRenderer::render_system(
                  glm::value_ptr(ambient + material.ambient));
     glUniform3fv(self.shaderProgram->uniform("albedo"), 1,
                  glm::value_ptr(material.diffuse * color.xyz()));
+    glUniform3fv(self.shaderProgram->uniform("emit"), 1,
+                 glm::value_ptr(material.emit));
     glUniform3fv(self.shaderProgram->uniform("specular_tint"), 1,
                  glm::value_ptr(material.specular_tint));
     glUniform1f(self.shaderProgram->uniform("phong_exponent"), 1 + 1 / material.roughness);

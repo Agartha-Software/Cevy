@@ -16,10 +16,11 @@
 #include "Window.hpp"
 #include "pipeline.hpp"
 #include "rendering.hpp"
+#include "glWindow.hpp"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-class cevy::engine::ForwardRenderer {
+class cevy::engine::ForwardRenderer : public glWindow::Module {
   struct pipeline : engine::pipeline {
     struct constants {
       inline static constexpr int lightCount = 15;
@@ -51,16 +52,42 @@ class cevy::engine::ForwardRenderer {
   public:
   template <typename Windower = cevy::engine::Window::GenericWindow>
   ForwardRenderer(const Windower & /* win */) {}
-  void init();
+
+  ForwardRenderer(ForwardRenderer &&other) {
+    *this = std::move(other);
+  }
+
+  ForwardRenderer &operator=(ForwardRenderer &&other) {
+    this->glfWindow = other.glfWindow;
+    this->uboLights = other.uboLights;
+    other.uboLights = 0;
+    this->shaderProgram = std::move(other.shaderProgram);
+    this->defaultMaterial = other.defaultMaterial;
+    return *this;
+  }
+
+  ~ForwardRenderer() override {
+  }
+
+  void build(ecs::App &app) override {
+    app.add_systems<RenderStage>(ForwardRenderer::render_system);
+  }
+
+  void init(glWindow &win) override;
+
+  void deinit(glWindow &_win) override {
+    glDeleteBuffers(1, &this->uboLights);
+    this->uboLights = 0;
+  }
   void static render_system(
-      ForwardRenderer &self, Query<Camera> cams,
+      Resource<Window> win, Query<Camera> cams,
       Query<option<Transform>, Handle<Mesh>, option<Handle<PbrMaterial>>, option<Color>> models,
       Query<option<Transform>, cevy::engine::PointLight> lights, const cevy::ecs::World &world);
 
   protected:
   GLFWwindow *glfWindow;
   uint32_t uboLights = 0;
-  ShaderProgram *shaderProgram;
+  std::unique_ptr<ShaderProgram> shaderProgram;
 
   PbrMaterial defaultMaterial;
 };

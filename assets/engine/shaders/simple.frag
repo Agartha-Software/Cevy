@@ -36,6 +36,7 @@ layout (std140, binding = 1) uniform LightBlock {
 uniform int activeLights;
 
 uniform vec3 albedo;
+uniform vec3 emit;
 uniform vec3 specular_tint;
 uniform float phong_exponent;
 uniform bool halflambert;
@@ -100,6 +101,8 @@ void main()
 	}
 
 	vec3 surface = fresnel * diffuse_light * albedo * color + (1 - fresnel) * specular * specular_tint;
+
+	surface += emit;
 
 	surface = mix(surface, fog, clamp(pow(position.w / fog_far, 0.5), 0, 1));
 	surface = filmicToneMapping(surface);
