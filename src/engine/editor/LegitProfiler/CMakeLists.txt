@@ -15,4 +15,4 @@ target_include_directories(legit PUBLIC
   .
 )
 
-target_link_libraries(legit PRIVATE imgui)
+target_link_libraries(legit PRIVATE imgui PUBLIC glm::glm)
