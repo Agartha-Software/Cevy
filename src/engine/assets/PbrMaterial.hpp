@@ -73,6 +73,24 @@ class PbrMaterial {
     return *this;
   }
 
+  PbrMaterial(const PbrMaterial &other) : PbrMaterial() { *this = other; };
+
+  PbrMaterial &operator=(const PbrMaterial &other) {
+    this->emit = other.emit;
+    this->ambient = other.ambient;
+    this->specular_tint = other.specular_tint;
+    this->roughness = other.roughness;
+    this->diffuse = other.diffuse;
+
+    this->shader = other.shader;
+
+    this->diffuse_texture = other.diffuse_texture;
+    this->specular_texture = other.specular_texture;
+    this->emission_texture = other.emission_texture;
+    this->normal_texture = other.normal_texture;
+    return *this;
+  }
+
   static PbrMaterial gold();
   static PbrMaterial from_tinyobj(const tinyobj::material_t &material);
 
