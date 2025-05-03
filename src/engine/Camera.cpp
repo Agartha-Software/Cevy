@@ -31,7 +31,7 @@ void update_camera(cevy::ecs::Query<cevy::engine::Camera, option<cevy::engine::T
                    cevy::ecs::Resource<cevy::engine::Window> window) {
   for (auto [cam, opt_target, opt_transform] : cams) {
     if (opt_transform) {
-      auto &tm = opt_transform.value();
+      const auto &tm = opt_transform.value().get_world();
       // cam.view = glm::mat4(tm);
       cam.view = glm::inverse(glm::mat4(tm));
     }
