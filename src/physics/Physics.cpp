@@ -7,6 +7,8 @@
 
 #include "Physics.hpp"
 #include "App.hpp"
+#include "ConstraintServer.hpp"
+#include "Constraints.hpp"
 #include "Spring.hpp"
 #include "Transform.hpp"
 #include <chrono>
@@ -16,11 +18,15 @@ void cevy::physics::PhysicsPlugin::build(cevy::ecs::App &app) {
   app.init_component<cevy::physics::RigidBody>();
   app.init_component<cevy::physics::Collider>();
   app.init_component<cevy::physics::Spring>();
+  app.init_component<cevy::physics::Rope>();
   app.init_resource<cevy::physics::Gravity>();
   app.init_resource<cevy::physics::RigidBodyWorld>();
+  app.init_resource<cevy::physics::ConstraintServer>();
   app.add_systems<core_stage::PreUpdate>(Gravity::system);
   app.add_systems<core_stage::PostUpdate>(RigidBody::system);
   app.add_systems<core_stage::PostUpdate>(Spring::system);
+  app.add_systems<core_stage::PostUpdate>(Rope::system);
+  app.add_systems<core_stage::PostUpdate>(ConstraintServer::system);
   app.add_systems<core_stage::PostUpdate>(RigidBodyWorld::system);
 }
 
