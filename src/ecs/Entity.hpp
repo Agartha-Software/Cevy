@@ -7,9 +7,10 @@
 
 #pragma once
 
-#include "ecs.hpp"
-
+#include <functional> // std::hash
 #include <cstddef>
+
+#include "ecs.hpp"
 
 class cevy::ecs::Entity {
   private:
@@ -28,3 +29,14 @@ class cevy::ecs::Entity {
   operator std::size_t &();
   operator std::size_t() const;
 };
+
+namespace std {
+  template<>
+  struct hash<cevy::ecs::Entity> {
+    // hash() noexcept {};
+    // ~hash() noexcept {};
+    std::size_t operator()(const cevy::ecs::Entity& e) const noexcept {
+      return std::hash<size_t>{}(e);
+    }
+  };
+}
