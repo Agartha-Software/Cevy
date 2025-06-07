@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "Velocity.hpp"
+#include "Motion.hpp"
 #include "collision/Collider.hpp"
 #include <cmath>
 #include <glm/geometric.hpp>
@@ -26,7 +26,7 @@ class RigidBody {
     // private:
     float iMass = 1; /// inverse of kilogram mass : kg⁻¹
     public:
-    glm::vec3 acceleration = {0, 0, 0}; /// : (m/s²)ds : additive m/s;
+    glm::vec3 acceleration = {0, 0, 0}; /// : (m/s²)ds : additive m/s as an impulse;
     // bool animated = false;
     // bool passive = false;
 
@@ -86,6 +86,6 @@ class RigidBody {
     }
 
     protected:
-    static void system(ecs::Query<ecs::Entity, RigidBody, const Collider, engine::Transform, option<engine::TransformVelocity>> query);
+    static void system(ecs::Query<ecs::Entity, RigidBody, const Collider, engine::Transform, option<engine::Motion>> query);
   };
 }

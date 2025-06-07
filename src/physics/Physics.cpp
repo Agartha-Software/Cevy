@@ -20,8 +20,8 @@ void cevy::physics::PhysicsPlugin::build(cevy::ecs::App &app) {
   app.init_resource<cevy::physics::RigidBodyWorld>();
   app.add_systems<core_stage::PreUpdate>(Gravity::system);
   app.add_systems<core_stage::PostUpdate>(RigidBody::system);
-  app.add_systems<core_stage::PostUpdate>(RigidBodyWorld::system);
   app.add_systems<core_stage::PostUpdate>(Spring::system);
+  app.add_systems<core_stage::PostUpdate>(RigidBodyWorld::system);
 }
 
 void cevy::physics::Gravity::system(Query<RigidBody> query, Resource<Time> time,
@@ -40,7 +40,7 @@ void cevy::physics::Gravity::system(Query<RigidBody> query, Resource<Time> time,
  */
 void cevy::physics::RigidBody::system(
     ecs::Query<Entity, RigidBody, const Collider, engine::Transform,
-               option<engine::TransformVelocity>>
+               option<engine::Motion>>
         query) {
   for (auto [a, body_a, collider_a, transform_a, motion_a] : query) {
     if (!collider_a.layers)
@@ -49,8 +49,8 @@ void cevy::physics::RigidBody::system(
       if (a >= b || (body_a.iMass == 0 && body_b.iMass == 0) ||
           !(collider_a.layers & collider_b.layers))
         continue;
-      auto vel_a = motion_a.has_value() ? motion_a->position : glm::vec3(0, 0, 0);
-      auto vel_b = motion_b.has_value() ? motion_b->position : glm::vec3(0, 0, 0);
+      auto vel_a = motion_a.has_value() ? motion_a->linear : glm::vec3(0, 0, 0);
+      auto vel_b = motion_b.has_value() ? motion_b->linear : glm::vec3(0, 0, 0);
       auto vel_d = vel_b - vel_a;
 
       const glm::mat4 &tm_a = transform_a;
@@ -71,23 +71,30 @@ void cevy::physics::RigidBody::system(
       transform_b.position -=
           (conservation_b)*glm::normalize(energy.direction) * energy.intersection;
       if (motion_a) {
-        motion_a->position += energy.direction * (restitution * conservation_a);
+        motion_a->linear += energy.direction * (restitution * conservation_a);
       };
       if (motion_b) {
-        motion_b->position -= energy.direction * (restitution * conservation_b);
+        motion_b->linear -= energy.direction * (restitution * conservation_b);
       };
     }
   }
 }
 
 void cevy::physics::RigidBodyWorld::system(
-    Query<RigidBody, engine::TransformVelocity, engine::Transform, option<Collider>> query,
+    Query<RigidBody, option<engine::Motion>, engine::Transform, option<Collider>> query,
     Resource<Time> time, Resource<RigidBodyWorld> world) {
+  for (auto [body, motion, transform, _collider] : query) {
+    if (motion && !motion->animated) {
+      transform.position += 0.5f * body.acceleration * float(time->delta_seconds());
+      motion->linear += body.acceleration;
+    }
+    body.acceleration = glm::vec3(0);
+  }
   if (world->dragDensity != 0) {
-    for (auto [body, velocity, transform, o_collider] : query) {
-      if (body.iMass != 0 && o_collider) {
+    for (auto [body, o_velocity, transform, o_collider] : query) {
+      if (body.iMass != 0 && o_collider && o_velocity) {
 
-        auto v = velocity.position;
+        auto v = o_velocity->linear;
         auto _v_ = glm::length(v);
         auto k = o_collider->dragCoefficient * world->dragDensity * o_collider->area *
                  glm::dot(transform.scale, transform.scale);
@@ -95,24 +102,15 @@ void cevy::physics::RigidBodyWorld::system(
 
         auto dv_dt = v * _v_ * k * i_m;
 
-        if (!velocity.animated) {
-          velocity.position /= 1 + k * i_m * _v_ * float(time->delta_seconds());
+        auto kw = o_collider->angularDragCoefficient * world->dragDensity * o_collider->area *
+        glm::dot(transform.scale, transform.scale * transform.scale);
+
+        if (!o_velocity->animated) {
+          o_velocity->linear /= 1 + 2 * k * i_m * _v_ * float(time->delta_seconds());
+          o_velocity->angular.w /= 1 + 2 * kw * i_m * o_velocity->angular.w * float(time->delta_seconds());
         }
 
-
-
-        // body.acceleration -= velocity.position * glm::length(velocity.position) *
-        //                      world->dragDensity * o_collider->dragCoefficient * o_collider->area *
-        //                      glm::dot(transform.scale, transform.scale) *
-        //                      float(time->delta_seconds()) /* * float(time->delta_seconds())  */ *
-        //                      body.iMass / 2.f;
       }
     }
-  }
-  for (auto [body, motion, transform, _collider] : query) {
-    if (!motion.animated) {
-      motion.position += body.acceleration;
-    }
-    body.acceleration = glm::vec3(0);
   }
 }

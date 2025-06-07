@@ -21,7 +21,7 @@
 #include "Stage.hpp"
 #include "Target.hpp"
 #include "Transform.hpp"
-#include "Velocity.hpp"
+#include "Motion.hpp"
 #include "Window.hpp"
 #include "ecs.hpp"
 #include "engine.hpp"
@@ -52,7 +52,7 @@ class Engine : public cevy::ecs::Plugin {
     app.init_component<cevy::engine::Line>();
     app.init_component<cevy::engine::Parent>();
     app.init_component<cevy::engine::Transform>();
-    app.init_component<cevy::engine::TransformVelocity>();
+    app.init_component<cevy::engine::Motion>();
     app.init_component<cevy::engine::PointLight>();
     app.init_component<cevy::engine::SpotLight>();
     app.init_component<cevy::engine::SunLight>();
@@ -64,7 +64,7 @@ class Engine : public cevy::ecs::Plugin {
     app.add_plugins(typename Windower::Plugin());
     app.add_systems<cevy::engine::PreRenderStage>(update_camera);
     app.add_systems<cevy::ecs::core_stage::PostUpdate>(Transform::children_system);
-    app.add_systems<ecs::core_stage::PostUpdate>(TransformVelocity::system);
+    app.add_systems<ecs::core_stage::PostUpdate>(Motion::system);
   };
 };
 } // namespace cevy::engine
