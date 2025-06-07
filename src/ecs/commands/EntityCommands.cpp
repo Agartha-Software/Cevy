@@ -17,6 +17,6 @@ cevy::ecs::EntityCommands cevy::ecs::Commands::spawn_empty() {
 
 cevy::ecs::Entity cevy::ecs::EntityCommands::id() { return _entity; }
 
-void cevy::ecs::EntityCommands::despawn() { _commands.despawn(_entity); }
+void cevy::ecs::EntityCommands::despawn() { _commands.get().despawn(_entity); }
 
 cevy::ecs::Commands &cevy::ecs::EntityCommands::commands() { return _commands; }

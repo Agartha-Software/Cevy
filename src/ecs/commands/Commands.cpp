@@ -7,10 +7,10 @@
 
 #include "Commands.hpp"
 #include "EntityCommands.hpp"
+#include "ecs.hpp"
 
 using cevy::ecs::Commands;
 using cevy::ecs::EntityCommands;
-#include "ecs.hpp"
 
 void cevy::ecs::Commands::add(std::function<void(cevy::ecs::World &w)> &&f) {
   _world_access._command_queue.push(std::forward<decltype(f)>(f));

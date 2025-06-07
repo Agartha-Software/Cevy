@@ -13,7 +13,7 @@
 class cevy::ecs::EntityCommands {
   private:
   cevy::ecs::Entity _entity;
-  cevy::ecs::Commands &_commands;
+  ref<cevy::ecs::Commands> _commands;
 
   friend class cevy::ecs::Commands;
   EntityCommands(cevy::ecs::Commands &commands, cevy::ecs::Entity entity)
@@ -22,14 +22,14 @@ class cevy::ecs::EntityCommands {
   public:
   template <typename... Components>
   cevy::ecs::EntityCommands &insert(const Components &...c) {
-    _commands.add(
+    _commands.get().add(
         [c..., e = _entity](cevy::ecs::World &w) { (w.add_component(e, c), ...); });
     return *this;
   }
 
   template <typename... Components>
   cevy::ecs::EntityCommands &remove() {
-    _commands.add(
+    _commands.get().add(
         [e = _entity](cevy::ecs::World &w) { (w.remove_component<Components>(e), ...); });
     return *this;
   }
