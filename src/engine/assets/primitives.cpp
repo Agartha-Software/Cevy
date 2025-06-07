@@ -13,6 +13,7 @@
 
 namespace cevy::engine::primitives {
 Mesh cube(float size) {
+  size /= 2;
   const std::vector<glm::vec3> vertices = {
       {-size, -size, -size}, {-size, -size, +size}, {-size, +size, +size}, {-size, +size, -size},
       {+size, +size, +size}, {+size, -size, +size}, {+size, -size, -size}, {+size, +size, -size},
