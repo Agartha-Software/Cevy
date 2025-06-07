@@ -10,11 +10,12 @@
 #define GLM_FORCE_SWIZZLE
 #define GLM_ENABLE_EXPERIMENTAL
 
+#include <algorithm>
+#include <cmath>
+#include <iostream>
+#include <numeric>
 #include <stdexcept>
 #include <type_traits>
-#include <cmath>
-#include <algorithm>
-#include <memory>
 #include <utility>
 #include <vector>
 
@@ -22,6 +23,8 @@
 #include <glm/geometric.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/matrix.hpp>
+
+#include "cevy.hpp"
 
 namespace cevy::physics {
 namespace detail {
@@ -52,7 +55,7 @@ struct Collision {
   glm::vec3 location;
   float intersection;
   bool hit;
-  static constexpr Collision NoHit() { return Collision{{}, {}, 0, false};};
+  static constexpr Collision NoHit() { return Collision {{}, {}, 0, false}; };
   Collision negate() const { return {-direction, location, intersection, hit}; }
 };
 struct Ray {
@@ -77,8 +80,7 @@ struct Ray {
   }
 
   template <typename T_it>
-  static std::enable_if_t<std::is_same_v<decltype(std::get<Collision>(*T_it())), Collision&>,
-  T_it>
+  static std::enable_if_t<std::is_same_v<decltype(std::get<Collision>(*T_it())), Collision &>, T_it>
   filter(const Ray &self, const T_it &begin, const T_it &end) {
     float best_dist = INFINITY;
     T_it best = end;
@@ -99,16 +101,22 @@ class Shape {
   public:
   enum class ShapeE {
     Sphere,
-    Plane,
+    Quad,
+    Box,
+    // Tri,
+    // Mesh,
     // BoundedPlane,
     // Cube,
   };
 
   // private:
   glm::vec4 data[4];
-  float dragCoefficient = 2; /// dimensionless c_d (defaulted to a cube) : ()
+  std::vector<glm::vec4> bounds;
+  float dragCoefficient = 2;        /// dimensionless c_d (defaulted to a cube) : ()
+  float angularDragCoefficient = 2; /// NPB defaulted to an assumed cube : ()
   float area;
   ShapeE shape;
+
   protected:
   Shape() {};
 
@@ -117,57 +125,114 @@ class Shape {
     Shape shape;
     shape.shape = ShapeE::Sphere;
     shape.dragCoefficient = 0.5;
+    shape.angularDragCoefficient = 0.5;
     shape.area = glm::pi<float>() * radius * radius;
     shape.data[0] = {position, 1};
     shape.data[1] = {glm::vec3(radius), 0};
     return shape;
   }
 
-  static Shape Plane(glm::vec3 position, glm::vec3 normal) {
+  // static Shape Plane(glm::vec3 position, glm::vec3 normal) {
+  //   Shape shape;
+  //   shape.shape = ShapeE::Quad;
+  //   shape.area = 1;
+  //   shape.data[0] = {position, 1};
+  //   shape.data[1] = {normal, 0};
+  //   return shape;
+  // }
+
+  static Shape Quad(glm::vec3 position, glm::vec3 tangeant, glm::vec3 cotangeant) {
     Shape shape;
-    shape.shape = ShapeE::Plane;
+    shape.shape = ShapeE::Quad;
     shape.area = 1;
-    shape.data[0] = {position, 1};
-    shape.data[1] = {normal, 0};
+    shape.data[0] = {position, 1};                                         // center position
+    shape.data[1] = {glm::normalize(glm::cross(tangeant, cotangeant)), 0}; // normal
+    float tan = glm::length(tangeant);
+    shape.data[2] = {tangeant / tan, tan}; // tangeant
+    float cotan = glm::length(cotangeant);
+    shape.data[3] = {cotangeant / cotan, cotan}; // tangeant
+    return shape;
+  }
+
+  static Shape Box(glm::vec3 position, glm::vec3 size,
+                   glm::quat orientation = glm::quat({0, 0, 0})) {
+    Shape shape;
+    shape.shape = ShapeE::Box;
+    shape.area = size.x * size.y * size.z;
+    shape.data[0] = {position, 1}; // center position
+    shape.data[1] = {orientation * glm::vec3(size.x / 2, 0, 0), 0};
+    shape.data[2] = {orientation * glm::vec3(0, size.y / 2, 0), 0};
+    shape.data[3] = {orientation * glm::vec3(0, 0, size.z / 2), 0};
     return shape;
   }
 
   bool isSphere() const { return this->shape == ShapeE::Sphere; }
 
-  bool isPlane() const { return this->shape == ShapeE::Plane; }
+  // bool isPlane() const { return this->shape == ShapeE::Plane; }
 
-  Collision raycast(const glm::mat4 &tm, const Ray& ray) const {
+  bool isQuad() const { return this->shape == ShapeE::Quad; }
+
+  bool isBox() const { return this->shape == ShapeE::Box; }
+
+  Collision raycast(const glm::mat4 &tm, const Ray &ray) const {
     switch (this->shape) {
     case ShapeE::Sphere:
       return Shape::raycast_sphere(this->data, tm, ray);
-    case ShapeE::Plane:
-      return Shape::raycast_plane(this->data, tm, ray);
+    // case ShapeE::Plane:
+    //   return Shape::raycast_plane(this->data, tm, ray);
+    case ShapeE::Quad:
+      return Shape::raycast_quad(this->data, tm, ray);
+    case ShapeE::Box:
+      return Shape::raycast_sphere(this->data, tm, ray);
     default:
-    throw std::runtime_error("Shape::raycast: unreachable");
+      throw std::runtime_error("Shape::raycast: unreachable");
     }
     throw std::runtime_error("Shape::raycast: unreachable");
   }
 
-  static Collision collide(const Shape &a, glm::mat4 tm_a, const Shape &b, glm::mat4 tm_b) {
+  static Collision collide(const Shape &left, glm::mat4 tm_left, const Shape &right,
+                           glm::mat4 tm_right) {
+    const Shape &a = (int)left.shape <= (int)right.shape ? left : right;
+    const Shape &b = (int)left.shape <= (int)right.shape ? right : left;
+    const glm::mat4 tm_a = (int)left.shape <= (int)right.shape ? tm_left : tm_right;
+    const glm::mat4 tm_b = (int)left.shape <= (int)right.shape ? tm_right : tm_left;
+
     switch (a.shape) {
     case ShapeE::Sphere:
       switch (b.shape) {
       case ShapeE::Sphere:
         return Shape::collide_sphere_sphere(a.data, tm_a, b.data, tm_b);
-      case ShapeE::Plane:
-        return Shape::collide_sphere_plane(a.data, tm_a, b.data, tm_b);
+      // case ShapeE::Plane:
+      //   return Shape::collide_sphere_plane(a.data, tm_a, b.data, tm_b);
+      case ShapeE::Quad:
+        return Shape::collide_sphere_quad(a.data, tm_a, b.data, tm_b);
+      case ShapeE::Box:
+        return Collision::NoHit(); // !todo
+        // return Shape::collide_sphere_box(a.data, tm_a, b.data, tm_b);
       default:
         throw std::runtime_error("Shape::collide: unreachable");
       }
-    case ShapeE::Plane:
+    // case ShapeE::Plane:
+    //   switch (b.shape) {
+    //   case ShapeE::Plane:
+    //     return {{}, {}, 0, false};
+    //   case ShapeE::Quad:
+    //     return Shape::collide_plane_quad(a.data, tm_a, b.data, tm_b);
+    //   default:
+    //     throw std::runtime_error("Shape::collide: unreachable");
+    //   }
+    case ShapeE::Quad:
       switch (b.shape) {
-      case ShapeE::Sphere:
-        return Shape::collide_sphere_plane(b.data, tm_b, a.data, tm_a);
-      case ShapeE::Plane:
-        return {{}, {}, 0, false};
+      case ShapeE::Quad:
+        return Collision::NoHit(); // !todo
+        // return Shape::collide_quad_quad(a.data, tm_a, b.data, tm_b);
+      case ShapeE::Box:
+        return Shape::collide_quad_box(a.data, tm_a, b.data, tm_b);
       default:
         throw std::runtime_error("Shape::collide: unreachable");
       }
+    case ShapeE::Box:
+      return Shape::collide_box_box(a.data, tm_a, b.data, tm_b);
     default:
       throw std::runtime_error("Shape::collide: unreachable");
     }
@@ -175,11 +240,14 @@ class Shape {
   }
 
   float drag() const { return this->dragCoefficient; }
+  float angularDrag() const { return this->angularDragCoefficient; }
+
+  glm::vec3 position() const { return this->data[0].xyz(); }
 
   private:
   static Collision raycast_sphere(const glm::vec4 (&data)[4], const glm::mat4 &tm, const Ray &ray) {
     auto i_tm = glm::inverse(tm);
-    auto ray_origin = ((i_tm * glm::vec4(ray.origin, 1)) - data[0]).xyz() ;
+    auto ray_origin = ((i_tm * glm::vec4(ray.origin, 1)) - data[0]).xyz();
     auto ray_direction = (i_tm * glm::vec4(ray.direction, 0)).xyz();
 
     glm::vec3 L = ray_origin;
@@ -204,52 +272,33 @@ class Shape {
     return Collision {normal, location, 0, true};
   }
 
-  static Collision raycast_plane_old(const glm::vec4 (&data)[4], const glm::mat4 &tm, const Ray &ray) {
-    auto i_tm = glm::inverse(tm);
-    auto ray_origin = ((i_tm * glm::vec4(ray.origin, 1)) - data[0]).xyz() ;
-    auto ray_direction = (i_tm * glm::vec4(ray.direction, 0)).xyz();
-
-    auto plane_normal = (data[1]).xyz();
-    // std::cout << cevy::reflect(ray_direction) << std::endl;
-    // Assuming vectors are all normalized
-    float denom = glm::dot(ray_direction, -plane_normal);
-    // std::cout << cevy::reflect(denom) << std::endl;
-    if (std::abs(denom) < 1e-6) {
-      return Collision::NoHit();
-    }
-    // std::cout << cevy::reflect(t) << std::endl;
-    float t = -glm::dot(ray_origin, -plane_normal) / std::abs(denom);
-
-
-    if (t <= 0) {
-      return Collision::NoHit();
-    }
-
-    glm::vec3 location = tm * glm::vec4(ray_direction * t + ray_origin, 1);
-    return Collision {plane_normal * detail::signum<float>(denom), location, 0, true};
-  }
-
-  static Collision raycast_plane(const glm::vec4 (&data)[4], const glm::mat4 &tm, const Ray &ray) {
+  static Collision raycast_quad(const glm::vec4 (&data)[4], const glm::mat4 &tm, const Ray &ray) {
 
     auto plane_pos = (tm * data[0]).xyz();
-    auto plane_normal = (tm * data[1]).xyz();
-    // std::cout << cevy::reflect(ray_direction) << std::endl;
-    // Assuming vectors are all normalized
-    float denom = glm::dot(ray.direction, -plane_normal);
-    // std::cout << cevy::reflect(denom) << std::endl;
+    glm::vec3 tan = tm * glm::vec4(data[2].xyz(), 0);
+    glm::vec3 cotan = tm * glm::vec4(data[3].xyz(), 0);
+    auto normal = glm::cross(tan, cotan);
+
+    float denom = glm::dot(ray.direction, -normal);
+
     if (std::abs(denom) < 1e-6) {
       return Collision::NoHit();
     }
     // std::cout << cevy::reflect(t) << std::endl;
-    float t = glm::dot(plane_pos - ray.origin, -plane_normal) / denom;
-
+    float t = glm::dot(plane_pos - ray.origin, -normal) / denom;
 
     if (t <= 0) {
       return Collision::NoHit();
     }
 
     glm::vec3 location = ray.direction * t + ray.origin;
-    return Collision {plane_normal * detail::signum<float>(denom), location, 0, true};
+
+    glm::vec3 center = tm * data[0];
+    if (!(std::abs(glm::dot(location - center, tan)) < data[2].w) ||
+        !(std::abs(glm::dot(location - center, cotan)) < data[3].w)) {
+      return Collision::NoHit();
+    }
+    return Collision {normal * detail::signum<float>(denom), location, 0, true};
   }
 
   static Collision collide_sphere_sphere(const glm::vec4 (&data_a)[4], const glm::mat4 &tm_a,
@@ -267,49 +316,372 @@ class Shape {
     return {{}, {}, 0, false};
   }
 
-  static Collision collide_sphere_plane(const glm::vec4 (&data_a)[4], const glm::mat4 &tm_a,
-                                        const glm::vec4 (&data_b)[4], const glm::mat4 &tm_b) {
-      const glm::vec3 p_center = (tm_b * data_b[0]).xyz();
-      const glm::vec3 p_normal = (tm_b * data_b[1]).xyz();
-      const glm::vec3 s_center = (tm_a * data_a[0]).xyz();
-      const glm::vec3 s_size = (tm_a * data_a[1]).xyz();
-      const auto distance = dot(p_center - s_center, -p_normal);
-      const auto radius = std::abs(dot(glm::abs(p_normal), s_size));
-      auto intersection = std::abs(distance) - radius;
-      if (intersection <= 0) {
-        auto direction = p_normal * detail::signum<float>(distance);
-        auto location = s_center + direction * s_size.x;
-        return {direction, location, -intersection, true};
-      } else {
-        return Collision::NoHit();
+  // static Collision collide_sphere_plane(const glm::vec4 (&data_a)[4], const glm::mat4 &tm_a,
+  //                                       const glm::vec4 (&data_b)[4], const glm::mat4 &tm_b) {
+  //   const glm::vec3 p_center = (tm_b * data_b[0]).xyz();
+  //   const glm::vec3 p_normal = (tm_b * data_b[1]).xyz();
+  //   const glm::vec3 s_center = (tm_a * data_a[0]).xyz();
+  //   const glm::vec3 s_size = (tm_a * data_a[1]).xyz();
+  //   const auto distance = dot(p_center - s_center, -p_normal);
+  //   const auto radius = std::abs(dot(glm::abs(p_normal), s_size));
+  //   auto intersection = std::abs(distance) - radius;
+  //   if (intersection <= 0) {
+  //     auto direction = p_normal * detail::signum<float>(distance);
+  //     auto location = s_center + direction * s_size.x;
+  //     return {direction, location, -intersection, true};
+  //   } else {
+  //     return Collision::NoHit();
+  //   }
+  // }
+
+  private:
+  static Collision collide_sphere_edge(const glm::vec4 (&data)[4], const glm::mat4 &tm,
+                                       const Ray &ray) {
+    auto i_tm = glm::inverse(tm);
+    auto ray_length = glm::length(ray.direction);
+    auto ray_origin = ((i_tm * glm::vec4(ray.origin, 1)) - data[0]).xyz();
+    auto ray_direction = (i_tm * glm::vec4(ray.direction / ray_length, 0)).xyz();
+
+    glm::vec3 L = ray_origin;
+    float a = glm::dot(ray_direction, ray_direction);
+    float b = 2 * glm::dot(ray_direction, L);
+    float c = glm::dot(L, L) - data[1].x * data[1].x;
+    float t0, t1;
+    if (!detail::solve_quadratic(a, b, c, t0, t1))
+      return Collision::NoHit();
+
+    glm::vec4 location;
+    glm::vec3 normal;
+    location = tm * glm::vec4(ray_direction * t0 + ray_origin, 1) +
+               tm * glm::vec4(ray_direction * t1 + ray_origin, 1);
+    location /= 2;
+    normal = glm::normalize(i_tm * location);
+    return Collision {normal, location, 0, true};
+  }
+
+  // static Collision collide_plane_edge(const glm::vec4 (&data)[4], const glm::mat4 &tm, const Ray
+  // &ray) {
+  //   auto ray_length = glm::length(ray.direction);
+  //   auto ray_direction = ray.direction / ray_length;
+
+  //   auto plane_pos = (tm * data[0]).xyz();
+  //   auto plane_normal = (tm * data[1]).xyz();
+  //   // std::cout << cevy::reflect(ray_direction) << std::endl;
+  //   // Assuming vectors are all normalized
+  //   float denom = glm::dot(ray_direction, -plane_normal);
+  //   // std::cout << cevy::reflect(denom) << std::endl;
+  //   if (std::abs(denom) < 1e-6) {
+  //     return Collision::NoHit();
+  //   }
+  //   // std::cout << cevy::reflect(t) << std::endl;
+  //   float t = glm::dot(plane_pos - ray.origin, -plane_normal) / denom;
+
+  //   if (t <= 0 || t >= ray_length) {
+  //     return Collision::NoHit();
+  //   }
+
+  //   glm::vec3 location = ray_direction * t + ray.origin;
+  //   return Collision {plane_normal * detail::signum<float>(denom), location, 0, true};
+  // }
+
+  public:
+  static Collision collide_sphere_quad(const glm::vec4 (&data_a)[4], const glm::mat4 &tm_a,
+                                       const glm::vec4 (&data_b)[4], const glm::mat4 &tm_b) {
+    const glm::vec3 s_center = (tm_a * data_a[0]).xyz();
+    const glm::vec3 s_size = (tm_a * data_a[1]).xyz();
+
+    glm::vec3 tan = tm_b * glm::vec4(data_b[2].xyz(), 0);
+    float tan_w = data_b[2].w;
+    glm::vec3 cotan = tm_b * glm::vec4(data_b[3].xyz(), 0);
+    float cotan_w = data_b[2].w;
+    const glm::vec3 q_center = (tm_b * data_b[0]).xyz();
+    const glm::vec3 q_normal = glm::cross(tan, cotan);
+    const auto distance = dot(q_center - s_center, -q_normal);
+    const auto radius = std::abs(dot(glm::abs(q_normal), s_size));
+    auto intersection = std::abs(distance) - radius;
+    if (intersection > 0) {
+      // std::cout << "NoHit: !Intersection" << std::endl;
+      return Collision::NoHit();
+    }
+    auto direction = q_normal * detail::signum<float>(distance);
+    auto location = s_center + direction * s_size.x;
+
+    float oob_tan = glm::dot(location - q_center, tan);
+    oob_tan = std::max(std::abs(oob_tan) - tan_w, 0.f) * detail::signum<float>(oob_tan);
+    float oob_cotan = glm::dot(location - q_center, cotan);
+    oob_cotan = std::max(std::abs(oob_cotan) - cotan_w, 0.f) * detail::signum<float>(oob_cotan);
+
+    if (oob_cotan == 0 && oob_tan == 0) {
+      return {direction, location, -intersection, true};
+    } else {
+      // std::cout << "NoHitYet: OOB" << std::endl;
+      if (oob_tan > 0) {
+        Collision pos_tan = collide_sphere_edge(
+            data_a, tm_a, Ray {q_center + tan * tan_w * 0.5f - cotan * cotan_w * 0.5f, cotan});
+        if (pos_tan.hit)
+          return pos_tan;
       }
+      if (oob_tan < 0) {
+        Collision pos_tan = collide_sphere_edge(
+            data_a, tm_a, Ray {q_center - tan * tan_w * 0.5f - cotan * cotan_w * 0.5f, cotan});
+        if (pos_tan.hit)
+          return pos_tan;
+      }
+      if (oob_cotan > 0) {
+        Collision pos_cotan = collide_sphere_edge(
+            data_a, tm_a, Ray {q_center + cotan * cotan_w * 0.5f - tan * tan_w * 0.5f, tan});
+        if (pos_cotan.hit)
+          return pos_cotan;
+      }
+      if (oob_cotan < 0) {
+        Collision pos_cotan = collide_sphere_edge(
+            data_a, tm_a, Ray {q_center - cotan * cotan_w * 0.5f - tan * tan_w * 0.5f, tan});
+        if (pos_cotan.hit)
+          return pos_cotan;
+      }
+    }
+    return Collision::NoHit();
+  }
+
+  // static Collision collide_plane_quad(const glm::vec4 (&data_a)[4], const glm::mat4 &tm_a,
+  //                                     const glm::vec4 (&data_b)[4], const glm::mat4 &tm_b) {
+  //   std::vector<Collision> collisions;
+
+  //   const glm::vec3 q_center = (tm_b * data_b[0]).xyz();
+
+  //   glm::vec3 tan = tm_b * glm::vec4(data_b[2].xyz(), 0);
+  //   float tan_w = data_b[2].w;
+  //   glm::vec3 cotan = tm_b * glm::vec4(data_b[3].xyz(), 0);
+  //   float cotan_w = data_b[2].w;
+
+  //   {
+  //     Collision pos_tan = collide_plane_edge(
+  //         data_a, tm_a,
+  //         Ray {q_center + tan * tan_w * 0.5f - cotan * cotan_w * 0.5f, cotan});
+  //     if (pos_tan.hit)
+  //       collisions.push_back(pos_tan);
+  //   }
+  //   {
+  //     Collision pos_tan = collide_plane_edge(
+  //         data_a, tm_a,
+  //         Ray {q_center - tan * tan_w * 0.5f - cotan * cotan_w * 0.5f, cotan});
+  //     if (pos_tan.hit)
+  //         collisions.push_back(pos_tan);
+  //   }
+  //   {
+  //     Collision pos_cotan = collide_plane_edge(
+  //         data_a, tm_a,
+  //         Ray {q_center + cotan * cotan_w * 0.5f - tan * tan_w * 0.5f, tan});
+  //     if (pos_cotan.hit)
+  //       return pos_cotan;
+  //   }
+  //   {
+  //     Collision pos_cotan = collide_plane_edge(
+  //         data_a, tm_a,
+  //         Ray {q_center - cotan * cotan_w * 0.5f - tan * tan_w * 0.5f, tan});
+  //     if (pos_cotan.hit)
+  //       return pos_cotan;
+  //   }
+  // }
+
+  //   static Collision collide_quad_quad(const glm::vec4 (&data_a)[4], const glm::mat4 &tm_a,
+  //                                     const glm::vec4 (&data_b)[4], const glm::mat4 &tm_b) {
+  //   std::vector<Collision> collisions;
+
+  //   const glm::vec3 q_center = (tm_b * data_b[0]).xyz();
+
+  //   glm::vec3 tan = tm_b * glm::vec4(data_b[2].xyz(), 0);
+  //   float tan_w = data_b[2].w;
+  //   glm::vec3 cotan = tm_b * glm::vec4(data_b[3].xyz(), 0);
+  //   float cotan_w = data_b[2].w;
+
+  //   {
+  //     Collision pos_tan = collide_plane_edge(
+  //         data_a, tm_a,
+  //         Ray {q_center + tan * tan_w * 0.5f - cotan * cotan_w * 0.5f, cotan});
+  //     if (pos_tan.hit)
+  //       collisions.push_back(pos_tan);
+  //   }
+  //   {
+  //     Collision pos_tan = collide_plane_edge(
+  //         data_a, tm_a,
+  //         Ray {q_center - tan * tan_w * 0.5f - cotan * cotan_w * 0.5f, cotan});
+  //     if (pos_tan.hit)
+  //         collisions.push_back(pos_tan);
+  //   }
+  //   {
+  //     Collision pos_cotan = collide_plane_edge(
+  //         data_a, tm_a,
+  //         Ray {q_center + cotan * cotan_w * 0.5f - tan * tan_w * 0.5f, tan});
+  //     if (pos_cotan.hit)
+  //       return pos_cotan;
+  //   }
+  //   {
+  //     Collision pos_cotan = collide_plane_edge(
+  //         data_a, tm_a,
+  //         Ray {q_center - cotan * cotan_w * 0.5f - tan * tan_w * 0.5f, tan});
+  //     if (pos_cotan.hit)
+  //       return pos_cotan;
+  //   }
+  // }
+
+  static Collision collide_quad_box(const glm::vec4 (&data_a)[4], const glm::mat4 &tm_a,
+                                    const glm::vec4 (&data_b)[4], const glm::mat4 &tm_b) {
+    std::vector<glm::vec3> hits_below;
+    std::vector<glm::vec3> hits_above;
+
+    glm::vec3 tan = tm_a * glm::vec4(data_b[2].xyz(), 0);
+    float tan_w = data_b[2].w;
+    glm::vec3 cotan = tm_a * glm::vec4(data_b[3].xyz(), 0);
+    float cotan_w = data_b[2].w;
+    const glm::vec3 q_center = (tm_a * data_b[0]).xyz();
+    const glm::vec3 q_normal = glm::cross(tan, cotan);
+    const glm::vec3 b_center = (tm_b * data_a[0]).xyz();
+    const glm::vec3 b_x = (tm_b * data_a[1]).xyz();
+    const glm::vec3 b_y = (tm_b * data_a[2]).xyz();
+    const glm::vec3 b_z = (tm_b * data_a[3]).xyz();
+
+    {
+      const auto vert = b_center + b_x + b_y + b_z;
+      const auto distance = dot(q_center - vert, q_normal);
+      if (distance < 0)
+        hits_below.push_back(vert);
+      else
+        hits_above.push_back(vert);
+    }
+    {
+      const auto vert = b_center + b_x + b_y - b_z;
+      const auto distance = dot(q_center - vert, q_normal);
+      if (distance < 0)
+        hits_below.push_back(vert);
+      else
+        hits_above.push_back(vert);
+    }
+    {
+      const auto vert = b_center + b_x - b_y + b_z;
+      const auto distance = dot(q_center - vert, q_normal);
+      if (distance < 0)
+        hits_below.push_back(vert);
+      else
+        hits_above.push_back(vert);
+    }
+    {
+      const auto vert = b_center + b_x - b_y - b_z;
+      const auto distance = dot(q_center - vert, q_normal);
+      if (distance < 0)
+        hits_below.push_back(vert);
+      else
+        hits_above.push_back(vert);
+    }
+    {
+      const auto vert = b_center - b_x + b_y + b_z;
+      const auto distance = dot(q_center - vert, q_normal);
+      if (distance < 0)
+        hits_below.push_back(vert);
+      else
+        hits_above.push_back(vert);
+    }
+    {
+      const auto vert = b_center - b_x + b_y - b_z;
+      const auto distance = dot(q_center - vert, q_normal);
+      if (distance < 0)
+        hits_below.push_back(vert);
+      else
+        hits_above.push_back(vert);
+    }
+    {
+      const auto vert = b_center - b_x - b_y + b_z;
+      const auto distance = dot(q_center - vert, q_normal);
+      if (distance < 0)
+        hits_below.push_back(vert);
+      else
+        hits_above.push_back(vert);
+    }
+    {
+      const auto vert = b_center - b_x - b_y - b_z;
+      const auto distance = dot(q_center - vert, q_normal);
+      if (distance < 0)
+        hits_below.push_back(vert);
+      else
+        hits_above.push_back(vert);
+    }
+
+    if (hits_below.size() == 0) {
+      std::cout << "NoHit: NoBelow" << std::endl;
+      return Collision::NoHit();
+    }
+    if (hits_above.size() == 0) {
+      std::cout << "NoHit: NoAbove" << std::endl;
+      return Collision::NoHit();
+    }
+
+    const auto &smaller = hits_above.size() < hits_below.size() ? hits_above : hits_below;
+
+    glm::vec3 hit = std::accumulate(smaller.begin(), smaller.end(), glm::vec3 {});
+    hit /= smaller.size();
+    const auto distance = dot(q_center - hit, -q_normal);
+    std::cout << "Hit: Hit" << cevy::reflect(hits_above) << cevy::reflect(hits_below) << std::endl;
+    return Collision {q_normal, hit, -distance, true};
+  }
+
+  static Collision collide_box_box(const glm::vec4 (&data_a)[4], const glm::mat4 &tm_a,
+                                   const glm::vec4 (&data_b)[4], const glm::mat4 &tm_b) {
+    throw std::runtime_error("todo!");
   }
 };
-// enum CELL_SIZE {
-//   X = 50,
-//   Y = 50,
-//   Z = 50,
-// };
 class Collider {
   private:
   public:
+  struct primitives {
+    static Collider Sphere(float radius, glm::vec3 position = {0, 0, 0}) {
+      return Collider(Shape::Sphere(position, radius));
+    };
+
+    static Collider Quad(glm::vec2 size, glm::quat orientation = glm::quat({0, 0, 0}),
+                         glm::vec3 position = {0, 0, 0}) {
+      return Collider(Shape::Quad(position, orientation * glm::vec3(size.x, 0, 0),
+                                  orientation * glm::vec3(0, size.y, 0)));
+    };
+    // static Collider Cube(glm::vec3 sides = {1, 1, 1}, glm::vec3 position = {0, 0, 0},
+    //                      glm::quat orientation = glm::quat({0, 0, 0})) {
+    //   glm::vec3 x = orientation * glm::vec3(sides.x, 0, 0);
+    //   glm::vec3 y = orientation * glm::vec3(0, sides.y, 0);
+    //   glm::vec3 z = orientation * glm::vec3(0, 0, sides.z);
+    //   return Collider(Shape::Quad(position + x / 2.f, y, z), Shape::Quad(position - x / 2.f, -y,
+    //   z),
+
+    //                   Shape::Quad(position + y / 2.f, z, y), Shape::Quad(position - y / 2.f, -z,
+    //                   y),
+
+    //                   Shape::Quad(position + z / 2.f, y, x),
+    //                   Shape::Quad(position + z / 2.f, -y, x));
+    // };
+    static Collider Box(glm::vec3 size, glm::quat orientation = glm::quat({0, 0, 0}),
+                        glm::vec3 position = {0, 0, 0}) {
+      return Collider(Shape::Box(position, size, orientation));
+    };
+  };
+
   std::vector<Shape> shapes;
   uint32_t layers = -1;
-  float dragCoefficient = 2; /// dimensionless c_d (defaulted to a cube) : ()
-  float area = 1; /// projected area : m²
+  float dragCoefficient = 2;        /// dimensionless c_d (defaulted to a cube) : ()
+  float angularDragCoefficient = 2; /// dimensionless NPB (defaulted to an assumed cube) : ()
+  float area = 1;                   /// projected area : m²
 
   Collider();
-  template<typename ...S>
-  Collider(uint32_t layers, S&& ...shapes) : Collider(std::forward<S>(shapes)...) {
+  template <typename... S>
+  Collider(uint32_t layers, S &&...shapes) : Collider(std::forward<S>(shapes)...) {
     this->layers = layers;
   };
-  template<typename ...S, class = std::enable_if_t<std::conjunction_v<std::is_same<S, Shape>...>>>
-  Collider(S ...shapes) {
+  template <typename... S, class = std::enable_if_t<std::conjunction_v<std::is_same<S, Shape>...>>>
+  Collider(S... shapes) {
     this->dragCoefficient = (shapes.drag() + ...);
+    this->angularDragCoefficient = (shapes.angularDrag() + ...);
+    this->angularDragCoefficient += ((shapes.drag() * glm::length(shapes.position())) + ...);
     this->shapes = {std::forward<S>(shapes)...};
   };
 
-  Collision raycast(const glm::mat4 &tm, const Ray& ray) {
+  Collision raycast(const glm::mat4 &tm, const Ray &ray) {
     float best_dist = INFINITY;
     Collision best = Collision::NoHit();
     for (auto shape : this->shapes) {
@@ -341,6 +713,7 @@ class Collider {
   }
 
   float drag() const { return this->dragCoefficient; }
+  float angularDrag() const { return this->angularDragCoefficient; }
 };
 
 // using entity =

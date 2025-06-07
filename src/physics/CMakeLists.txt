@@ -13,5 +13,6 @@ add_library(physics
 # add_subdirectory(collision)
 
 target_include_directories(physics PUBLIC .)
+target_include_directories(physics PUBLIC collision)
 
 target_link_libraries(physics PUBLIC ecs engine)
