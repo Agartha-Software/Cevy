@@ -2,11 +2,15 @@ cmake_minimum_required(VERSION 3.10)
 
 set(CMAKE_CXX_STANDARD 17)
 
-project(physics_test LANGUAGES CXX VERSION 0.1)
+project(basic_test LANGUAGES CXX VERSION 0.1)
 set(Cevy_VERSION 0.1)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/lib")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+if (!USE_WAYLAND)
+    add_definitions(-DGLFW_HINT_X11=1)
+endif()
 
 if (WIN32)
     set(CMAKE_CXX_STANDARD_LIBRARIES "-static-libgcc -static-libstdc++ -lwsock32 -lws2_32 ${CMAKE_CXX_STANDARD_LIBRARIES}")
@@ -15,18 +19,13 @@ endif(WIN32)
 
 add_subdirectory(../../ Cevy) # //Cevy
 
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3 -ggdb -fno-exceptions")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3 -ggdb")
 
-add_executable(physics_test
-    # tug.cpp
-    # constraints.cpp
-    physics.cpp
-    # terminal_velocity.cpp
-    )
+add_executable(basic basic.cpp)
 
-target_link_libraries(physics_test PUBLIC cevy)
+target_link_libraries(basic PUBLIC cevy)
 
-get_cevy_engine_assets(physics_test)
+get_cevy_engine_assets(basic)
 
 
 option(TESTS "Build tests" OFF)
@@ -44,15 +43,15 @@ option(RUN "Launch game" OFF)
 if(RUN)
     add_custom_target(run
                         COMMENT "Launching binary"
-                        COMMAND physics_test
+                        COMMAND basic
                         # WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                         WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
                     )
     add_custom_target(run_debug
                         COMMENT "Launching binary with valgrind"
-                        DEPENDS physics_test
+                        DEPENDS basic
                         # COMMAND pwd
-                        COMMAND valgrind ./physics_test
+                        COMMAND valgrind ./basic
                         # WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                         WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
                     )
