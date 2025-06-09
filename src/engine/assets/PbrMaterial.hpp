@@ -23,12 +23,20 @@ class PbrMaterial {
     std::optional<T> a;
     std::optional<V> b;
     pair() : a(std::nullopt), b(std::nullopt) {};
+    pair(const T &t) : a(t), b(std::nullopt) {};
+    pair(const V &v) : a(std::nullopt), b(v) {};
     pair(T &&t) : a(std::forward<T>(t)), b(std::nullopt) {};
     pair(V &&v) : a(std::nullopt), b(std::forward<V>(v)) {};
-    pair(T &&t, V &&v) : a(std::forward<T>(t)), b(std::forward<V>(v)) {};
     pair(const T &t, const V &v) : a(t), b(v) {};
-    pair(V &&v, T &&t) : a(std::forward<T>(t)), b(std::forward<V>(v)) {};
     pair(const V &v, const T &t) : a(t), b(v) {};
+    pair(T &&t, V &&v) : a(std::forward<T>(t)), b(std::forward<V>(v)) {};
+    pair(V &&v, T &&t) : a(std::forward<T>(t)), b(std::forward<V>(v)) {};
+    pair(std::optional<T> &&t, std::optional<V> &&v)
+        : a(t == T() ? std::nullopt : std::forward<T>(t)),
+          b(v == V() ? std::nullopt : std::forward<V>(v)) {};
+    pair(std::optional<V> &&v, std::optional<T> &&t)
+        : a(v == V() ? std::nullopt : std::forward<V>(v)),
+          b(t == T() ? std::nullopt : std::forward<T>(t)) {};
   };
 
   using color_tex = pair<glm::vec4, std::string>;
@@ -48,6 +56,9 @@ class PbrMaterial {
   PbrMaterial() { halflambert = true; };
 
   PbrMaterial(asset::AssetManager &mngr, const definition &def);
+
+  /// deprecated
+  PbrMaterial(const definition &def);
 
   PbrMaterial(glm::vec3 &&diffuse, glm::vec3 &&specular, float roughness)
       : diffuse(diffuse), specular_tint(specular), roughness(roughness) {
@@ -92,7 +103,7 @@ class PbrMaterial {
   }
 
   static PbrMaterial gold();
-  static PbrMaterial from_tinyobj(const tinyobj::material_t &material);
+  static PbrMaterial from_tinyobj(const tinyobj::material_t &material, const std::string &path);
 
   glm::vec3 emit = {0, 0, 0};
   glm::vec3 ambient = {0, 0, 0};

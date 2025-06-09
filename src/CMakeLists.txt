@@ -25,17 +25,33 @@ set_target_properties(cevy PROPERTIES LINKER_LANGUAGE CXX)
 
 
 function(get_cevy_engine_assets target)
-add_custom_target(cevy_always
-        COMMAND ${CMAKE_COMMAND} -E echo "cevy_always:" "`date`")
-add_dependencies(${target} cevy_always)
+add_custom_target(cevy_automatic_engine_assets
+        COMMAND ${CMAKE_COMMAND} -E echo "cevy_automatic_engine_assets:" "`date`")
+add_dependencies(${target} cevy_automatic_engine_assets)
 add_custom_command(
-    TARGET cevy_always POST_BUILD
+    TARGET cevy_automatic_engine_assets POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "$<TARGET_PROPERTY:cevy,SOURCE_DIR>/../assets/engine/"
         "$<TARGET_PROPERTY:${target},RUNTIME_OUTPUT_DIRECTORY>/assets/engine/"
     COMMAND
         echo "Copying engine assets to"
         "$<TARGET_PROPERTY:${target},RUNTIME_OUTPUT_DIRECTORY>/assets/engine/"
+
+)
+endfunction()
+
+function(get_project_assets target folder)
+add_custom_target(cevy_automatic_project_assets
+        COMMAND ${CMAKE_COMMAND} -E echo "cevy_automatic_project_assets:" "`date`")
+add_dependencies(${target} cevy_automatic_project_assets)
+add_custom_command(
+    TARGET cevy_automatic_project_assets POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${folder}
+        "$<TARGET_PROPERTY:${target},RUNTIME_OUTPUT_DIRECTORY>/assets/"
+    COMMAND
+        echo "Copying ${target} assets to"
+        "$<TARGET_PROPERTY:${target},RUNTIME_OUTPUT_DIRECTORY>/assets/"
 
 )
 endfunction()

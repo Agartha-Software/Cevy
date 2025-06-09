@@ -10,9 +10,10 @@
 #include <glm/glm.hpp>
 #include <optional>
 
+#include "tinyobj_loader_opt.h"
+
 #include "AssetManager.hpp"
 #include "ShaderProgram.hpp"
-#include "tinyobj_loader_opt.h"
 
 namespace cevy::engine {
 using Shader = ShaderProgram;
@@ -68,7 +69,7 @@ struct TextureBuilder {
   std::string rgb_file_name = "";
   std::string alpha_file_name = "";
   void *data = nullptr;
-  Texture::Type type;
+  const Texture::Type type;
   int width;
   int height;
   struct {
@@ -85,7 +86,9 @@ struct TextureBuilder {
 
   // AssetManager* manager = nullptr;
 
-  TextureBuilder() {
+  /// must specify an expected type of texture;
+  TextureBuilder() = delete;
+  TextureBuilder(Texture::Type type) : type(type) {
     flags.initted = false;
     flags.has_alpha = false;
     flags.has_rgb = false;
@@ -103,10 +106,11 @@ struct TextureBuilder {
   int get_alpha(const TextureBuilder &other);
 
   bool good() const {
-    std::cout << "txBuilder:" << this->rgb_file_name << ":rdy?:"
-              << (this->data != nullptr || this->rgb_file_name != "" || this->alpha_file_name != "")
+    bool is_good = this->data != nullptr || this->rgb_file_name != "" || this->alpha_file_name != "";
+    std::cout << "txBuilder:" << this->rgb_file_name << "+" << alpha_file_name << ":rdy?:"
+              << is_good
               << std::endl;
-    return this->data != nullptr || this->rgb_file_name != "" || this->alpha_file_name != "";
+    return is_good;
   }
   cevy::engine::Texture build();
   Handle<cevy::engine::Texture> build(asset::AssetManager &manager);

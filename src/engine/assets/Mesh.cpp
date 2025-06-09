@@ -6,20 +6,24 @@
 */
 
 #define GLM_ENABLE_EXPERIMENTAL
-#define TINYOBJLOADER_IMPLEMENTATION
 
 #include "glx.hpp"
 
-#include "tinyobj_loader_opt.h"
+#include <cstdint>
+#include <iostream>
 #include <stdexcept>
+#include <unordered_map>
+#include <vector>
+
+#include <glm/gtc/type_ptr.hpp>
 
 #include "Mesh.hpp"
-#include <cstdint>
-#include <glm/gtc/type_ptr.hpp>
-#include <unordered_map>
-// #include <glm/gtx/string_cast.hpp>
-#include <iostream>
-#include <vector>
+#include "PbrMaterial.hpp"
+
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tinyobj_loader_opt.h"
+// must TINYOBJLOADER_IMPLEMENTATION is not double-inclusion-protected
+// this MUST be the LAST include
 
 using cevy::engine::Mesh;
 
@@ -116,7 +120,9 @@ struct std::hash<tiny_index_t_impl> {
   }
 };
 
-cevy::engine::Mesh cevy::engine::Mesh::load(const std::string &filename) {
+cevy::engine::Mesh cevy::engine::Mesh::load(const std::string &filename,
+                                            std::vector<Handle<PbrMaterial>> &materials,
+                                            bool withMats) {
   if (filename.substr(filename.find_last_of(".")) == ".obj") {
     tinyobj::ObjReader reader;
 
@@ -170,6 +176,22 @@ cevy::engine::Mesh cevy::engine::Mesh::load(const std::string &filename) {
           };
       }
       model.gl_init();
+
+      if (withMats) {
+        size_t pos;
+        std::string path;
+        if ((pos = filename.find_last_of("/")) != std::string::npos) {
+          path = filename.substr(0, pos + 1);
+        }
+
+        for (const auto &mat : reader.GetMaterials()) {
+          materials.push_back(
+              Handle<PbrMaterial>(std::make_shared<std::optional<PbrMaterial>>(
+                                      std::make_optional(PbrMaterial::from_tinyobj(mat, path))),
+                                  AssetId(-1)));
+        }
+      }
+
       return model;
     }
     throw std::runtime_error("failed to load obj '" + filename + "': " + reader.Error());
@@ -178,7 +200,7 @@ cevy::engine::Mesh cevy::engine::Mesh::load(const std::string &filename) {
 }
 
 void Mesh::load(const std::vector<glm::vec3> &vertices, const std::vector<glm::vec3> &normals,
-                 const std::vector<uint32_t> &indices) {
+                const std::vector<uint32_t> &indices) {
   this->vertices.clear();
   this->vertices.reserve(vertices.size());
 
@@ -197,7 +219,7 @@ void Mesh::load(const std::vector<glm::vec3> &vertices, const std::vector<glm::v
 }
 
 void Mesh::load(const std::vector<glm::vec4> &vertices, const std::vector<glm::vec3> &normals,
-                 const std::vector<uint32_t> &indices) {
+                const std::vector<uint32_t> &indices) {
   this->vertices = vertices;
   this->indices = indices;
   this->normals = normals;
@@ -210,7 +232,7 @@ void Mesh::load(const std::vector<glm::vec4> &vertices, const std::vector<glm::v
 }
 
 void Mesh::load(const std::vector<float> &vertices, const std::vector<float> &normals,
-                 const std::vector<uint32_t> &indices) {
+                const std::vector<uint32_t> &indices) {
   this->vertices.clear();
   this->vertices.reserve(vertices.size() * 4);
 
@@ -264,7 +286,7 @@ void Mesh::draw() const {
 // }
 
 std::vector<glm::vec3> Mesh::generate_normals(const std::vector<glm::vec3> &vertices,
-                                               const std::vector<uint32_t> &indices) {
+                                              const std::vector<uint32_t> &indices) {
   std::vector<glm::vec3> normals(vertices.size());
   // this->normals.resize(this->vertices.size());
 
