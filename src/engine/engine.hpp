@@ -21,6 +21,9 @@ namespace engine {
 template <typename Windower>
 class Engine;
 
+class Transform;
+class Motion;
+
 #ifdef DEBUG
 struct DebugWindow {
   bool open;

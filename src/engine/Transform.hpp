@@ -75,6 +75,14 @@ class Transform {
     return tm;
   }
 
+  /**
+   * @brief apply instaneanous motion to this transform
+   *
+   * @param rhs motion to apply
+   * @return Transform& self
+   */
+  Transform &operator+=(const engine::Motion& rhs);
+
   // glm::vec3 operator*(const glm::vec3 &v) const {
   //   glm::vec3 w = v;
   //   auto [vec, rot, scale] = get_world();

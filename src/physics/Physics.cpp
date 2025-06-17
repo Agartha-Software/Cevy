@@ -1,18 +1,23 @@
 /*
-** EPITECH PROJECT, 2023
-** R-Type
+** EPITECH PROJECT, 2025
+** Cevy
 ** File description:
-** physics.cpp
+** physics systems implementations
 */
 
-#include "Physics.hpp"
+#define GLM_FORCE_SWIZZLE
+
+#include <chrono>
+
+#include <glm/ext/quaternion_geometric.hpp>
+#include <glm/geometric.hpp>
+
 #include "App.hpp"
 #include "ConstraintServer.hpp"
 #include "Constraints.hpp"
+#include "Physics.hpp"
 #include "Spring.hpp"
 #include "Transform.hpp"
-#include <chrono>
-#include <glm/ext/quaternion_geometric.hpp>
 
 void cevy::physics::PhysicsPlugin::build(cevy::ecs::App &app) {
   app.init_component<cevy::physics::RigidBody>();
@@ -45,43 +50,55 @@ void cevy::physics::Gravity::system(Query<RigidBody> query, Resource<Time> time,
  * @param query
  */
 void cevy::physics::RigidBody::system(
-    ecs::Query<Entity, RigidBody, const Collider, engine::Transform,
-               option<engine::Motion>>
+    ecs::Query<Entity, RigidBody, const Collider, engine::Transform, option<engine::Motion>>
         query) {
   for (auto [a, body_a, collider_a, transform_a, motion_a] : query) {
     if (!collider_a.layers)
       continue;
     for (auto [b, body_b, collider_b, transform_b, motion_b] : query) {
       if (a >= b || (body_a.iMass == 0 && body_b.iMass == 0) ||
-          !(collider_a.layers & collider_b.layers))
+          !(collider_a.layers & collider_b.layers) || (!motion_a && !motion_b))
         continue;
-      auto vel_a = motion_a.has_value() ? motion_a->linear : glm::vec3(0, 0, 0);
-      auto vel_b = motion_b.has_value() ? motion_b->linear : glm::vec3(0, 0, 0);
-      auto vel_d = vel_b - vel_a;
+      const engine::Motion &vel_a = motion_a.has_value() ? *motion_a : engine::Motion();
+      const engine::Motion &vel_b = motion_b.has_value() ? *motion_b : engine::Motion();
 
       const glm::mat4 &tm_a = transform_a;
       const glm::mat4 &tm_b = transform_b;
 
-      auto energy = RigidBody::collide(collider_a, tm_a, collider_b, tm_b, vel_d);
-      if (!energy.hit) {
-        continue;
+      auto collisions = RigidBody::collide(collider_a, tm_a, collider_b, tm_b);
+      for (const auto &collision : collisions) {
+        glm::vec3 pos_a = collision.location - transform_a.position;
+        glm::vec3 pos_b = collision.location - transform_b.position;
+
+        auto vel_a_local = vel_a.linear + glm::cross(vel_a.angular.xyz() * vel_a.angular.w, pos_a);
+        auto vel_b_local = vel_b.linear + glm::cross(vel_b.angular.xyz() * vel_b.angular.w, pos_b);
+
+        auto impulse = glm::dot(collision.direction, (vel_b_local - vel_a_local) * 2.f);
+
+        if (impulse <= 0)
+          continue;
+
+        float conservation_a = body_a.iMass / (body_a.iMass + body_b.iMass);
+        float conservation_b = body_b.iMass / (body_a.iMass + body_b.iMass);
+
+        float restitution = body_a.resititution * body_b.resititution;
+
+        glm::vec3 impulse_a = collision.direction * impulse * conservation_a * restitution + friction;
+        glm::vec3 impulse_b = -collision.direction * impulse * conservation_b * restitution - friction;
+
+        glm::vec3 push_a = collision.direction * collision.intersection * conservation_a;
+        glm::vec3 push_b = -collision.direction * collision.intersection * conservation_b;
+
+        transform_a += body_a.impulse(push_a, pos_a);
+        transform_b += body_b.impulse(push_b, pos_b);
+
+        if (motion_a) {
+          motion_a.value() += body_a.impulse(impulse_a, pos_a);
+        };
+        if (motion_b) {
+          motion_b.value() += body_b.impulse(impulse_b, pos_b);
+        };
       }
-      assert(energy.direction != glm::vec3(0, 0, 0));
-
-      float conservation_a = body_a.iMass / (body_a.iMass + body_b.iMass);
-      float conservation_b = body_b.iMass / (body_a.iMass + body_b.iMass);
-
-      float restitution = body_a.resititution * body_b.resititution;
-      transform_a.position +=
-          (conservation_a)*glm::normalize(energy.direction) * energy.intersection;
-      transform_b.position -=
-          (conservation_b)*glm::normalize(energy.direction) * energy.intersection;
-      if (motion_a) {
-        motion_a->linear += energy.direction * (restitution * conservation_a);
-      };
-      if (motion_b) {
-        motion_b->linear -= energy.direction * (restitution * conservation_b);
-      };
     }
   }
 }

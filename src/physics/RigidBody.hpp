@@ -7,85 +7,93 @@
 
 #pragma once
 
-#include "Motion.hpp"
+#include <vector>
+
 #include "collision/Collider.hpp"
 #include <cmath>
 #include <glm/geometric.hpp>
 #include <glm/vec3.hpp>
 
+#include "Motion.hpp"
+#include "cevy.hpp"
+
 namespace cevy::physics {
 class RigidBody {
-    friend class Gravity;
-    friend class PhysicsPlugin;
-    public:
-    // Collider collider;
-    // glm::vec3 center;
-    // float resititution = 1;
-    float resititution = 0.95;
-    // float resititution = 0.7071; // sqrt(0.5);
-    // private:
-    float iMass = 1; /// inverse of kilogram mass : kg⁻¹
-    public:
-    glm::vec3 acceleration = {0, 0, 0}; /// : (m/s²)ds : additive m/s as an impulse;
-    // bool animated = false;
-    // bool passive = false;
+  friend class Gravity;
+  friend class PhysicsPlugin;
 
-    float mass() const {
-      return 1 / this->iMass;
-    }
-    void setMass(float mass) {
-      this->iMass = 1 / mass;
-    }
+  public:
+  // Collider collider;
+  // glm::vec3 center;
+  // float resititution = 1;
+  float resititution = 0.90;
+  // float resititution = 0.7071; // sqrt(0.5);
+  // private:
+  float iMass = 1; /// inverse of kilogram mass : kg⁻¹
+  public:
+  glm::vec3 acceleration = {0, 0, 0}; /// : (m/s²)ds : additive m/s as an impulse;
+  // bool animated = false;
+  // bool passive = false;
 
-    // template<typename ...S>
-    // RigidBody(float mass, S ...shapes) : collider(std::forward<S>(shapes)...), iMass(1/mass) {};
+  float mass() const { return 1 / this->iMass; }
+  void setMass(float mass) { this->iMass = 1 / mass; }
 
-    RigidBody(float mass) : iMass(1/mass) {};
 
-    static RigidBody Passive() {
-      RigidBody body(INFINITY);
-      // body.passive = true;
-      return body;
-    }
+  RigidBody(float mass) : iMass(1 / mass) {};
 
-    /**
-     * @brief compute collisions between two bodies
-     * friction ignored
-     * rotation and center of mass ignored
-     * @param a first body
-     * @param b second body
-     * @param relative_velocity : m/s
-     * @return Collision with energy exchanged : m*kg
-     */
-    static Collision collide(const Collider &a, const glm::mat4 &tm_a, const Collider &b, const glm::mat4 &tm_b, const glm::vec3 &relative_velocity) {
-      auto collisions = Collider::collide(a, tm_a, b, tm_b);
+  static RigidBody Passive() {
+    RigidBody body(INFINITY);
+    // body.passive = true;
+    return body;
+  }
 
-      if (collisions.size() == 0) {
-        return Collision::NoHit();
-      }
+  /**
+   * @brief enumerate collisions between two bodies
+   * @param a first body
+   * @param b second body
+   * @param tm_a first body's transform
+   * @param tm_b second body's transform
+   * @return list of collisions
+   */
+  static std::vector<Collision> collide(const Collider &a, const glm::mat4 &tm_a, const Collider &b,
+                                        const glm::mat4 &tm_b) {
+    return Collider::collide(a, tm_a, b, tm_b);
+  }
 
-      glm::vec3 accumulate = {};
-      glm::vec3 location = {};
-      float intersection = 0;
+  /**
+   * @brief Compute motion from an instantaneous acceleration to a body
+   *
+   * Intended to be used to compute angular motion related to a force
+   *
+   * @param impulse change in velocity : m/s
+   * @param arm position from the center of mass : m
+   * @return engine::Motion instantaneous motion
+   */
+  engine::Motion impulse(glm::vec3 impulse, glm::vec3 arm = {}) {
+    float arm_length = glm::length(arm);
+    glm::vec3 arm_n = arm / arm_length;
+    glm::vec3 tangeantial_impulse = impulse - arm_n * glm::dot(impulse, arm_n);
 
-      for (const auto &collision : collisions) {
-        accumulate += collision.direction;
-        location += collision.location;
-        intersection += collision.intersection;
-      }
-      accumulate /= collisions.size();
-      location /= collisions.size();
-      intersection /= collisions.size();
+    glm::vec3 axis = glm::vec3 {0, 0, 1};
+    float angle = glm::length(tangeantial_impulse) * arm_length;
 
-      auto energy_ = glm::dot(accumulate, relative_velocity * 2.f);
-      if (energy_ <= 0) {
-        return Collision::NoHit();
-      }
-      auto energy = accumulate * energy_;
-      return {energy, location, intersection, true};
+    angle = std::isnan(angle) ? 0 : angle;
+
+    if (angle > 0) {
+      axis = glm::normalize(glm::cross(arm_n, tangeantial_impulse));
+      std::cout << "impulse:" << cevy::reflect(axis) << std::endl;
+      // axis = glm::cross(arm, axis);
     }
 
-    protected:
-    static void system(ecs::Query<ecs::Entity, RigidBody, const Collider, engine::Transform, option<engine::Motion>> query);
-  };
-}
+    glm::vec3 tangeantial_v = glm::cross(axis.xyz() * angle, arm);
+
+    std::cout << "impulse:" << cevy::reflect(axis) << "," << cevy::reflect(angle) << std::endl;
+    return engine::Motion(impulse - tangeantial_v, {axis, angle});
+  }
+
+  protected:
+  static void system(
+      ecs::Query<ecs::Entity, RigidBody, const Collider, engine::Transform, option<engine::Motion>>
+          query);
+};
+} // namespace cevy::physics
