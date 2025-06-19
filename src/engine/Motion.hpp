@@ -8,7 +8,6 @@
 #pragma once
 
 #define GLM_FORCE_SWIZZLE
-#include <iostream>
 
 #include <glm/ext/quaternion_geometric.hpp>
 #include <glm/ext/quaternion_trigonometric.hpp>
@@ -17,7 +16,6 @@
 #include <glm/geometric.hpp>
 #include <glm/trigonometric.hpp>
 
-#include "PhysicsProps.hpp"
 #include "Query.hpp"
 #include "Resource.hpp"
 #include "Time.hpp"
@@ -33,10 +31,10 @@ R signum(T val) {
 class Motion {
   public:
   glm::vec3 linear = {0, 0, 0};
-  glm::vec4 angular = {0, 0, 1, 0};
+  glm::vec3 angular = {0, 0, 0};
   bool animated;
 
-  Motion(glm::vec3 linear = {}, glm::vec4 angular = {0, 0, 1, 0}, bool animated = false) {
+  Motion(glm::vec3 linear = {}, glm::vec3 angular = {0, 0, 0}, bool animated = false) {
     this->linear = linear;
     this->angular = angular;
     this->animated = animated;
@@ -49,7 +47,7 @@ class Motion {
    */
   Motion &operator+=(const Motion &rhs) {
     this->linear += rhs.linear;
-    this->composeAngular(rhs.angular.xyz(), rhs.angular.w);
+    this->angular += rhs.angular;
     return *this;
   }
 
@@ -57,16 +55,18 @@ class Motion {
   Motion &operator*=(float s) {
 
     this->linear *= s;
-    this->angular.w *= s;
-    // rotation = glm::slerp(glm::identity<glm::quat>(), rotation, s);
-    // scale = glm::pow(scale, glm::vec3(s, s, s));
+    this->angular *= s;
 
     return *this;
   }
 
   Motion &operator*=(glm::quat q) {
     const glm::vec4 b = {glm::axis(q), glm::angle(q)};
-    const glm::vec4 &a = this->angular;
+    glm::vec4 a = {this->angular, 1};
+
+    a.w = glm::length(this->angular);
+    a = {a.xyz() / a.w, a.w};
+
     glm::vec4 new_angular;
     new_angular.w = glm::acos(glm::cos(a.w) * glm::cos(b.w) -
                               glm::dot(a.xyz() * glm::sin(a.w), b.xyz() * glm::sin(b.w)));
@@ -75,7 +75,7 @@ class Motion {
                         glm::cross(a.w * glm::sin(a.xyz()), b.w * glm::sin(b.xyz()));
     new_angular.xyz() = glm::normalize(new_angular.xyz());
 
-    this->angular = new_angular;
+    this->angular = new_angular.xyz() * new_angular.w;
     return *this;
   }
 
@@ -93,9 +93,7 @@ class Motion {
    * @param angle the angular velocity
    */
   void composeAngular(glm::vec3 axis, float angle) {
-    this->angular = {axis * angle + this->angular.xyz() * this->angular.w, 1};
-    this->angular.w = glm::length(this->angular.xyz());
-    this->angular = {this->angular.xyz() / this->angular.w, this->angular.w};
+    this->angular = {axis * angle + this->angular};
   }
 
   protected:
@@ -108,11 +106,10 @@ class Motion {
         continue;
       auto scaled = vel * delta_t;
       tm.position += scaled.linear;
-      tm.rotation =
-          glm::rotate(glm::quat({0, 0, 0}), scaled.angular.w, scaled.angular.xyz()) * tm.rotation;
-      // tm.rotation *= glm::rotate(glm::quat({0, 0, 0}), scaled.angular.w, scaled.angular.xyz());
-      // tm.rotation = glm::rotate(tm.rotation, scaled.angular.w, scaled.angular.xyz());
-      //   tm.scale *= scaled.scale;
+      auto angle = glm::length(scaled.angular);
+      if (angle > 0)
+        tm.rotation =
+            glm::rotate(glm::quat({0, 0, 0}), angle, scaled.angular) * tm.rotation;
     }
   }
 };
@@ -123,8 +120,10 @@ class Motion {
 inline Transform &Transform::operator+=(const Motion &rhs) {
   this->position += rhs.linear;
 
-  this->rotation =
-      glm::rotate(glm::quat({0, 0, 0}), rhs.angular.w, rhs.angular.xyz()) * this->rotation;
+  auto angle = glm::length(rhs.angular);
+  if (angle > 0)
+    this->rotation =
+      glm::rotate(glm::quat({0, 0, 0}), angle, rhs.angular) * this->rotation;
   return *this;
 };
 } // namespace cevy::engine

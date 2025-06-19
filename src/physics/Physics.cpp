@@ -70,8 +70,8 @@ void cevy::physics::RigidBody::system(
         glm::vec3 pos_a = collision.location - transform_a.position;
         glm::vec3 pos_b = collision.location - transform_b.position;
 
-        auto vel_a_local = vel_a.linear + glm::cross(vel_a.angular.xyz() * vel_a.angular.w, pos_a);
-        auto vel_b_local = vel_b.linear + glm::cross(vel_b.angular.xyz() * vel_b.angular.w, pos_b);
+        auto vel_a_local = vel_a.linear + glm::cross(vel_a.angular, pos_a);
+        auto vel_b_local = vel_b.linear + glm::cross(vel_b.angular, pos_b);
 
         auto impulse = glm::dot(collision.direction, (vel_b_local - vel_a_local) * 2.f);
 
@@ -126,13 +126,13 @@ void cevy::physics::RigidBodyWorld::system(
         auto dv_dt = v * _v_ * k * i_m;
 
         auto kw = o_collider->angularDragCoefficient * world->dragDensity * o_collider->area *
-        glm::dot(transform.scale, transform.scale * transform.scale);
+                  glm::dot(transform.scale, transform.scale * transform.scale);
 
         if (!o_velocity->animated) {
           o_velocity->linear /= 1 + 2 * k * i_m * _v_ * float(time->delta_seconds());
-          o_velocity->angular.w /= 1 + 2 * kw * i_m * o_velocity->angular.w * float(time->delta_seconds());
+          o_velocity->angular /=
+              1 + 2 * kw * i_m * glm::length(o_velocity->angular) * float(time->delta_seconds());
         }
-
       }
     }
   }

@@ -74,7 +74,7 @@ class RigidBody {
     glm::vec3 arm_n = arm / arm_length;
     glm::vec3 tangeantial_impulse = impulse - arm_n * glm::dot(impulse, arm_n);
 
-    glm::vec3 axis = glm::vec3 {0, 0, 1};
+    glm::vec3 axis = glm::vec3 {0, 0, 0};
     float angle = glm::length(tangeantial_impulse) * arm_length;
 
     angle = std::isnan(angle) ? 0 : angle;
@@ -84,9 +84,9 @@ class RigidBody {
       // axis = glm::cross(arm, axis);
     }
 
-    glm::vec3 tangeantial_v = glm::cross(axis.xyz() * angle, arm);
+    glm::vec3 tangeantial_v = glm::cross(axis * angle, arm);
 
-    return engine::Motion(impulse - tangeantial_v, {axis, angle});
+    return engine::Motion(impulse - tangeantial_v, {axis * angle});
   }
 
   protected:
