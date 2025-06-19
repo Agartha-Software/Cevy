@@ -81,13 +81,11 @@ class RigidBody {
 
     if (angle > 0) {
       axis = glm::normalize(glm::cross(arm_n, tangeantial_impulse));
-      std::cout << "impulse:" << cevy::reflect(axis) << std::endl;
       // axis = glm::cross(arm, axis);
     }
 
     glm::vec3 tangeantial_v = glm::cross(axis.xyz() * angle, arm);
 
-    std::cout << "impulse:" << cevy::reflect(axis) << "," << cevy::reflect(angle) << std::endl;
     return engine::Motion(impulse - tangeantial_v, {axis, angle});
   }
 

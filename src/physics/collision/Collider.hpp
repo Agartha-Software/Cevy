@@ -707,9 +707,84 @@ class Shape {
     return Collision {q_normal, hit, -distance, true};
   }
 
+
+  protected:
+  static std::tuple<float, float> compute_sat(const glm::vec3 &axis, const std::vector<glm::vec3> &verts) {
+    float min = INFINITY;
+    float max = -INFINITY;
+
+    for (const auto& vert : verts) {
+      auto dot = glm::dot(axis, vert);
+      min = std::min(min, dot);
+      max = std::max(max, dot);
+    }
+
+    return {min, max};
+  }
+
+  public:
   static Collision collide_box_box(const glm::vec4 (&data_a)[4], const glm::mat4 &tm_a,
                                    const glm::vec4 (&data_b)[4], const glm::mat4 &tm_b) {
-    throw std::runtime_error("todo!");
+    const glm::vec3 a_center = (tm_a * data_a[0]).xyz();
+    const glm::vec3 a_x = (tm_a * data_a[1]).xyz();
+    const glm::vec3 a_y = (tm_a * data_a[2]).xyz();
+    const glm::vec3 a_z = (tm_a * data_a[3]).xyz();
+
+
+    const glm::vec3 b_center = (tm_b * data_b[0]).xyz();
+    const glm::vec3 b_x = (tm_b * data_b[1]).xyz();
+    const glm::vec3 b_y = (tm_b * data_b[2]).xyz();
+    const glm::vec3 b_z = (tm_b * data_b[3]).xyz();
+
+    const glm::vec3 delta = a_center - b_center;
+
+    std::vector<glm::vec3> verts_a = {
+      a_center - a_x - a_y - a_z,
+      a_center - a_x - a_y + a_z,
+      a_center - a_x + a_y - a_z,
+      a_center - a_x + a_y + a_z,
+      a_center + a_x - a_y - a_z,
+      a_center + a_x - a_y + a_z,
+      a_center + a_x + a_y - a_z,
+      a_center + a_x + a_y + a_z,
+    };
+
+    std::vector<glm::vec3> verts_b = {
+      b_center - b_x - b_y - b_z,
+      b_center - b_x - b_y + b_z,
+      b_center - b_x + b_y - b_z,
+      b_center - b_x + b_y + b_z,
+      b_center + b_x - b_y - b_z,
+      b_center + b_x - b_y + b_z,
+      b_center + b_x + b_y - b_z,
+      b_center + b_x + b_y + b_z,
+    };
+
+    Collision hit;
+    hit.intersection = INFINITY; // used to filter to the smallest intersection
+    hit.hit = true;
+    hit.location = {0, 0, 0};
+
+    for (const auto& face: {a_x, a_y, a_z, b_x, b_y, b_z}) {
+      glm::vec3 axis = glm::normalize(face);
+      auto [min_a, max_a] = compute_sat(axis, verts_a);
+      auto [min_b, max_b] = compute_sat(axis, verts_b);
+
+      auto top = std::max(min_a, min_b);
+      auto bottom = std::min(max_a, max_b);
+      auto intersection = bottom - top;
+      if (max_b > min_a && max_a > min_b) {
+        if (intersection < hit.intersection) {
+          hit.intersection = intersection;
+          hit.direction = detail::signum<float>(glm::dot(axis, delta)) * axis;
+        }
+        hit.location += axis * (top + bottom) / 2.f / 2.f; // add each perpendicular axis, averaged over the two bounds and over 6 axis;
+      }
+      else {
+       return Collision::NoHit();
+     }
+    }
+    return hit;
   }
 };
 class Collider {
