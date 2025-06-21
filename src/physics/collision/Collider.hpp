@@ -12,7 +12,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <numeric>
 #include <stdexcept>
 #include <type_traits>
@@ -21,10 +20,9 @@
 
 #include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/matrix.hpp>
-
-#include "cevy.hpp"
 
 namespace cevy::physics {
 namespace detail {
@@ -128,7 +126,8 @@ class Shape {
     shape.angularDragCoefficient = 0.5;
     shape.area = glm::pi<float>() * radius * radius;
     shape.data[0] = {position, 1};
-    shape.data[1] = {glm::vec3(radius), 0};
+    shape.data[1] = {glm::vec3(radius, 0, 0), 0};
+    shape.inertia_tensor = glm::mat3(2 * radius * radius / 2.f);
     return shape;
   }
 
@@ -158,7 +157,7 @@ class Shape {
                    glm::quat orientation = glm::quat({0, 0, 0})) {
     Shape shape;
     shape.shape = ShapeE::Box;
-    shape.area = size.x * size.y * size.z;
+    shape.area = std::powf(size.x * size.y * size.z, 2.f / 3.f);
     shape.data[0] = {position, 1}; // center position
     shape.data[1] = {orientation * glm::vec3(size.x / 2, 0, 0), 0};
     shape.data[2] = {orientation * glm::vec3(0, size.y / 2, 0), 0};
@@ -207,7 +206,7 @@ class Shape {
       case ShapeE::Quad:
         return Shape::collide_sphere_quad(a.data, tm_a, b.data, tm_b);
       case ShapeE::Box:
-        return Collision::NoHit(); // !todo
+        return Shape::collide_sphere_box(a.data, tm_a, b.data, tm_b);
         // return Shape::collide_sphere_box(a.data, tm_a, b.data, tm_b);
       default:
         throw std::runtime_error("Shape::collide: unreachable");
@@ -397,14 +396,15 @@ class Shape {
     const glm::vec3 q_center = (tm_b * data_b[0]).xyz();
     const glm::vec3 q_normal = glm::cross(tan, cotan);
     const auto distance = dot(q_center - s_center, -q_normal);
-    const auto radius = std::abs(dot(glm::abs(q_normal), s_size));
+    const auto radius = glm::length(s_size);
+    // const auto radius = std::abs(dot(glm::abs(q_normal), s_size));
     auto intersection = std::abs(distance) - radius;
     if (intersection > 0) {
       // std::cout << "NoHit: !Intersection" << std::endl;
       return Collision::NoHit();
     }
     auto direction = q_normal * detail::signum<float>(distance);
-    auto location = s_center + direction * s_size.x;
+    auto location = s_center + direction * radius;
 
     float oob_tan = glm::dot(location - q_center, tan);
     oob_tan = std::max(std::abs(oob_tan) - tan_w, 0.f) * detail::signum<float>(oob_tan);
@@ -441,6 +441,90 @@ class Shape {
       }
     }
     return Collision::NoHit();
+  }
+
+  static Collision collide_sphere_box(const glm::vec4 (&data_a)[4], const glm::mat4 &tm_a,
+                                      const glm::vec4 (&data_b)[4], const glm::mat4 &tm_b) {
+    std::vector<glm::vec3> hits;
+
+    const glm::vec3 s_center = (tm_a * data_a[0]).xyz();
+    const glm::vec3 s_size = (tm_a * data_a[1]).xyz();
+    auto radius = glm::length(s_size);
+
+    const glm::vec3 b_center = (tm_b * data_b[0]).xyz();
+    const glm::vec3 b_x = (tm_b * data_b[1]).xyz();
+    const glm::vec3 b_y = (tm_b * data_b[2]).xyz();
+    const glm::vec3 b_z = (tm_b * data_b[3]).xyz();
+
+    {
+      const auto vert = b_center + b_x + b_y + b_z;
+      const auto distance = vert - s_center;
+
+      if (glm::length(distance) < radius)
+        hits.push_back(vert);
+    }
+    {
+      const auto vert = b_center + b_x + b_y - b_z;
+      const auto distance = vert - s_center;
+
+      if (glm::length(distance) < radius)
+        hits.push_back(vert);
+    }
+    {
+      const auto vert = b_center + b_x - b_y + b_z;
+      const auto distance = vert - s_center;
+
+      if (glm::length(distance) < radius)
+        hits.push_back(vert);
+    }
+    {
+      const auto vert = b_center + b_x - b_y - b_z;
+      const auto distance = vert - s_center;
+
+      if (glm::length(distance) < radius)
+        hits.push_back(vert);
+    }
+    {
+      const auto vert = b_center - b_x + b_y + b_z;
+      const auto distance = vert - s_center;
+
+      if (glm::length(distance) < radius)
+        hits.push_back(vert);
+    }
+    {
+      const auto vert = b_center - b_x + b_y - b_z;
+      const auto distance = vert - s_center;
+
+      if (glm::length(distance) < radius)
+        hits.push_back(vert);
+    }
+    {
+      const auto vert = b_center - b_x - b_y + b_z;
+      const auto distance = vert - s_center;
+
+      if (glm::length(distance) < radius)
+        hits.push_back(vert);
+    }
+    {
+      const auto vert = b_center - b_x - b_y - b_z;
+      const auto distance = vert - s_center;
+
+      if (glm::length(distance) < radius)
+        hits.push_back(vert);
+    }
+
+    if (hits.size() == 0) {
+      return Collision::NoHit();
+    }
+
+    glm::vec3 hit = std::accumulate(hits.begin(), hits.end(), glm::vec3 {});
+    hit /= hits.size();
+    const auto normal = glm::normalize(hit - s_center);
+    const auto distance = glm::dot(hit - s_center, normal);
+    // const auto radius = std::abs(dot(glm::abs(normal), s_size));
+    auto intersection = std::abs(distance) - radius;
+
+    return Collision {-normal, hit, distance, true};
   }
 
   // static Collision collide_plane_quad(const glm::vec4 (&data_a)[4], const glm::mat4 &tm_a,
@@ -530,20 +614,21 @@ class Shape {
     std::vector<glm::vec3> hits_below;
     std::vector<glm::vec3> hits_above;
 
-    glm::vec3 tan = tm_a * glm::vec4(data_b[2].xyz(), 0);
-    float tan_w = data_b[2].w;
-    glm::vec3 cotan = tm_a * glm::vec4(data_b[3].xyz(), 0);
-    float cotan_w = data_b[2].w;
-    const glm::vec3 q_center = (tm_a * data_b[0]).xyz();
-    const glm::vec3 q_normal = glm::cross(tan, cotan);
-    const glm::vec3 b_center = (tm_b * data_a[0]).xyz();
-    const glm::vec3 b_x = (tm_b * data_a[1]).xyz();
-    const glm::vec3 b_y = (tm_b * data_a[2]).xyz();
-    const glm::vec3 b_z = (tm_b * data_a[3]).xyz();
+    glm::vec3 tan = tm_a * glm::vec4(data_a[2].xyz(), 0);
+    float tan_w = data_a[2].w;
+    glm::vec3 cotan = tm_a * glm::vec4(data_a[3].xyz(), 0);
+    float cotan_w = data_a[2].w;
+    const glm::vec3 q_center = (tm_a * data_a[0]).xyz();
+    const glm::vec3 q_normal = glm::normalize(glm::cross(tan, cotan));
+
+    const glm::vec3 b_center = (tm_b * data_b[0]).xyz();
+    const glm::vec3 b_x = (tm_b * data_b[1]).xyz();
+    const glm::vec3 b_y = (tm_b * data_b[2]).xyz();
+    const glm::vec3 b_z = (tm_b * data_b[3]).xyz();
 
     {
       const auto vert = b_center + b_x + b_y + b_z;
-      const auto distance = dot(q_center - vert, q_normal);
+      const auto distance = dot(vert - q_center, q_normal);
       if (distance < 0)
         hits_below.push_back(vert);
       else
@@ -551,7 +636,7 @@ class Shape {
     }
     {
       const auto vert = b_center + b_x + b_y - b_z;
-      const auto distance = dot(q_center - vert, q_normal);
+      const auto distance = dot(vert - q_center, q_normal);
       if (distance < 0)
         hits_below.push_back(vert);
       else
@@ -559,7 +644,7 @@ class Shape {
     }
     {
       const auto vert = b_center + b_x - b_y + b_z;
-      const auto distance = dot(q_center - vert, q_normal);
+      const auto distance = dot(vert - q_center, q_normal);
       if (distance < 0)
         hits_below.push_back(vert);
       else
@@ -567,7 +652,7 @@ class Shape {
     }
     {
       const auto vert = b_center + b_x - b_y - b_z;
-      const auto distance = dot(q_center - vert, q_normal);
+      const auto distance = dot(vert - q_center, q_normal);
       if (distance < 0)
         hits_below.push_back(vert);
       else
@@ -575,7 +660,7 @@ class Shape {
     }
     {
       const auto vert = b_center - b_x + b_y + b_z;
-      const auto distance = dot(q_center - vert, q_normal);
+      const auto distance = dot(vert - q_center, q_normal);
       if (distance < 0)
         hits_below.push_back(vert);
       else
@@ -583,7 +668,7 @@ class Shape {
     }
     {
       const auto vert = b_center - b_x + b_y - b_z;
-      const auto distance = dot(q_center - vert, q_normal);
+      const auto distance = dot(vert - q_center, q_normal);
       if (distance < 0)
         hits_below.push_back(vert);
       else
@@ -591,7 +676,7 @@ class Shape {
     }
     {
       const auto vert = b_center - b_x - b_y + b_z;
-      const auto distance = dot(q_center - vert, q_normal);
+      const auto distance = dot(vert - q_center, q_normal);
       if (distance < 0)
         hits_below.push_back(vert);
       else
@@ -599,7 +684,7 @@ class Shape {
     }
     {
       const auto vert = b_center - b_x - b_y - b_z;
-      const auto distance = dot(q_center - vert, q_normal);
+      const auto distance = dot(vert - q_center, q_normal);
       if (distance < 0)
         hits_below.push_back(vert);
       else
@@ -607,11 +692,9 @@ class Shape {
     }
 
     if (hits_below.size() == 0) {
-      std::cout << "NoHit: NoBelow" << std::endl;
       return Collision::NoHit();
     }
     if (hits_above.size() == 0) {
-      std::cout << "NoHit: NoAbove" << std::endl;
       return Collision::NoHit();
     }
 
@@ -619,8 +702,8 @@ class Shape {
 
     glm::vec3 hit = std::accumulate(smaller.begin(), smaller.end(), glm::vec3 {});
     hit /= smaller.size();
-    const auto distance = dot(q_center - hit, -q_normal);
-    std::cout << "Hit: Hit" << cevy::reflect(hits_above) << cevy::reflect(hits_below) << std::endl;
+    const auto distance = dot(hit - q_center, q_normal);
+
     return Collision {q_normal, hit, -distance, true};
   }
 

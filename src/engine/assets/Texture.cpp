@@ -74,11 +74,10 @@ TextureBuilder::~TextureBuilder() {
 }
 
 Texture TextureBuilder::from(const glm::vec4u8 &pixel, int width, int height) {
-  TextureBuilder builder;
+  TextureBuilder builder(Texture::Type::U8);
   builder.width = width;
   builder.height = height;
   builder.data = malloc(width * height * 4 * sizeof(uint8_t));
-  builder.type = Texture::Type::U8;
 
   for (int x = 0; x < width; ++x)
     for (int y = 0; y < height; ++y) {
@@ -91,11 +90,10 @@ Texture TextureBuilder::from(const glm::vec4u8 &pixel, int width, int height) {
 }
 
 Texture TextureBuilder::from(const glm::vec4 &pixel, int width, int height) {
-  TextureBuilder builder;
+  TextureBuilder builder(Texture::Type::F16);
   builder.width = width;
   builder.height = height;
   builder.data = malloc(width * height * 4 * sizeof(float));
-  builder.type = Texture::Type::F16;
 
   for (int x = 0; x < width; ++x)
     for (int y = 0; y < height; ++y) {
@@ -160,7 +158,7 @@ int TextureBuilder::load_rgb() {
   uint8_t *new_data = normalize_image_data(image_data, width, height, nrChannels, 255);
   stbi_image_free(image_data);
   this->data = new_data;
-  this->type = Texture::Type::U8_sRGB;
+  // this->type = Texture::Type::U8_sRGB;
   // this->type = Texture::Type::U8;
   return 0;
 }
@@ -180,16 +178,17 @@ int TextureBuilder::load_alpha() {
     return -1;
   }
 
+  if (!this->data) {
+    this->width = width;
+    this->height = height;
+    this->data = static_cast<uint8_t *>(malloc(width * height * sizeof(DataType) * 4));
+    std::memset(this->data, 255, width * height * 4);
+  }
+
   if (this->width != width || this->width != height) {
     stbi_image_free(alpha_data);
     throw std::runtime_error("TextureBuilder::load_alpha: '" + this->alpha_file_name +
                              "' Image texture has differently sized alpha");
-  }
-
-  if (!this->data) {
-    this->data = static_cast<uint8_t *>(malloc(width * height * sizeof(DataType)));
-    std::memset(this->data, 255, width * height * sizeof(DataType));
-    this->type = Texture::Type::U8_sRGB;
   }
 
   splice_image_data(static_cast<uint8_t *>(this->data), alpha_data, this->width, this->height,
@@ -205,9 +204,8 @@ int TextureBuilder::get_alpha(const TextureBuilder &other) {
   }
 
   if (!this->data) {
-    this->data = static_cast<uint8_t *>(malloc(width * height * sizeof(DataType)));
-    std::memset(this->data, 255, width * height * sizeof(DataType));
-    this->type = Texture::Type::U8_sRGB;
+    this->data = static_cast<uint8_t *>(malloc(width * height * sizeof(DataType) * 4));
+    std::memset(this->data, 255, width * height * 4);
   }
 
   splice_image_data(static_cast<uint8_t *>(this->data), static_cast<uint8_t *>(other.data),

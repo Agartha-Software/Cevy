@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+#include "PbrMaterial.hpp"
+
 typedef uint32_t index_t;
 
 namespace cevy::engine {
@@ -29,7 +31,12 @@ class Mesh {
   Mesh &operator=(Mesh &&other);
   Mesh &operator=(const Mesh &other);
 
-  static Mesh load(const std::string &filename);
+  static Mesh load(const std::string &filename) {
+    std::vector<Handle<PbrMaterial>> mats;
+    return Mesh::load(filename, mats, false);
+  }
+
+  static Mesh load(const std::string &filename, std::vector<Handle<PbrMaterial>> &materials, bool withMats = true);
 
   void load(const std::vector<glm::vec3> &vertices, const std::vector<glm::vec3> &normals,
             const std::vector<uint32_t> &indices);
