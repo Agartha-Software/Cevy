@@ -1,7 +1,7 @@
-#include "Constraints.hpp"
 #define GLM_FORCE_SWIZZLE
 #define GLM_ENABLE_EXPERIMENTAL
 
+#include "Constraints.hpp"
 #include "Spring.hpp"
 #include "cevy.hpp"
 #include <stdexcept>

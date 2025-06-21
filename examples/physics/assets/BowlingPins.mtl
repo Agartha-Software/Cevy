@@ -1,0 +1,18 @@
+# Blender 4.4.3 MTL File: 'BowlingPins.blend'
+# www.blender.org
+
+newmtl bownlingpin1
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+Pm 0.000000
+Ps 0.000000
+Pc 0.000000
+Pcr 0.030000
+aniso 0.000000
+anisor 0.000000
+map_Kd bowlingpin1_COL.png
+map_Pr bowlingpin1_ROU.png
+map_Bump -bm 1.000000 bowlingpin1_NOR.png
