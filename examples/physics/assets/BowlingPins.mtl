@@ -13,6 +13,6 @@ Pc 0.000000
 Pcr 0.030000
 aniso 0.000000
 anisor 0.000000
-map_Kd bowlingpin1_COL.png
-map_Pr bowlingpin1_ROU.png
-map_Bump -bm 1.000000 bowlingpin1_NOR.png
+map_Kd texture/bowlingpin1_COL.png
+map_Pr texture/bowlingpin1_ROU.png
+map_Bump -bm 1.000000 texture/bowlingpin1_NOR.png

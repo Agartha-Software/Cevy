@@ -30,6 +30,8 @@ target_link_libraries(physics_test PUBLIC cevy)
 get_cevy_engine_assets(physics_test)
 
 
+get_project_assets(physics_test ${CMAKE_CURRENT_SOURCE_DIR}/assets)
+
 option(TESTS "Build tests" OFF)
 if(TESTS)
     add_custom_target(tests-run

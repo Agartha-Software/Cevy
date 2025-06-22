@@ -14,5 +14,5 @@ Pc 0.000000
 Pcr 0.030000
 aniso 0.000000
 anisor 0.000000
-map_Kd /home/arthur/Downloads/LowPoly/textures/laminate_floor_diff_4k.png
-map_Bump -bm 1.000000 /home/arthur/Downloads/LowPoly/textures/laminate_floor_NOR_4k.png
+map_Kd texture/laminate_floor_diff_4k.png
+map_Bump -bm 1.000000 texture/laminate_floor_NOR_4k.png

@@ -13,5 +13,6 @@ Pc 1.000000
 Pcr 0.000000
 aniso 0.000000
 anisor 0.000000
-map_Pm Baked_Metallic_BowlingBall_01.png
-map_Pr Baked_Rough_BowlingBall_03.png
+map_Kd texture/Baked_COL_BowlingBall_03.png
+map_Bump -bm 1.000000 texture/Baked_Norm_BowlingBall_01.png
+map_Pr texture/Baked_Rough_BowlingBall_03.png
