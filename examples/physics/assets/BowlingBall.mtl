@@ -1,0 +1,18 @@
+# Blender 4.4.3 MTL File: 'PM_Baked_BowlingBall_6-21-22_01.blend'
+# www.blender.org
+
+newmtl Bowling_Ball
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+Ps 0.000000
+Pc 1.000000
+Pcr 0.000000
+aniso 0.000000
+anisor 0.000000
+map_Kd texture/Baked_COL_BowlingBall_03.png
+map_Bump -bm 1.000000 texture/Baked_Norm_BowlingBall_01.png
+map_Pr texture/Baked_Rough_BowlingBall_03.png

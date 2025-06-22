@@ -20,14 +20,17 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3 -ggdb -fno-exceptions")
 add_executable(physics_test
     # tug.cpp
     # constraints.cpp
-    physics.cpp
+    # physics.cpp
     # terminal_velocity.cpp
+    bowling.cpp
     )
 
 target_link_libraries(physics_test PUBLIC cevy)
 
 get_cevy_engine_assets(physics_test)
 
+
+get_project_assets(physics_test ${CMAKE_CURRENT_SOURCE_DIR}/assets)
 
 option(TESTS "Build tests" OFF)
 if(TESTS)

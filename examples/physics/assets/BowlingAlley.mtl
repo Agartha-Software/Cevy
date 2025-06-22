@@ -1,0 +1,18 @@
+# Blender 4.4.3 MTL File: 'BowlingAlley.blend'
+# www.blender.org
+
+newmtl laminate_floor.001
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+Pr 0.140182
+Pm 0.000000
+Ps 0.000000
+Pc 0.000000
+Pcr 0.030000
+aniso 0.000000
+anisor 0.000000
+map_Kd texture/laminate_floor_diff_4k.png
+map_Bump -bm 1.000000 texture/laminate_floor_NOR_4k.png
