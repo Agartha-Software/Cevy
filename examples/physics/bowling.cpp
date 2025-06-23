@@ -1,3 +1,5 @@
+#include "Stage.hpp"
+#include <numbers>
 #define GLM_FORCE_SWIZZLE
 #define GLM_ENABLE_EXPERIMENTAL
 
@@ -38,32 +40,71 @@ using namespace physics;
 float DEG2RAD = glm::pi<float>() / 180;
 
 struct Ball {};
+struct Arrow {};
 
 struct GameState {
   bool is_rolling;
+  glm::vec3 arrow_angle;
+  float arrow_power = 0.6;
 };
 
 void reset(Resource<GameState> game_state,
            Query<Ball, Transform, RigidBody, Motion> ball,
+           Query<Arrow, Transform> arrow,
            Query<Camera, Transform> camera) {
   auto [_, transform, rigid, motion] = ball.single();
 
   if (transform.position.z < -2) {
     game_state->is_rolling = false;
-    transform = Transform(glm::vec3(0, -8.5, 0.0754), glm::quat({0, 0, 0}));
+    transform = Transform(glm::vec3{0., -8.5, 0.0754}, glm::quat({0, 0, 0}));
     auto [_cam, camera_transform] = camera.single();
-    camera_transform = Transform(glm::vec3(0, -10, 5), glm::quat({glm::half_pi<float>() * 0.8, 0, 0}));
+    camera_transform = Transform(glm::vec3(0, -12, 1.5), glm::quat({glm::half_pi<float>() * 0.9, 0, 0}));
     motion.linear = glm::vec3{0};
     motion.angular = glm::vec3{0};
+    auto [_, arrow_transform] = arrow.single();
+    arrow_transform.setScaleY(game_state->arrow_power);
   }
+}
+
+void affect_arrow(Resource<input::ButtonInput<input::KeyCode>> keyboard,
+                Query<Arrow, Transform> arrow,
+                Resource<GameState> game_state,
+                Resource<Time> time) {
+  if (game_state->is_rolling) {
+    return;
+  }
+  auto [_, arrow_transform] = arrow.single();
+  auto rot = arrow_transform.rotation;
+
+  if (keyboard->is_pressed(input::KeyCode::LeftArrow) && game_state->arrow_angle.z < glm::pi<float>() / 5.) {
+    game_state->arrow_angle.z += 0.4 * time->delta_seconds();
+  }
+  if (keyboard->is_pressed(input::KeyCode::RightArrow) && game_state->arrow_angle.z > -glm::pi<float>() / 5.) {
+    game_state->arrow_angle.z -= 0.4 * time->delta_seconds();
+  }
+  if (keyboard->is_pressed(input::KeyCode::Space) && game_state->arrow_angle.x < glm::pi<float>() / 5.) {
+    game_state->arrow_angle.x += 0.4 * time->delta_seconds();
+  }
+  if (keyboard->is_pressed(input::KeyCode::RightShift) && game_state->arrow_angle.x > 0.) {
+    game_state->arrow_angle.x -= 0.4 * time->delta_seconds();
+  }
+  if (keyboard->is_pressed(input::KeyCode::UpArrow) && game_state->arrow_power < 1.2) {
+    game_state->arrow_power += 1 * time->delta_seconds();
+  }
+  if (keyboard->is_pressed(input::KeyCode::DownArrow) && game_state->arrow_power > 0.2) {
+    game_state->arrow_power -= 1 * time->delta_seconds();
+  }
+  arrow_transform.setRotationXYZ(game_state->arrow_angle);
+  arrow_transform.setScaleXYZ({0.05, game_state->arrow_power, 0.05});
 }
 
 void move_camera(Resource<input::ButtonInput<input::KeyCode>> keyboard,
                  Query<Camera, Transform> cam_q, Resource<ecs::Time> time,
                  Query<Ball, Transform> ball,
+                 Query<Arrow, Transform> arrow,
                  Resource<GameState> game_state) {
-  if (game_state->is_rolling == false) {
-    glm::vec3 direction = {0, 0, 0};
+  if (!game_state->is_rolling) {
+    glm::vec3 direction = {0., 0., 0.};
     float speed = 10;
 
     for (auto [_, transform] : cam_q) {
@@ -98,6 +139,8 @@ void move_camera(Resource<input::ButtonInput<input::KeyCode>> keyboard,
       transform.translateY(-4);
       transform.translateZ(2);
       transform.setRotationXYZ({glm::half_pi<float>() * 0.8, 0, 0});
+      auto [_, arrow_transform] = arrow.single();
+      arrow_transform.setScaleXYZ(0.);
     }
   }
 }
@@ -106,7 +149,7 @@ void rotate_camera(Query<Camera, Transform> cam_q,
                   Resource<input::ButtonInput<input::MouseButton>> mouse_buttons,
                   EventReader<input::mouseMotion> mouse_motion_reader,
                   Resource<GameState> game_state) {
-  static glm::vec2 rotation = {0 * glm::pi<float>(), glm::pi<float>() * 0.3f};
+  static glm::vec2 rotation = {0.f, glm::pi<float>() * 0.3f};
 
   if (mouse_buttons->is_pressed(input::MouseButton::Right)) {
     for (const auto &mouse_motion : mouse_motion_reader) {
@@ -130,12 +173,10 @@ void ball_control(Resource<input::ButtonInput<input::MouseButton>> mouse_buttons
                   EventReader<input::mouseMotion> mouse_motion_reader,
                   Query<Ball, RigidBody, Motion> ball,
                   Resource<GameState> game_state) {
-  if (game_state->is_rolling == true) {
-    return;
-  }
+  if (game_state->is_rolling) return;
   if (mouse_buttons->is_just_pressed(input::MouseButton::Left)) {
     auto [_, ball_rigidbody, ball_motion] = ball.single();
-    ball_motion.linear += glm::vec3{0., 10., 0.};
+    ball_motion.linear += glm::quat(game_state->arrow_angle) * glm::vec3(0., game_state->arrow_power * 15, 0.);
     ball_motion.angular += glm::vec3{-20., 0., 0.};
     game_state->is_rolling = true;
   }
@@ -143,13 +184,13 @@ void ball_control(Resource<input::ButtonInput<input::MouseButton>> mouse_buttons
 
 void setup(Resource<asset::AssetManager> asset_manager,
            Resource<Time> time,
-           Resource<physics::Gravity> gravity,
-           Resource<physics::RigidBodyWorld> rigidbody_world,
+           Resource<Gravity> gravity,
+           Resource<RigidBodyWorld> rigidbody_world,
            Resource<Assets<Mesh>> mesh_manager,
            Commands cmd) {
   rigidbody_world->dragDensity = 0.01;
-  cmd.spawn(SunLight{{1, 1 , 1}, }, Transform(0, 0, 15));
-  cmd.spawn(SunLight{{1, 0.9, 0.9}, }, Transform(-5, -1, 2));
+  cmd.spawn(SunLight{{1., 1., 1.}, }, Transform(0., 0., 15.));
+  cmd.spawn(SunLight{{1., 0.9, 0.9}, }, Transform(-5., -1., 2.));
   cmd.spawn(Camera(), Transform(glm::vec3(0, -12, 1.5), glm::quat({glm::half_pi<float>() * 0.9, 0, 0})));
   std::vector<Handle<PbrMaterial>> pins_mat;
   std::vector<Handle<PbrMaterial>> ball_mat;
@@ -166,16 +207,23 @@ void setup(Resource<asset::AssetManager> asset_manager,
       j++;
     } while (j <= i);
   }
-  cmd.spawn(Ball {}, ball, ball_mat.at(0), Transform(glm::vec3(0, -8.5, 0.0754), glm::quat({0, 0, 0})), physics::RigidBody(1.), Motion({0, 0, 0}), physics::Collider::primitives::Sphere(.0753));
-  cmd.spawn(alley, alley_mat.at(0), Transform(glm::vec3(0, 0, 0), glm::quat({0, 0, 0})), physics::RigidBody(INFINITY), Motion(), physics::Collider::primitives::Quad({10.5, 10.5}));
+  cmd.spawn(Ball {}, ball, ball_mat.at(0), Transform(glm::vec3(0, -8.5, 0.0754), glm::quat({0, 0, 0})), RigidBody(1.), Motion({0, 0, 0}), Collider::primitives::Sphere(.0753));
+  cmd.spawn(alley, alley_mat.at(0), Transform(glm::vec3(0, 0, 0), glm::quat({0, 0, 0})), RigidBody(INFINITY), Motion(), Collider::primitives::Quad({9.6, 1.}));
+
+  auto mat_white = asset_manager->add(PbrMaterial(), "white.material");
+  auto cube_handle = asset_manager->add(primitives::cube(1), "cube.mesh");
+  cube_handle->setModelMatrix(Transform(glm::vec3{0, 0.6, 0}));
+
+  cmd.spawn(Arrow {}, cube_handle, mat_white, Transform(glm::vec3(0, -8.5, 0.0754), glm::quat({0., 0., 0.}), {0.05, 0.6, 0.05}));
 }
 
 int main() {
   App app;
   app.add_plugins(engine::Engine<glWindow::Builder<engine::DeferredRenderer>>());
   // app.add_plugins(Engine<glWindow>());
-  app.add_plugins(physics::PhysicsPlugin());
+  app.add_plugins(PhysicsPlugin());
   app.init_component<Ball>();
+  app.init_component<Arrow>();
   GameState state = GameState { false };
   app.init_resource(state);
   app.add_systems<core_stage::Startup>(setup);
@@ -183,6 +231,7 @@ int main() {
   app.add_systems<core_stage::Update>(move_camera);
   app.add_systems<core_stage::Update>(ball_control);
   app.add_systems<core_stage::Update>(reset);
+  app.add_systems<core_stage::Update>(affect_arrow);
   app.run();
   return 0;
 }
