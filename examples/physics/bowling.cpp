@@ -33,6 +33,7 @@
 using namespace cevy;
 using namespace engine;
 using namespace ecs;
+using namespace physics;
 
 float DEG2RAD = glm::pi<float>() / 180;
 
@@ -42,8 +43,11 @@ struct GameState {
   bool is_rolling;
 };
 
-void reset(Resource<GameState> game_state, Query<Ball, Transform, cevy::physics::RigidBody, cevy::engine::Motion> ball, Query<Camera, Transform> camera) {
+void reset(Resource<GameState> game_state,
+           Query<Ball, Transform, RigidBody, Motion> ball,
+           Query<Camera, Transform> camera) {
   auto [_, transform, rigid, motion] = ball.single();
+
   if (transform.position.z < -2) {
     game_state->is_rolling = false;
     transform = Transform(glm::vec3(0, -8.5, 0.0754), glm::quat({0, 0, 0}));
@@ -86,8 +90,6 @@ void move_camera(Resource<input::ButtonInput<input::KeyCode>> keyboard,
       if (glm::length(direction) != 0) {
         transform.translateXYZ(transform.rotation * glm::normalize(direction) * speed * delta_time);
       }
-      std::cout << "tra" << transform.position.x << " " << transform.position.y << " " << transform.position.z << " " << std::endl;
-      std::cout << "rot" << transform.rotation.x << " " << transform.rotation.y << " " << transform.rotation.z << " " << std::endl;
     }
   } else {
     for (auto [_camera, transform] : cam_q) {
@@ -102,7 +104,7 @@ void move_camera(Resource<input::ButtonInput<input::KeyCode>> keyboard,
 
 void rotate_camera(Query<Camera, Transform> cam_q,
                   Resource<input::ButtonInput<input::MouseButton>> mouse_buttons,
-                  cevy::ecs::EventReader<input::mouseMotion> mouse_motion_reader,
+                  EventReader<input::mouseMotion> mouse_motion_reader,
                   Resource<GameState> game_state) {
   static glm::vec2 rotation = {0 * glm::pi<float>(), glm::pi<float>() * 0.3f};
 
@@ -125,10 +127,9 @@ void rotate_camera(Query<Camera, Transform> cam_q,
 }
 
 void ball_control(Resource<input::ButtonInput<input::MouseButton>> mouse_buttons,
-                  cevy::ecs::EventReader<input::mouseMotion> mouse_motion_reader,
-                  Query<Ball, cevy::physics::RigidBody, cevy::engine::Motion> ball,
-                  Resource<GameState> game_state
-                ) {
+                  EventReader<input::mouseMotion> mouse_motion_reader,
+                  Query<Ball, RigidBody, Motion> ball,
+                  Resource<GameState> game_state) {
   if (game_state->is_rolling == true) {
     return;
   }
@@ -141,16 +142,15 @@ void ball_control(Resource<input::ButtonInput<input::MouseButton>> mouse_buttons
 }
 
 void setup(Resource<asset::AssetManager> asset_manager,
-  Resource<Time> time,
-  Resource<physics::Gravity> gravity,
-  Resource<physics::RigidBodyWorld> rigidbody_world,
-  Resource<Assets<Mesh>> mesh_manager,
-  cevy::ecs::Commands cmd) {
+           Resource<Time> time,
+           Resource<physics::Gravity> gravity,
+           Resource<physics::RigidBodyWorld> rigidbody_world,
+           Resource<Assets<Mesh>> mesh_manager,
+           Commands cmd) {
   rigidbody_world->dragDensity = 0.01;
   cmd.spawn(SunLight{{1, 1 , 1}, }, Transform(0, 0, 15));
   cmd.spawn(SunLight{{1, 0.9, 0.9}, }, Transform(-5, -1, 2));
-  cmd.spawn(Camera(), Transform(glm::vec3(0, -10, 5),
-                                    glm::quat({glm::half_pi<float>() * 0.8, 0, 0}), glm::vec3(1)));
+  cmd.spawn(Camera(), Transform(glm::vec3(0, -12, 1.5), glm::quat({glm::half_pi<float>() * 0.9, 0, 0})));
   std::vector<Handle<PbrMaterial>> pins_mat;
   std::vector<Handle<PbrMaterial>> ball_mat;
   std::vector<Handle<PbrMaterial>> alley_mat;
@@ -162,12 +162,12 @@ void setup(Resource<asset::AssetManager> asset_manager,
   for (float i = 0; i != 4; i++) {
     float j = 0;
     do {
-      cmd.spawn(pins, pins_mat.at(0), Transform(glm::vec3(((i / 2) - j) / 3, 8.5 + i / 3, 0), glm::quat({0, 0, 0}), glm::vec3(1)));
+      cmd.spawn(pins, pins_mat.at(0), Transform(glm::vec3(((i / 2) - j) / 3, 8.5 + i / 3, 0), glm::quat({0, 0, 0})));
       j++;
     } while (j <= i);
   }
-  cmd.spawn(Ball {}, ball, ball_mat.at(0), Transform(glm::vec3(0, -8.5, 0.0754), glm::quat({0, 0, 0}), glm::vec3(1)), physics::RigidBody(1.), Motion({0, 0, 0}), physics::Collider::primitives::Sphere(.0753));
-  cmd.spawn(alley, alley_mat.at(0), Transform(glm::vec3(0, 0, 0), glm::quat({0, 0, 0}), glm::vec3(1)), physics::RigidBody(INFINITY), Motion(), physics::Collider::primitives::Quad({10.5, 10.5}));
+  cmd.spawn(Ball {}, ball, ball_mat.at(0), Transform(glm::vec3(0, -8.5, 0.0754), glm::quat({0, 0, 0})), physics::RigidBody(1.), Motion({0, 0, 0}), physics::Collider::primitives::Sphere(.0753));
+  cmd.spawn(alley, alley_mat.at(0), Transform(glm::vec3(0, 0, 0), glm::quat({0, 0, 0})), physics::RigidBody(INFINITY), Motion(), physics::Collider::primitives::Quad({10.5, 10.5}));
 }
 
 int main() {
