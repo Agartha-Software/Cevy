@@ -312,7 +312,7 @@ void move_camera(Resource<input::ButtonInput<input::KeyCode>> keyboard,
 void rotate_camera(Query<Camera, Transform> cam_q,
                   Resource<input::ButtonInput<input::MouseButton>> mouse_buttons,
                   cevy::ecs::EventReader<input::mouseMotion> mouse_motion_reader) {
-  static glm::vec2 rotation = {0 * glm::pi<float>(), glm::pi<float>() * 0.3f};
+  static glm::vec2 rotation = {0.f, glm::pi<float>() * 0.3f};
 
   if (mouse_buttons->is_pressed(input::MouseButton::Right)) {
     // std::cout << "mousing!" << std::endl;
