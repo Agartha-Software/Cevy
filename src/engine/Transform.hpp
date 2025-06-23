@@ -43,7 +43,7 @@ class Transform {
       : position(0, 0, 0), rotation(glm::normalize(quat)), scale(1, 1, 1), world_position(position),
         world_rotation(rotation), world_scale(scale) {}
 
-  Transform(const glm::vec3 &vec, const glm::quat &quat, const glm::vec3 scale)
+  Transform(const glm::vec3 &vec, const glm::quat &quat, const glm::vec3 scale = {1, 1, 1})
       : position(vec), rotation(quat), scale(scale), world_position(position),
         world_rotation(rotation), world_scale(scale) {}
 

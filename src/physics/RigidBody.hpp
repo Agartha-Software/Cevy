@@ -26,9 +26,8 @@ class RigidBody {
   public:
   // Collider collider;
   // glm::vec3 center;
-  // float resititution = 1;
-  float resititution = 0.90;
-  // float resititution = 0.7071; // sqrt(0.5);
+  float resititution = 0.95;
+  float friction = 0.1;
   // private:
 
   /// inverse of kilogram mass : kg⁻¹
@@ -91,9 +90,9 @@ class RigidBody {
       // axis = glm::cross(arm, axis);
     }
 
-    // auto i_inertia_tensor = glm::mat3(tm.rotation) * this->iInertiaTensor *
-    // glm::transpose(glm::mat3(tm.rotation));
-    auto i_inertia_tensor = glm::mat3(0.5);
+    auto i_inertia_tensor = glm::mat3(tm.rotation) * this->iInertiaTensor *
+    glm::transpose(glm::mat3(tm.rotation));
+    // auto i_inertia_tensor = glm::mat3(10);
 
     glm::vec3 angular = i_inertia_tensor * glm::vec3(axis * angle);
     glm::vec3 tangeantial_v = glm::cross(angular, arm);

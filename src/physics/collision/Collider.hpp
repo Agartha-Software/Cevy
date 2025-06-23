@@ -441,7 +441,7 @@ class Shape {
     glm::vec3 tan = tm_b * glm::vec4(data_b[2].xyz(), 0);
     float tan_w = data_b[2].w;
     glm::vec3 cotan = tm_b * glm::vec4(data_b[3].xyz(), 0);
-    float cotan_w = data_b[2].w;
+    float cotan_w = data_b[3].w;
     const glm::vec3 q_center = (tm_b * data_b[0]).xyz();
     const glm::vec3 q_normal = glm::normalize(glm::cross(tan, cotan));
     const auto distance = dot(q_center - s_center, -q_normal);
@@ -728,9 +728,9 @@ class Shape {
     glm::vec3 tan = tm_a * glm::vec4(data_a[2].xyz(), 0);
     float tan_w = data_a[2].w;
     glm::vec3 cotan = tm_a * glm::vec4(data_a[3].xyz(), 0);
-    float cotan_w = data_a[2].w;
+    float cotan_w = data_a[3].w;
     const glm::vec3 q_center = (tm_a * data_a[0]).xyz();
-    const glm::vec3 q_normal = glm::normalize(glm::cross(tan, cotan));
+    const glm::vec3 q_normal = glm::normalize((tm_a * data_a[1]).xyz());
 
     const glm::vec3 b_center = (tm_b * data_b[0]).xyz();
     const glm::vec3 b_x = (tm_b * data_b[1]).xyz();
@@ -822,18 +822,24 @@ class Shape {
                                          const glm::vec4 (&data_b)[4], const glm::mat4 &tm_b) {
     glm::vec3 tan = tm_a * glm::vec4(data_a[2].xyz(), 0);
     float tan_w = data_a[2].w;
+    tan /= tan_w;
     glm::vec3 cotan = tm_a * glm::vec4(data_a[3].xyz(), 0);
+    cotan /= tan_w;
     float cotan_w = data_a[2].w;
     const glm::vec3 q_center = (tm_a * data_a[0]).xyz();
-    const glm::vec3 q_normal = glm::normalize(glm::cross(tan, cotan));
+    const glm::vec3 q_normal = glm::normalize((tm_a * data_a[1]).xyz());
 
     const glm::vec3 c_center = (tm_b * data_b[0]).xyz();
-    glm::vec4 axis = homogenous((tm_b * data_b[1]).xyz());
+    glm::vec3 c_run = (tm_b * data_b[1]);
+    glm::vec4 axis = homogenous(c_run);
     const glm::vec3 c_axis = axis.xyz();
     const float c_h_height = axis.w / 2.f; // height is -1 to +1, we want 0 to 1
-    const float c_radius = glm::length((tm_b * data_b[2]).xyz());
+    glm::vec3 c_radial = (tm_b * data_b[2]);
+    const float c_radius = glm::length(c_radial);
+    c_radial /= c_radius;
 
-    const glm::vec3 pivot = glm::normalize(glm::cross(c_axis, q_normal));
+    const glm::vec3 pivot = c_axis == q_normal ? c_radial : glm::normalize(glm::cross(c_axis, q_normal));
+
     const glm::vec3 tilt = glm::cross(c_axis, pivot);
 
     auto c_a = c_center + c_axis * (c_h_height);

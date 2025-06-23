@@ -70,11 +70,13 @@ void cevy::physics::RigidBody::system(
         glm::vec3 pos_b = collision.location - transform_b.position;
 
         auto vel_a_local =
-            vel_a.linear +
-            (vel_a.angular != glm::vec3() ? glm::cross(vel_a.angular, pos_a) : glm::vec3());
+            vel_a.linear
+            +
+            (vel_a.angular != glm::vec3() ? glm::cross(pos_a, vel_a.angular) : glm::vec3());
         auto vel_b_local =
-            vel_b.linear +
-            (vel_b.angular != glm::vec3() ? glm::cross(vel_b.angular, pos_b) : glm::vec3());
+            vel_b.linear
+            -
+            (vel_b.angular != glm::vec3() ? glm::cross(pos_b, vel_b.angular) : glm::vec3());
 
         auto relative_v = vel_b_local - vel_a_local;
 
@@ -83,7 +85,7 @@ void cevy::physics::RigidBody::system(
         auto friction = relative_v - collision.direction * impulse / 2.f;
 
         if (glm::dot(friction, friction) != 0) {
-          friction = glm::normalize(friction) * std::min(.02f, glm::length(friction));
+          friction = glm::normalize(friction) * std::min(.01f * (body_a.friction + body_b.friction), glm::length(friction));
         }
 
         if (impulse <= 0)
@@ -95,9 +97,9 @@ void cevy::physics::RigidBody::system(
         float restitution = body_a.resititution * body_b.resititution;
 
         glm::vec3 impulse_a =
-            collision.direction * impulse * conservation_a * restitution + friction;
+            (collision.direction * impulse * restitution + friction) * conservation_a;
         glm::vec3 impulse_b =
-            -collision.direction * impulse * conservation_b * restitution - friction;
+            (-collision.direction * impulse * restitution - friction) * conservation_b;
 
         glm::vec3 push_a = collision.direction * collision.intersection * conservation_a;
         glm::vec3 push_b = -collision.direction * collision.intersection * conservation_b;
