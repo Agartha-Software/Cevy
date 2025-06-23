@@ -67,6 +67,14 @@ inline std::string reflect<glm::mat4>(const glm::mat4 &v) {
     + reflect(v[3]) + "\n"
     + "}";
 }
+
+/// calculate a normalized vector with its length stored in its last component
+template<int Size, typename T, ::glm::qualifier Q>
+::glm::vec<Size + 1, T, Q> homogenous(const ::glm::vec<Size, T, Q> &v) {
+  T w = ::glm::length(v);
+  return {v / w, w};
+}
+
 } // namespace cevy
 
 namespace glm {

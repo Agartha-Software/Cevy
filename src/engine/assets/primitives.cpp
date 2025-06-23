@@ -177,4 +177,89 @@ Mesh sphere(float size, uint32_t slices, uint32_t stacks) {
   return model;
 }
 
+Mesh cylinder(glm::vec2 size, uint32_t slices) {
+  uint32_t nVerts = (slices * 4) + 2;
+  uint32_t nIndices = (slices * 4) * 3;
+
+  std::vector<glm::vec4> vertices(nVerts);
+  std::vector<glm::vec3> normals(nVerts);
+  // std::vector<glm::vec2> uvs(nVerts);
+  std::vector<uint32_t> indices(nIndices);
+
+  float theta;
+  float thetaFac = glm::two_pi<float>() / slices;
+  // float s;
+
+  uint32_t idx = 0;
+  for (uint32_t i = 0; i < slices; i++) {
+    theta = i * thetaFac;
+    // s = (float)i / slices / 2;
+
+    vertices[idx] = {size.x * std::cos(theta), size.x * std::sin(theta), -size.y / 2, 1};
+    normals[idx] = { 0, 0, -1};
+    // uvs[idx] = { 0.75 + 0.25 * std::cos(theta), 0.25 + 0.25 * std::sin(theta) };
+    idx += 1;
+
+    vertices[idx] = {size.x * std::cos(theta), size.x * std::sin(theta), -size.y / 2, 1};
+    normals[idx] = { std::cos(theta), std::sin(theta), 0};
+    // uvs[idx] = { s, 0, };
+    idx += 1;
+
+    vertices[idx] = {size.x * std::cos(theta), size.x * std::sin(theta), size.y / 2, 1};
+    normals[idx] = { std::cos(theta), std::sin(theta), 0};
+    // uvs[idx] = { s, 1, };
+    idx += 1;
+
+    vertices[idx] = {size.x * std::cos(theta), size.x * std::sin(theta),size.y / 2, 1};
+    normals[idx] = { 0, 0, 1};
+    // uvs[idx] = { 0.75 + 0.25 * std::cos(theta), 0.75 + 0.25 * std::sin(theta) };
+    idx += 1;
+  }
+
+  uint32_t bottom_index = idx;
+  vertices[idx] = {0, 0, -size.y / 2, 1};
+  normals[idx] = { 0, 0, -1};
+  // uvs[idx] = { 0.75, 0.25 };
+  idx += 1;
+
+  uint32_t top_index = idx;
+  vertices[idx] = {0, 0, size.y / 2, 1};
+  normals[idx] = { 0, 0, 1};
+  // uvs[idx] = { 0.75, 0.75 };
+  idx += 1;
+
+  // Generate the element list
+  idx = 0;
+  for (uint32_t i = 0; i < slices; i++) {
+    uint32_t region = i * 4;
+    uint32_t next_region = ((i + 1) % slices) * 4;
+    indices[idx] = bottom_index;
+    indices[idx + 1] = next_region + 0;
+    indices[idx + 2] = region + 0;
+    idx += 3;
+
+    indices[idx] = region + 1;
+    indices[idx + 1] = next_region + 1;
+    indices[idx + 2] = region + 2;
+    idx += 3;
+
+    indices[idx] = next_region + 2;
+    indices[idx + 1] = region + 2;
+    indices[idx + 2] = next_region + 1;
+    idx += 3;
+
+    indices[idx] = top_index;
+    indices[idx + 1] = region + 3;
+    indices[idx + 2] = next_region + 3;
+    idx += 3;
+  }
+
+  Mesh model;
+  model.load(vertices, normals, indices);
+  model.gl_init();
+
+  return model;
+}
+
+
 } // namespace cevy::engine::primitives

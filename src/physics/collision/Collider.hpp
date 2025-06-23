@@ -24,28 +24,31 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/matrix.hpp>
 
+#include "engine.hpp"
+
 namespace cevy::physics {
 namespace detail {
-  template <typename R, typename T> R signum(T val) {
-    return (T(0) < val) - (val < T(0));
-  }
-  inline bool solve_quadratic(float a, float b, float c, float &x0, float &x1) {
-    float discr = b * b - 4 * a * c;
-    if (discr < 0)
-      return false;
+template <typename R, typename T>
+R signum(T val) {
+  return (T(0) < val) - (val < T(0));
+}
+inline bool solve_quadratic(float a, float b, float c, float &x0, float &x1) {
+  float discr = b * b - 4 * a * c;
+  if (discr < 0)
+    return false;
 
-    if (discr == 0) {
-      x0 = x1 = -0.5 * b / a;
-    } else {
-      float q = -0.5 * (b + std::sqrt(discr) * signum<int>(b));
-      x0 = q / a;
-      x1 = c / q;
-    }
-    if (x0 > x1)
-      std::swap(x0, x1);
-
-    return true;
+  if (discr == 0) {
+    x0 = x1 = -0.5 * b / a;
+  } else {
+    float q = -0.5 * (b + std::sqrt(discr) * signum<int>(b));
+    x0 = q / a;
+    x1 = c / q;
   }
+  if (x0 > x1)
+    std::swap(x0, x1);
+
+  return true;
+}
 } // namespace detail
 
 struct Collision {
@@ -101,10 +104,7 @@ class Shape {
     Sphere,
     Quad,
     Box,
-    // Tri,
-    // Mesh,
-    // BoundedPlane,
-    // Cube,
+    Cylinder,
   };
 
   // private:
@@ -194,6 +194,17 @@ class Shape {
     return shape;
   }
 
+  static Shape Cylinder(glm::vec3 location, glm::quat orientation, glm::vec2 size) {
+    Shape shape;
+    shape.shape = ShapeE::Cylinder;
+    shape.data[0] = {location, 1};
+    shape.data[1] = {orientation * glm::vec3(0, 0, size.y), 0};
+    shape.data[2] = {orientation * glm::vec3(size.x, 0, 0), 0};
+
+    shape.inertiaTensor = glm::mat3 {0.1};
+    return shape;
+  }
+
   bool isSphere() const { return this->shape == ShapeE::Sphere; }
 
   // bool isPlane() const { return this->shape == ShapeE::Plane; }
@@ -212,6 +223,8 @@ class Shape {
       return Shape::raycast_quad(this->data, tm, ray);
     case ShapeE::Box:
       return Shape::raycast_sphere(this->data, tm, ray);
+    case ShapeE::Cylinder:
+      return Collision::NoHit();
     default:
       throw std::runtime_error("Shape::raycast: unreachable");
     }
@@ -239,7 +252,8 @@ class Shape {
         return Shape::collide_sphere_quad(a.data, tm_a, b.data, tm_b);
       case ShapeE::Box:
         return Shape::collide_sphere_box(a.data, tm_a, b.data, tm_b);
-        // return Shape::collide_sphere_box(a.data, tm_a, b.data, tm_b);
+      case ShapeE::Cylinder:
+        return Shape::collide_sphere_cylinder(a.data, tm_a, b.data, tm_b);
       default:
         throw std::runtime_error("Shape::collide: unreachable");
       }
@@ -259,11 +273,29 @@ class Shape {
         // return Shape::collide_quad_quad(a.data, tm_a, b.data, tm_b);
       case ShapeE::Box:
         return Shape::collide_quad_box(a.data, tm_a, b.data, tm_b);
+      case ShapeE::Cylinder:
+        return Shape::collide_quad_cylinder(a.data, tm_a, b.data, tm_b);
       default:
         throw std::runtime_error("Shape::collide: unreachable");
       }
     case ShapeE::Box:
-      return Shape::collide_box_box(a.data, tm_a, b.data, tm_b);
+      switch (b.shape) {
+      case ShapeE::Box:
+        return Shape::collide_box_box(a.data, tm_a, b.data, tm_b);
+      case ShapeE::Cylinder:
+        return Collision::NoHit(); // !todo
+      // return Shape::collide_box_cylinder(a.data, tm_a, b.data, tm_b);
+      default:
+        throw std::runtime_error("Shape::collide: unreachable");
+      }
+    case ShapeE::Cylinder:
+      switch (b.shape) {
+      case ShapeE::Cylinder:
+        return Collision::NoHit(); // !todo
+        // return Shape::collide_cylinder_cylinder(a.data, tm_a, b.data, tm_b);
+      default:
+        throw std::runtime_error("Shape::collide: unreachable");
+      }
     default:
       throw std::runtime_error("Shape::collide: unreachable");
     }
@@ -559,6 +591,68 @@ class Shape {
     return Collision {-normal, hit, distance, true};
   }
 
+  static Collision collide_sphere_cylinder(const glm::vec4 (&data_a)[4], const glm::mat4 &tm_a,
+                                           const glm::vec4 (&data_b)[4], const glm::mat4 &tm_b) {
+    const glm::vec3 s_center = (tm_a * data_a[0]).xyz();
+    const glm::vec3 s_size = (tm_a * data_a[1]).xyz();
+    const float s_radius = glm::length(s_size);
+
+    const glm::vec3 c_center = (tm_b * data_b[0]).xyz();
+    glm::vec4 axis = homogenous((tm_b * data_b[1]).xyz());
+    const glm::vec3 c_axis = axis.xyz();
+    const float c_h_height = axis.w / 2.f; // height is -1 to +1, we want 0 to 1
+    const float c_radius = glm::length((tm_b * data_b[2]).xyz());
+
+    const glm::vec3 difference = s_center - c_center;
+    const float along_axis = glm::dot(c_axis, difference);
+    const glm::vec3 axial_out = c_axis * along_axis;
+    const glm::vec3 radial_out = difference - axial_out;
+    const float along_radial = glm::length(radial_out);
+    if (std::abs(along_axis) < c_h_height) {
+      // center within axial bounds
+      if (along_radial < c_radius) {
+        // center within cylinder -> curve contact
+        float intersection = along_radial - s_radius - c_radius;
+        glm::vec3 normal = radial_out / along_radial;
+        return Collision {-normal, s_center + normal * s_radius, intersection, true};
+      } else {
+        // center around curve -> curve contact
+        float intersection = along_radial - s_radius - c_radius;
+        if (intersection < 0) {
+          glm::vec3 normal = radial_out / along_radial;
+          return Collision {normal, s_center + normal * s_radius, -intersection, true};
+        } else {
+          return Collision::NoHit();
+        }
+      }
+    } else {
+      // center outside of axial bounds
+      if (along_radial < c_radius) {
+        // center facing caps -> flat contact
+        glm::vec3 normal = c_axis * detail::signum<float>(along_axis);
+        float intersection = std::abs(along_axis) - s_radius - c_h_height;
+        if (intersection < 0) {
+          return Collision {normal, s_center + normal * s_radius, -intersection, true};
+        } else {
+          return Collision::NoHit();
+        }
+      } else {
+        // center on diagonal -> rim contact
+        glm::vec3 corner = c_center                                                    //
+                           + (c_axis * c_h_height * detail::signum<float>(along_axis)) //
+                           + c_radius * radial_out / along_radial;                     //
+        glm::vec3 intersecting = s_center - corner;
+        float intersection = glm::length(intersecting) - s_radius;
+        glm::vec3 normal = glm::normalize(intersecting);
+        if (intersection < 0) {
+          return Collision {normal, s_center + normal * s_radius, -intersection, true};
+        } else {
+          return Collision::NoHit();
+        }
+      }
+    }
+  }
+
   // static Collision collide_plane_quad(const glm::vec4 (&data_a)[4], const glm::mat4 &tm_a,
   //                                     const glm::vec4 (&data_b)[4], const glm::mat4 &tm_b) {
   //   std::vector<Collision> collisions;
@@ -739,6 +833,66 @@ class Shape {
     return Collision {q_normal, hit, -distance, true};
   }
 
+  static Collision collide_quad_cylinder(const glm::vec4 (&data_a)[4], const glm::mat4 &tm_a,
+                                         const glm::vec4 (&data_b)[4], const glm::mat4 &tm_b) {
+    glm::vec3 tan = tm_a * glm::vec4(data_a[2].xyz(), 0);
+    float tan_w = data_a[2].w;
+    glm::vec3 cotan = tm_a * glm::vec4(data_a[3].xyz(), 0);
+    float cotan_w = data_a[2].w;
+    const glm::vec3 q_center = (tm_a * data_a[0]).xyz();
+    const glm::vec3 q_normal = glm::normalize(glm::cross(tan, cotan));
+
+    const glm::vec3 c_center = (tm_b * data_b[0]).xyz();
+
+    glm::vec4 axis = homogenous((tm_b * data_b[1]).xyz());
+    const glm::vec3 c_axis = axis.xyz();
+    const float c_h_height = axis.w / 2.f; // height is -1 to +1, we want 0 to 1
+    const float c_radius = glm::length((tm_b * data_b[2]).xyz());
+
+    const glm::vec3 pivot = glm::normalize(glm::cross(c_axis, q_normal));
+    const glm::vec3 tilt = glm::cross(c_axis, pivot);
+
+    auto c_a = c_center + c_axis * (c_h_height);
+    auto c_b = c_center - c_axis * (c_h_height);
+
+    std::vector<glm::vec3> points = {
+        c_a + tilt * c_radius,
+        c_a - tilt * c_radius,
+        c_b + tilt * c_radius,
+        c_b - tilt * c_radius,
+    };
+
+    const float q_dot = glm::dot(q_normal, q_center);
+
+    float min = INFINITY;
+    float max = -INFINITY;
+    const glm::vec3 *v_min = 0;
+    const glm::vec3 *v_max = 0;
+
+    for (const auto &vert : points) {
+      auto dot = glm::dot(q_normal, vert);
+      if (dot < min) {
+        min = dot;
+        v_min = &vert;
+      }
+      if (dot > max) {
+        max = dot;
+        v_max = &vert;
+      }
+    }
+
+    if (min > q_dot || max < q_dot) {
+      return Collision::NoHit();
+    }
+
+    if (q_dot - min < max - q_dot) {
+      // closest to 'min'
+      return Collision {-q_normal, *v_min, std::abs(q_dot - min), true};
+    } else {
+      // closest to 'max'
+      return Collision {q_normal, *v_max, std::abs(max - q_dot), true};
+    }
+  }
 
   protected:
   static std::tuple<float, float> compute_sat(const glm::vec3 &axis,
@@ -763,7 +917,6 @@ class Shape {
     const glm::vec3 a_y = (tm_a * data_a[2]).xyz();
     const glm::vec3 a_z = (tm_a * data_a[3]).xyz();
 
-
     const glm::vec3 b_center = (tm_b * data_b[0]).xyz();
     const glm::vec3 b_x = (tm_b * data_b[1]).xyz();
     const glm::vec3 b_y = (tm_b * data_b[2]).xyz();
@@ -772,25 +925,25 @@ class Shape {
     const glm::vec3 delta = a_center - b_center;
 
     std::vector<glm::vec3> verts_a = {
-      a_center - a_x - a_y - a_z, //
-      a_center - a_x - a_y + a_z, //
-      a_center - a_x + a_y - a_z, //
-      a_center - a_x + a_y + a_z, //
-      a_center + a_x - a_y - a_z, //
-      a_center + a_x - a_y + a_z, //
-      a_center + a_x + a_y - a_z, //
-      a_center + a_x + a_y + a_z, //
+        a_center - a_x - a_y - a_z, //
+        a_center - a_x - a_y + a_z, //
+        a_center - a_x + a_y - a_z, //
+        a_center - a_x + a_y + a_z, //
+        a_center + a_x - a_y - a_z, //
+        a_center + a_x - a_y + a_z, //
+        a_center + a_x + a_y - a_z, //
+        a_center + a_x + a_y + a_z, //
     };
 
     std::vector<glm::vec3> verts_b = {
-      b_center - b_x - b_y - b_z, //
-      b_center - b_x - b_y + b_z, //
-      b_center - b_x + b_y - b_z, //
-      b_center - b_x + b_y + b_z, //
-      b_center + b_x - b_y - b_z, //
-      b_center + b_x - b_y + b_z, //
-      b_center + b_x + b_y - b_z, //
-      b_center + b_x + b_y + b_z, //
+        b_center - b_x - b_y - b_z, //
+        b_center - b_x - b_y + b_z, //
+        b_center - b_x + b_y - b_z, //
+        b_center - b_x + b_y + b_z, //
+        b_center + b_x - b_y - b_z, //
+        b_center + b_x - b_y + b_z, //
+        b_center + b_x + b_y - b_z, //
+        b_center + b_x + b_y + b_z, //
     };
 
     Collision hit;
@@ -852,6 +1005,11 @@ class Collider {
                         glm::vec3 position = {0, 0, 0}) {
       return Collider(Shape::Box(position, size, orientation));
     };
+
+    static Collider Cylinder(glm::vec2 size, glm::quat orientation = glm::quat({0, 0, 0}),
+                             glm::vec3 position = {0, 0, 0}) {
+      return Collider(Shape::Cylinder(position, orientation, size));
+    }
   };
 
   std::vector<Shape> shapes;

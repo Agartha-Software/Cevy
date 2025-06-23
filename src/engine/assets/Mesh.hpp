@@ -179,5 +179,6 @@ Mesh cube(float size);
 // inline Mesh cube(float size) { return cube({size, size, size}); };
 Mesh plane(float size, uint32_t subu, uint32_t subv);
 Mesh sphere(float size, uint32_t slices, uint32_t stacks);
+Mesh cylinder(glm::vec2 size, uint32_t slices);
 } // namespace primitives
 } // namespace cevy::engine
