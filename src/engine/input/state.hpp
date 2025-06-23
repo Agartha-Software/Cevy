@@ -145,7 +145,7 @@ enum class KeyCode : unsigned int {
   KPEnter = GLFW_KEY_KP_ENTER,
   KPEqual = GLFW_KEY_KP_EQUAL,
   LeftShift = GLFW_KEY_LEFT_SHIFT,
-  Shift = GLFW_KEY_LEFT_SHIFT,
+  Shift = GLFW_KEY_RIGHT_SHIFT,
   LeftControl = GLFW_KEY_LEFT_CONTROL,
   Control = GLFW_KEY_LEFT_CONTROL,
   LeftAlt = GLFW_KEY_LEFT_ALT,
