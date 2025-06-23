@@ -7,8 +7,6 @@
 
 #define GLM_FORCE_SWIZZLE
 
-#include <chrono>
-
 #include <glm/ext/quaternion_geometric.hpp>
 #include <glm/geometric.hpp>
 
@@ -18,6 +16,7 @@
 #include "Physics.hpp"
 #include "Spring.hpp"
 #include "Transform.hpp"
+#include "engine.hpp"
 
 void cevy::physics::PhysicsPlugin::build(cevy::ecs::App &app) {
   app.init_component<cevy::physics::RigidBody>();
@@ -70,8 +69,12 @@ void cevy::physics::RigidBody::system(
         glm::vec3 pos_a = collision.location - transform_a.position;
         glm::vec3 pos_b = collision.location - transform_b.position;
 
-        auto vel_a_local = vel_a.linear + glm::cross(vel_a.angular, pos_a);
-        auto vel_b_local = vel_b.linear + glm::cross(vel_b.angular, pos_b);
+        auto vel_a_local =
+            vel_a.linear +
+            (vel_a.angular != glm::vec3() ? glm::cross(vel_a.angular, pos_a) : glm::vec3());
+        auto vel_b_local =
+            vel_b.linear +
+            (vel_b.angular != glm::vec3() ? glm::cross(vel_b.angular, pos_b) : glm::vec3());
 
         auto relative_v = vel_b_local - vel_a_local;
 
@@ -79,7 +82,9 @@ void cevy::physics::RigidBody::system(
 
         auto friction = relative_v - collision.direction * impulse / 2.f;
 
-        friction = glm::normalize(friction) * std::min(.02f, glm::length(friction));
+        if (glm::dot(friction, friction) != 0) {
+          friction = glm::normalize(friction) * std::min(.02f, glm::length(friction));
+        }
 
         if (impulse <= 0)
           continue;

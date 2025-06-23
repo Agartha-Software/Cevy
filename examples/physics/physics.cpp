@@ -69,10 +69,12 @@ int initial_setup(Resource<asset::AssetManager> asset_manager,
   // auto plane_handle = mesh_manager->add();
   auto sphere = primitives::sphere(1, 32, 16);
   auto cube = primitives::cube(1);
+  auto cylinder = primitives::cylinder({0.5, 1}, 16);
   // sphere.setModelMatrix(glm::mat4(Transform(0, 0, 1.5)));
 
   auto sphere_handle = asset_manager->add(std::move(sphere), "sphere.mesh");
   auto cube_handle = asset_manager->add(std::move(cube), "cube.mesh");
+  auto cylinder_handle = asset_manager->add(std::move(cylinder), "cylinder.mesh");
 
   auto mat_white = asset_manager->add(PbrMaterial(), "white.material");
   auto mat_sphere = asset_manager->add(PbrMaterial(glm::vec3(0.8, 0.8, 0.8), glm::vec3(1), 12), "sphere.material");
@@ -85,15 +87,24 @@ int initial_setup(Resource<asset::AssetManager> asset_manager,
       Motion({-2, 0, 0}),
   };
   auto origin_b = Origin {
-      Transform({-2, 0, 6}, glm::quat({1, 0.5, 0.2,}), glm::vec3(1)),
+      Transform({-2, 0, 6}, glm::quat({1, 0.5, 0.2,}), glm::vec3({1, 1, 2})),
       Motion({2, 0, 0}),
   };
   auto sphere_a =
       cmd.spawn(sphere_handle, mat_sphere, Color(1, 0.1, 0.1), origin_a, origin_a.transform,
-                origin_a.velocity, physics::RigidBody(.8), physics::Collider::primitives::Sphere(1));
-  auto cube_b =
-  cmd.spawn(cube_handle, mat_sphere, Color(0.1, 0.1, 1), origin_b, origin_b.transform,
-            origin_b.velocity, physics::RigidBody(10), physics::Collider::primitives::Box({1, 1, 1}));
+                origin_a.velocity, physics::RigidBody(8), physics::Collider::primitives::Sphere(1));
+  // auto cube_a =
+  // cmd.spawn(cube_handle, mat_sphere, Color(1, 0.1, 0.1), origin_a, origin_a.transform,
+  //           origin_a.velocity, physics::RigidBody::With(physics::Collider::primitives::Box({1, 1, 1}), .4, 1000));
+  // auto cube_b =
+  cmd.spawn(cylinder_handle, mat_sphere, Color(0.1, 0.1, 1), origin_b, origin_b.transform,
+            origin_b.velocity, physics::RigidBody(10), physics::Collider(physics::Shape::Cylinder({}, glm::quat({0, 0, 0}), {0.5, 1} ), physics::Shape::Box({}, {0.7, 0.7, 1})));
+
+  cmd.spawn(cylinder_handle, mat_sphere, Color(0.1, 0.1, 1), Transform({0, 0, 2}, glm::quat({2, 0, 0}), {.7, .7, 1.2}),
+            Motion(), physics::RigidBody(10), physics::Collider(physics::Shape::Cylinder({}, glm::quat({0, 0, 0}), {0.5, 1} ), physics::Shape::Box({}, {0.7, 0.7, 1})));
+
+  cmd.spawn(cylinder_handle, mat_sphere, Color(0.1, 0.1, 1), Transform({2, 1, 2}, glm::quat({0, 2, 0}), {.7, .7, 1.2}),
+            Motion(), physics::RigidBody(10), physics::Collider(physics::Shape::Cylinder({}, glm::quat({0, 0, 0}), {0.5, 1} ), physics::Shape::Box({}, {0.7, 0.7, 1})));
   cmd.spawn(plane_handle, mat_white, Color(0.8, 0.8, 1), Transform({0, 8, 8}, glm::quat({80 * DEG2RAD, 0, 0}), {1, 1, 1}), physics::RigidBody(INFINITY), physics::Collider::primitives::Quad({8, 8}));
   cmd.spawn(plane_handle, mat_white, Color(0.8, 0.8, 1), Transform(), physics::RigidBody(INFINITY), physics::Collider::primitives::Quad({8, 8}));
   // cmd.spawn(PointLight{{100, 100 ,100}, 1, 30}, Transform(0, 0, 10));

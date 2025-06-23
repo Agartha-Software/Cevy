@@ -207,8 +207,6 @@ class Shape {
 
   bool isSphere() const { return this->shape == ShapeE::Sphere; }
 
-  // bool isPlane() const { return this->shape == ShapeE::Plane; }
-
   bool isQuad() const { return this->shape == ShapeE::Quad; }
 
   bool isBox() const { return this->shape == ShapeE::Box; }
@@ -217,8 +215,6 @@ class Shape {
     switch (this->shape) {
     case ShapeE::Sphere:
       return Shape::raycast_sphere(this->data, tm, ray);
-    // case ShapeE::Plane:
-    //   return Shape::raycast_plane(this->data, tm, ray);
     case ShapeE::Quad:
       return Shape::raycast_quad(this->data, tm, ray);
     case ShapeE::Box:
@@ -246,8 +242,6 @@ class Shape {
       switch (b.shape) {
       case ShapeE::Sphere:
         return Shape::collide_sphere_sphere(a.data, tm_a, b.data, tm_b);
-      // case ShapeE::Plane:
-      //   return Shape::collide_sphere_plane(a.data, tm_a, b.data, tm_b);
       case ShapeE::Quad:
         return Shape::collide_sphere_quad(a.data, tm_a, b.data, tm_b);
       case ShapeE::Box:
@@ -257,15 +251,6 @@ class Shape {
       default:
         throw std::runtime_error("Shape::collide: unreachable");
       }
-    // case ShapeE::Plane:
-    //   switch (b.shape) {
-    //   case ShapeE::Plane:
-    //     return {{}, {}, 0, false};
-    //   case ShapeE::Quad:
-    //     return Shape::collide_plane_quad(a.data, tm_a, b.data, tm_b);
-    //   default:
-    //     throw std::runtime_error("Shape::collide: unreachable");
-    //   }
     case ShapeE::Quad:
       switch (b.shape) {
       case ShapeE::Quad:
@@ -291,8 +276,8 @@ class Shape {
     case ShapeE::Cylinder:
       switch (b.shape) {
       case ShapeE::Cylinder:
-        return Collision::NoHit(); // !todo
-        // return Shape::collide_cylinder_cylinder(a.data, tm_a, b.data, tm_b);
+        // return Collision::NoHit(); // !todo
+        return Shape::collide_cylinder_cylinder(a.data, tm_a, b.data, tm_b);
       default:
         throw std::runtime_error("Shape::collide: unreachable");
       }
@@ -458,7 +443,7 @@ class Shape {
     glm::vec3 cotan = tm_b * glm::vec4(data_b[3].xyz(), 0);
     float cotan_w = data_b[2].w;
     const glm::vec3 q_center = (tm_b * data_b[0]).xyz();
-    const glm::vec3 q_normal = glm::cross(tan, cotan);
+    const glm::vec3 q_normal = glm::normalize(glm::cross(tan, cotan));
     const auto distance = dot(q_center - s_center, -q_normal);
     const auto radius = glm::length(s_size);
     // const auto radius = std::abs(dot(glm::abs(q_normal), s_size));
@@ -843,7 +828,6 @@ class Shape {
     const glm::vec3 q_normal = glm::normalize(glm::cross(tan, cotan));
 
     const glm::vec3 c_center = (tm_b * data_b[0]).xyz();
-
     glm::vec4 axis = homogenous((tm_b * data_b[1]).xyz());
     const glm::vec3 c_axis = axis.xyz();
     const float c_h_height = axis.w / 2.f; // height is -1 to +1, we want 0 to 1
@@ -972,6 +956,121 @@ class Shape {
       }
     }
     return hit;
+  }
+
+  static Collision collide_cylinder_cylinder(const glm::vec4 (&data_a)[4], const glm::mat4 &tm_a,
+                                             const glm::vec4 (&data_b)[4], const glm::mat4 &tm_b) {
+    return Collision::NoHit();
+    const glm::vec3 a_center = (tm_a * data_a[0]).xyz();
+    const glm::vec3 a_run = tm_a * data_a[1];
+    const glm::vec3 a_start = a_center - a_run / 2.f;
+    glm::vec4 _a_axis = homogenous(a_run);
+    const glm::vec3 a_axis = _a_axis.xyz();
+    const float a_h_height = _a_axis.w / 2.f; // height is -1 to +1, we want 0 to 1
+    glm::vec3 _rad_a = (tm_a * data_a[2]).xyz();
+    const float a_radius = glm::length(_rad_a);
+
+    const glm::vec3 b_center = (tm_b * data_b[0]).xyz();
+    const glm::vec3 b_run = tm_b * data_b[1];
+    const glm::vec3 b_start = b_center - b_run / 2.f;
+    glm::vec4 _b_axis = homogenous(b_run);
+    const glm::vec3 b_axis = _b_axis.xyz();
+    const float b_h_height = _b_axis.w / 2.f; // height is -1 to +1, we want 0 to 1
+    const float b_radius = glm::length((tm_b * data_b[2]).xyz());
+
+    glm::vec3 common_n;
+    glm::vec3 common_n_normalized;
+    if (a_axis == b_axis) {
+      return Collision::NoHit();
+      //   common_n = b_center - a_center - a_axis * glm::dot(b_center - a_center, a_axis);
+      // } else {
+    }
+    common_n = glm::cross(a_run, b_run);
+    common_n_normalized = glm::normalize(common_n);
+
+    auto diff = b_start - a_start;
+    float dist = glm::dot(diff, common_n_normalized);
+
+    if (dist - a_radius - b_radius > 0) {
+      return Collision::NoHit();
+    }
+
+    float t1 = glm::dot(glm::cross(diff, b_run), common_n) / glm::dot(common_n, common_n);
+    float t2 = glm::dot(glm::cross(diff, a_run), common_n) / glm::dot(common_n, common_n);
+
+    // if (std::abs(t1) < 1 && std::abs(t2) < 1) {
+    //   return Collision { common_n_normalized, a_center + a_axis * t1, -dist + a_radius +
+    //   b_radius, true};
+    // }
+
+    if (t1 < 1 && t1 > 0 && t2 < 1 && t2 > 0) {
+      return Collision {common_n_normalized, a_center + a_axis * t1, -dist + a_radius + b_radius,
+                        true};
+    }
+
+    // if (std::abs(t1) > a_h_height + a_radius || std::abs(t2) > b_h_height + b_radius) {
+    //   return Collision::NoHit();
+    // }
+
+    glm::vec3 d_a0 = b_center - b_run - a_center;
+
+    glm::vec3 d_a1 = b_center + b_run - a_center;
+
+    glm::vec3 d_b0 = a_center - a_run - b_center;
+
+    glm::vec3 d_b1 = a_center + a_run - b_center;
+
+    float intersection;
+    intersection = glm::length(d_a0 - d_b0) - a_radius - b_radius;
+    if (intersection < 0) {
+      return Collision {glm::normalize(d_b0 - d_a0), (d_a0 + d_b0) * 0.5f, -intersection, true};
+    }
+    intersection = glm::length(d_a0 - d_b1) - a_radius - b_radius;
+    if (intersection < 0) {
+      return Collision {glm::normalize(d_b1 - d_a0), (d_a0 + d_b1) * 0.5f, -intersection, true};
+    }
+    intersection = glm::length(d_a1 - d_b0) - a_radius - b_radius;
+    if (intersection < 0) {
+      return Collision {glm::normalize(d_b0 - d_a1), (d_a1 + d_b0) * 0.5f, -intersection, true};
+    }
+    intersection = glm::length(d_a1 - d_b1) - a_radius - b_radius;
+    if (intersection < 0) {
+      return Collision {glm::normalize(d_b1 - d_a1), (d_a1 + d_b1) * 0.5f, -intersection, true};
+    }
+    return Collision::NoHit();
+
+    std::vector<glm::vec3> tips = {d_a0, d_a1, d_b0, d_b1};
+
+    d_a0 = d_a0 - glm::dot(d_a0, a_axis) * a_axis;
+    d_a1 = d_a1 - glm::dot(d_a1, a_axis) * a_axis;
+    d_b0 = d_b0 - glm::dot(d_b0, b_axis) * b_axis;
+    d_b1 = d_b1 - glm::dot(d_b1, b_axis) * b_axis;
+
+    std::vector<std::pair<glm::vec3, uint32_t>> deltas = {
+        std::make_pair(d_a0, 0), std::make_pair(d_a1, 1), std::make_pair(d_b0, 2),
+        std::make_pair(d_b1, 3)};
+
+    auto delta_min = std::min_element(
+        deltas.begin(), deltas.end(),
+        [](const std::pair<glm::vec3, uint32_t> &a, const std::pair<glm::vec3, uint32_t> &b) {
+          return glm::dot(a.first, a.first) < glm::dot(b.first, b.first);
+        });
+
+    // float fixed_radius = delta_min->second & 0b10 ? b_radius : a_radius;
+    // float squished_radius = delta_min->second & 0b10 ? b_radius : a_radius;
+
+    float contact_dist = glm::length(delta_min->first);
+    // float intersection = contact_dist - a_radius - b_radius;
+    glm::vec3 normal = delta_min->first / contact_dist;
+
+    if (intersection < 0) {
+      // return Collision::NoHit();
+      return Collision {-normal,
+                        tips[delta_min->second] +
+                            normal * ((delta_min->second & 0b10) ? b_radius : a_radius),
+                        -intersection, true};
+    }
+    return Collision::NoHit();
   }
 };
 class Collider {
