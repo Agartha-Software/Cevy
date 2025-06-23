@@ -73,7 +73,13 @@ void cevy::physics::RigidBody::system(
         auto vel_a_local = vel_a.linear + glm::cross(vel_a.angular, pos_a);
         auto vel_b_local = vel_b.linear + glm::cross(vel_b.angular, pos_b);
 
-        auto impulse = glm::dot(collision.direction, (vel_b_local - vel_a_local) * 2.f);
+        auto relative_v = vel_b_local - vel_a_local;
+
+        auto impulse = glm::dot(collision.direction, relative_v * 2.f);
+
+        auto friction = relative_v - collision.direction * impulse / 2.f;
+
+        friction = glm::normalize(friction) * std::min(.02f, glm::length(friction));
 
         if (impulse <= 0)
           continue;
@@ -83,20 +89,22 @@ void cevy::physics::RigidBody::system(
 
         float restitution = body_a.resititution * body_b.resititution;
 
-        glm::vec3 impulse_a = collision.direction * impulse * conservation_a * restitution + friction;
-        glm::vec3 impulse_b = -collision.direction * impulse * conservation_b * restitution - friction;
+        glm::vec3 impulse_a =
+            collision.direction * impulse * conservation_a * restitution + friction;
+        glm::vec3 impulse_b =
+            -collision.direction * impulse * conservation_b * restitution - friction;
 
         glm::vec3 push_a = collision.direction * collision.intersection * conservation_a;
         glm::vec3 push_b = -collision.direction * collision.intersection * conservation_b;
 
-        transform_a += body_a.impulse(push_a, pos_a);
-        transform_b += body_b.impulse(push_b, pos_b);
+        transform_a += body_a.impulse(transform_a, push_a, pos_a);
+        transform_b += body_b.impulse(transform_b, push_b, pos_b);
 
-        if (motion_a) {
-          motion_a.value() += body_a.impulse(impulse_a, pos_a);
+        if (motion_a && !motion_a->animated) {
+          motion_a.value() += body_a.impulse(transform_a, impulse_a, pos_a);
         };
-        if (motion_b) {
-          motion_b.value() += body_b.impulse(impulse_b, pos_b);
+        if (motion_b && !motion_b->animated) {
+          motion_b.value() += body_b.impulse(transform_b, impulse_b, pos_b);
         };
       }
     }

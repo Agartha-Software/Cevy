@@ -110,9 +110,11 @@ class Shape {
   // private:
   glm::vec4 data[4];
   std::vector<glm::vec4> bounds;
-  float dragCoefficient = 2;        /// dimensionless c_d (defaulted to a cube) : ()
-  float angularDragCoefficient = 2; /// NPB defaulted to an assumed cube : ()
-  float area;
+  float dragCoefficient = 2;              /// dimensionless c_d (defaulted to a cube) : ()
+  float angularDragCoefficient = 2;       /// NPB defaulted to an assumed cube : ()
+  float area = 1;                         /// projected area : m²
+  float volume = 1;                       /// volume : m³
+  glm::mat3 inertiaTensor = glm::mat3(1); /// inertia tensor : m² / rad∙s ?
   ShapeE shape;
 
   protected:
@@ -125,9 +127,10 @@ class Shape {
     shape.dragCoefficient = 0.5;
     shape.angularDragCoefficient = 0.5;
     shape.area = glm::pi<float>() * radius * radius;
+    shape.volume = glm::pi<float>() * radius * radius * 4 / 3;
     shape.data[0] = {position, 1};
     shape.data[1] = {glm::vec3(radius, 0, 0), 0};
-    shape.inertia_tensor = glm::mat3(2 * radius * radius / 2.f);
+    shape.inertiaTensor = glm::mat3(2 * radius * radius / 5.f);
     return shape;
   }
 
@@ -141,15 +144,29 @@ class Shape {
   // }
 
   static Shape Quad(glm::vec3 position, glm::vec3 tangeant, glm::vec3 cotangeant) {
+    glm::vec3 normal = glm::normalize(glm::cross(tangeant, cotangeant));
+
     Shape shape;
     shape.shape = ShapeE::Quad;
-    shape.area = 1;
-    shape.data[0] = {position, 1};                                         // center position
-    shape.data[1] = {glm::normalize(glm::cross(tangeant, cotangeant)), 0}; // normal
+    shape.data[0] = {position, 1}; // center position
+    shape.data[1] = {normal, 0};   // normal
     float tan = glm::length(tangeant);
     shape.data[2] = {tangeant / tan, tan}; // tangeant
     float cotan = glm::length(cotangeant);
     shape.data[3] = {cotangeant / cotan, cotan}; // tangeant
+    shape.area = tan * cotan;
+    auto height = (tan + cotan / 200.f); // 1% assumed thickness;
+    shape.volume = tan * cotan * height;
+    shape.inertiaTensor = {};
+    shape.inertiaTensor[0][0] = (cotan * cotan + height * height) / 12.f;
+    shape.inertiaTensor[1][1] = (height * height + tan * tan) / 12.f;
+    shape.inertiaTensor[2][2] = (tan * tan + cotan * cotan) / 12.f;
+
+    glm::mat3 local_to_world = glm::mat3(glm::quatLookAt(normal, cotangeant));
+    glm::mat3 i_local_to_world = glm::inverse(local_to_world);
+
+    shape.inertiaTensor = i_local_to_world * shape.inertiaTensor * glm::transpose(i_local_to_world);
+
     return shape;
   }
 
@@ -158,10 +175,22 @@ class Shape {
     Shape shape;
     shape.shape = ShapeE::Box;
     shape.area = std::powf(size.x * size.y * size.z, 2.f / 3.f);
+    shape.volume = size.x * size.y * size.z;
     shape.data[0] = {position, 1}; // center position
     shape.data[1] = {orientation * glm::vec3(size.x / 2, 0, 0), 0};
     shape.data[2] = {orientation * glm::vec3(0, size.y / 2, 0), 0};
     shape.data[3] = {orientation * glm::vec3(0, 0, size.z / 2), 0};
+
+    glm::mat3 local_to_world = glm::mat3(orientation);
+    glm::mat3 i_local_to_world = glm::inverse(local_to_world);
+
+    shape.inertiaTensor = {};
+    shape.inertiaTensor[0][0] = (size.y * size.y + size.z * size.z) / 12.f;
+    shape.inertiaTensor[1][1] = (size.z * size.z + size.x * size.x) / 12.f;
+    shape.inertiaTensor[2][2] = (size.x * size.x + size.y * size.y) / 12.f;
+
+    shape.inertiaTensor = i_local_to_world * shape.inertiaTensor * glm::transpose(i_local_to_world);
+
     return shape;
   }
 
@@ -191,10 +220,13 @@ class Shape {
 
   static Collision collide(const Shape &left, glm::mat4 tm_left, const Shape &right,
                            glm::mat4 tm_right) {
-    const Shape &a = (int)left.shape <= (int)right.shape ? left : right;
-    const Shape &b = (int)left.shape <= (int)right.shape ? right : left;
-    const glm::mat4 tm_a = (int)left.shape <= (int)right.shape ? tm_left : tm_right;
-    const glm::mat4 tm_b = (int)left.shape <= (int)right.shape ? tm_right : tm_left;
+    if ((int)left.shape > (int)right.shape) {
+      return collide(right, tm_right, left, tm_left).negate();
+    }
+    const Shape &a = left;
+    const Shape &b = right;
+    const glm::mat4 tm_a = tm_left;
+    const glm::mat4 tm_b = tm_right;
 
     switch (a.shape) {
     case ShapeE::Sphere:
@@ -709,11 +741,12 @@ class Shape {
 
 
   protected:
-  static std::tuple<float, float> compute_sat(const glm::vec3 &axis, const std::vector<glm::vec3> &verts) {
+  static std::tuple<float, float> compute_sat(const glm::vec3 &axis,
+                                              const std::vector<glm::vec3> &verts) {
     float min = INFINITY;
     float max = -INFINITY;
 
-    for (const auto& vert : verts) {
+    for (const auto &vert : verts) {
       auto dot = glm::dot(axis, vert);
       min = std::min(min, dot);
       max = std::max(max, dot);
@@ -739,25 +772,25 @@ class Shape {
     const glm::vec3 delta = a_center - b_center;
 
     std::vector<glm::vec3> verts_a = {
-      a_center - a_x - a_y - a_z,
-      a_center - a_x - a_y + a_z,
-      a_center - a_x + a_y - a_z,
-      a_center - a_x + a_y + a_z,
-      a_center + a_x - a_y - a_z,
-      a_center + a_x - a_y + a_z,
-      a_center + a_x + a_y - a_z,
-      a_center + a_x + a_y + a_z,
+      a_center - a_x - a_y - a_z, //
+      a_center - a_x - a_y + a_z, //
+      a_center - a_x + a_y - a_z, //
+      a_center - a_x + a_y + a_z, //
+      a_center + a_x - a_y - a_z, //
+      a_center + a_x - a_y + a_z, //
+      a_center + a_x + a_y - a_z, //
+      a_center + a_x + a_y + a_z, //
     };
 
     std::vector<glm::vec3> verts_b = {
-      b_center - b_x - b_y - b_z,
-      b_center - b_x - b_y + b_z,
-      b_center - b_x + b_y - b_z,
-      b_center - b_x + b_y + b_z,
-      b_center + b_x - b_y - b_z,
-      b_center + b_x - b_y + b_z,
-      b_center + b_x + b_y - b_z,
-      b_center + b_x + b_y + b_z,
+      b_center - b_x - b_y - b_z, //
+      b_center - b_x - b_y + b_z, //
+      b_center - b_x + b_y - b_z, //
+      b_center - b_x + b_y + b_z, //
+      b_center + b_x - b_y - b_z, //
+      b_center + b_x - b_y + b_z, //
+      b_center + b_x + b_y - b_z, //
+      b_center + b_x + b_y + b_z, //
     };
 
     Collision hit;
@@ -765,7 +798,7 @@ class Shape {
     hit.hit = true;
     hit.location = {0, 0, 0};
 
-    for (const auto& face: {a_x, a_y, a_z, b_x, b_y, b_z}) {
+    for (const auto &face : {a_x, a_y, a_z, b_x, b_y, b_z}) {
       glm::vec3 axis = glm::normalize(face);
       auto [min_a, max_a] = compute_sat(axis, verts_a);
       auto [min_b, max_b] = compute_sat(axis, verts_b);
@@ -778,11 +811,12 @@ class Shape {
           hit.intersection = intersection;
           hit.direction = detail::signum<float>(glm::dot(axis, delta)) * axis;
         }
-        hit.location += axis * (top + bottom) / 2.f / 2.f; // add each perpendicular axis, averaged over the two bounds and over 6 axis;
+        hit.location +=
+            axis * (top + bottom) / 2.f /
+            2.f; // add each perpendicular axis, averaged over the two bounds and over 6 axis;
+      } else {
+        return Collision::NoHit();
       }
-      else {
-       return Collision::NoHit();
-     }
     }
     return hit;
   }
@@ -825,6 +859,10 @@ class Collider {
   float dragCoefficient = 2;        /// dimensionless c_d (defaulted to a cube) : ()
   float angularDragCoefficient = 2; /// dimensionless NPB (defaulted to an assumed cube) : ()
   float area = 1;                   /// projected area : m²
+  float volume;                     /// volume : m³
+
+  /// inverse of inertia tensor : rad∙s / m² ?
+  glm::mat4 iInertiaTensor = {1};
 
   Collider();
   template <typename... S>
@@ -833,10 +871,14 @@ class Collider {
   };
   template <typename... S, class = std::enable_if_t<std::conjunction_v<std::is_same<S, Shape>...>>>
   Collider(S... shapes) {
+    this->area = (shapes.area + ...);
+    this->volume = (shapes.volume + ...);
     this->dragCoefficient = (shapes.drag() + ...);
     this->angularDragCoefficient = (shapes.angularDrag() + ...);
-    this->angularDragCoefficient += ((shapes.drag() * glm::length(shapes.position())) + ...);
+    this->angularDragCoefficient +=
+        ((shapes.drag() * shapes.area * glm::length(shapes.position())) + ...);
     this->shapes = {std::forward<S>(shapes)...};
+    this->iInertiaTensor = 1.f / ((shapes.inertiaTensor) + ...);
   };
 
   Collision raycast(const glm::mat4 &tm, const Ray &ray) {

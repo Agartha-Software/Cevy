@@ -9,13 +9,14 @@
 
 #include <vector>
 
-#include "collision/Collider.hpp"
 #include <cmath>
 #include <glm/geometric.hpp>
+#include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 
 #include "Motion.hpp"
 #include "cevy.hpp"
+#include "collision/Collider.hpp"
 
 namespace cevy::physics {
 class RigidBody {
@@ -29,15 +30,21 @@ class RigidBody {
   float resititution = 0.90;
   // float resititution = 0.7071; // sqrt(0.5);
   // private:
-  float iMass = 1; /// inverse of kilogram mass : kg⁻¹
+
+  /// inverse of kilogram mass : kg⁻¹
+  float iMass = 1;
+
+  /// inverse of inertia tensor : rad/(m∙s⁻¹)
+  glm::mat3 iInertiaTensor = {0.1};
+
   public:
-  glm::vec3 acceleration = {0, 0, 0}; /// : (m/s²)ds : additive m/s as an impulse;
+  /// : (m/s²)ds : additive m/s as an impulse;
+  glm::vec3 acceleration = {0, 0, 0};
   // bool animated = false;
   // bool passive = false;
 
   float mass() const { return 1 / this->iMass; }
   void setMass(float mass) { this->iMass = 1 / mass; }
-
 
   RigidBody(float mass) : iMass(1 / mass) {};
 
@@ -69,7 +76,7 @@ class RigidBody {
    * @param arm position from the center of mass : m
    * @return engine::Motion instantaneous motion
    */
-  engine::Motion impulse(glm::vec3 impulse, glm::vec3 arm = {}) {
+  engine::Motion impulse(const engine::Transform &tm, glm::vec3 impulse, glm::vec3 arm = {}) {
     float arm_length = glm::length(arm);
     glm::vec3 arm_n = arm / arm_length;
     glm::vec3 tangeantial_impulse = impulse - arm_n * glm::dot(impulse, arm_n);
@@ -84,9 +91,14 @@ class RigidBody {
       // axis = glm::cross(arm, axis);
     }
 
-    glm::vec3 tangeantial_v = glm::cross(axis * angle, arm);
+    // auto i_inertia_tensor = glm::mat3(tm.rotation) * this->iInertiaTensor *
+    // glm::transpose(glm::mat3(tm.rotation));
+    auto i_inertia_tensor = glm::mat3(0.5);
 
-    return engine::Motion(impulse - tangeantial_v, {axis * angle});
+    glm::vec3 angular = i_inertia_tensor * glm::vec3(axis * angle);
+    glm::vec3 tangeantial_v = glm::cross(angular, arm);
+
+    return engine::Motion(impulse - tangeantial_v, angular);
   }
 
   protected:

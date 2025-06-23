@@ -66,6 +66,9 @@ class Motion {
 
     a.w = glm::length(this->angular);
     a = {a.xyz() / a.w, a.w};
+    if (a.w == 0) {
+      a = {0, 0, 1, 0};
+    }
 
     glm::vec4 new_angular;
     new_angular.w = glm::acos(glm::cos(a.w) * glm::cos(b.w) -
